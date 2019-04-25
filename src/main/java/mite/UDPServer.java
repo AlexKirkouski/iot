@@ -72,7 +72,7 @@ public class UDPServer extends MonitorServer {
                             text.append(';');
                         text.append(receivedString);
 
-                        if(text.length() > 1000) {
+                        if(text.length() > 50) {
                             final String textToProceed = text.toString();
                             executorService.submit(new Runnable() {
                                 public void run() {
