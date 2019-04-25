@@ -1,5 +1,7 @@
 package mite;
 
+import com.google.common.base.Throwables;
+import lsfusion.interop.action.MessageClientAction;
 import lsfusion.server.data.sql.exception.SQLHandledException;
 import lsfusion.server.data.value.DataObject;
 import lsfusion.server.language.ScriptingErrorLog;
@@ -37,8 +39,9 @@ public class StartUDPServerAction extends InternalAction {
             UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), serverObject);
             server.start();
             UDPServer.runningServers.put(serverObject, server);
-        } catch (ScriptingErrorLog.SemanticErrorException | SocketException e) {
-            throw new RuntimeException(e);
+        } catch (Throwable e) {
+            executionContext.requestUserInteraction(new MessageClientAction(e.getMessage(), "Error"));
+            throw Throwables.propagate(e);
         }
     }
 }
