@@ -1,7 +1,7 @@
 MODULE Device;
 
 CLASS ABSTRACT DeviceType;
-name 'Имя' = ABSTRACT ISTRING[1000] (DeviceType);
+name 'Имя' = ABSTRACT BPISTRING[1000] (DeviceType);
 
 CLASS Device 'Устройство';
 id 'ИД' = DATA LONG (Device);
