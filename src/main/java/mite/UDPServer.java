@@ -68,6 +68,7 @@ public class UDPServer extends MonitorServer {
                             text.append('\n');
                         text.append(DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime())));
                         String receivedString = new String(receivePacket.getData()).trim();
+                        System.out.println(receivedString);
                         if(receivedString.isEmpty() || receivedString.charAt(0) != ';')
                             text.append(';');
                         text.append(receivedString);
