@@ -9,7 +9,7 @@ type 'Тип' = ABSTRACT DeviceType (Device);
 
 CLASS ABSTRACT Measurement 'Измерение';
 device = DATA Device (Measurement);
-deviceId 'ИД устройства' (Measurement m) = id(device(m));
+deviceId 'ИД устройства' (Measurement m) = id(device(m)) MATERIALIZED;
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
 
 CLASS ABSTRACT Server 'Сервер';
