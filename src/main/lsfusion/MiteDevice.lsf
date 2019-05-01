@@ -47,7 +47,7 @@ importCSV(MiteServer server, CSVFILE file) {
 EXTEND FORM servers
     PROPERTIES (s) port
     PROPERTIES (d) NEW[MiteDevice] SHOWIF s IS MiteServer
-    PROPERTIES (m) temp, humidity, battery, csq, ffff
+    PROPERTIES (m) temp, humidity, battery, csq
 ;
 
 
