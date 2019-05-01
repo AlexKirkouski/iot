@@ -10,6 +10,8 @@ name(MiteDeviceType t) += staticCaption(t);
 CLASS MiteDevice : Device;
 type(MiteDevice md) += MiteDeviceType.instance;
 
+TABLE measurement (Measurement);
+
 CLASS MiteMeasurement : Measurement;
 temp 'Температура' = DATA DOUBLE (MiteMeasurement);
 humidity 'Влажность' = DATA DOUBLE (MiteMeasurement);
@@ -45,7 +47,7 @@ importCSV(MiteServer server, CSVFILE file) {
 EXTEND FORM servers
     PROPERTIES (s) port
     PROPERTIES (d) NEW[MiteDevice] SHOWIF s IS MiteServer
-    PROPERTIES (m) temp, humidity, battery, csq
+    PROPERTIES (m) temp, humidity, battery, csq, ffff
 ;
 
 
