@@ -29,7 +29,7 @@ device(Server server, LONG id)= device(deviceType(server), id);
 
 FORM servers 'Сервера' 
     OBJECTS s = Server
-    PROPERTIES (s) name, nameDeviceType, port, NEW, DELETE
+    PROPERTIES (s) name, nameDeviceType, port, isRunning, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
     OBJECTS d = Device 
@@ -66,6 +66,12 @@ DESIGN servers {
 
 NAVIGATOR {
     NEW servers;
+}
+
+onStarted() + {
+    FOR isRunning(Server s) DO {
+        startUDPServer(s, port(s), 'importCSV');
+    }
 }
 
 // IMPORT
