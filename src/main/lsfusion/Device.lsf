@@ -15,7 +15,8 @@ NAVIGATOR {
 }
 
 CLASS Device 'Устройство';
-id 'ИД' = DATA LONG (Device);
-type 'Тип' = DATA DeviceType (Device);
+id 'ИД' = DATA LONG (Device) IN id;
+type 'Тип' = DATA DeviceType (Device) ;
+nameType 'Наименование типа' = name(type(Device d)) IN id;
 
 device = GROUP AGGR Device device BY type(device), id(device);

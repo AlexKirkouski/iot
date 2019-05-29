@@ -40,7 +40,7 @@ FORM servers 'Сервера'
     FILTERS number(deviceType(s),mt)
     
     OBJECTS m = Measurement
-    PROPERTIES (m) dateTime, deviceId 
+    PROPERTIES (m) dateTime, deviceId, idImport READONLY 
     ORDER dateTime(m) DESC
     FILTERS type(device(m)) = deviceType(s)  
     
@@ -82,6 +82,7 @@ importCSVScript 'Скрипт импорта' (Server server) = 'run(Server serv
                                                 '\t\t'+       'NEW m = Measurement \{\n' +
                                                 '\t\t\t'+            'dateTime(m) <- dt;\n' +
                                                 '\t\t\t'+            'device(m) <- device(server, id);\n' +
+                                                '\t\t\t'+            'idImport(m) <- id;\n' +
                                                 '\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE '+ (GROUP CONCAT 'WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, server, mt),' ' ORDER n) + ';\n' + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +

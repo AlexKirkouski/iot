@@ -20,6 +20,7 @@ device = DATA Device (Measurement);
 deviceId 'ИД устройства' (Measurement m) = id(device(m)) MATERIALIZED;
 nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(m)));
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
+idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
 value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
 
