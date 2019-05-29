@@ -7,7 +7,7 @@ deviceType = DATA DeviceType (Server);
 nameDeviceType 'Тип устройства' (Server s) = name(deviceType(s));
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
 port 'Порт' = DATA INTEGER (Server);
-isRunning = DATA BOOLEAN (Server);
+isRunning 'Запущен' = DATA BOOLEAN (Server);
 
 startUDPServer INTERNAL 'mite.StartUDPServerAction' (Server, INTEGER, TEXT);
 stopUDPServer INTERNAL 'mite.StopUDPServerAction' (Server);
