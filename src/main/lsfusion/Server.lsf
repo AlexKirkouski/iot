@@ -8,22 +8,20 @@ nameDeviceType 'Тип устройства' (Server s) = name(deviceType(s));
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
 port 'Порт' = DATA INTEGER (Server);
 isRunning = DATA BOOLEAN (Server);
-startServerInternal ABSTRACT (Server);
-stopServerInternal ABSTRACT (Server);
+
+startUDPServer INTERNAL 'mite.StartUDPServerAction' (Server, INTEGER, TEXT);
+stopUDPServer INTERNAL 'mite.StopUDPServerAction' (Server);
 
 startServer 'Запустить сервер' (Server server) {    
     APPLY isRunning(server) <- TRUE;
     
-    startServerInternal(server);
+    startUDPServer(server, port(server), 'importCSV');
 }
 stopServer 'Остановить сервер' (Server server) {
-    stopServerInternal(server);
+    stopUDPServer(server);
 
     APPLY isRunning(server) <- NULL;
 }
-
-startUDPServer INTERNAL 'mite.StartUDPServerAction' (Server, INTEGER, TEXT);
-stopUDPServer INTERNAL 'mite.StopUDPServerAction' (Server);
 
 server = GROUP AGGR Server server BY deviceType(server);
 server(Device device) = server(type(device)); 
@@ -81,6 +79,7 @@ importCSVScript 'Скрипт импорта' (Server server) = 'run(Server serv
                                                 '\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE '+ (GROUP CONCAT 'WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, server, mt),' ' ORDER n) + ';\n' + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
+                                                '\t'+  'APPLY;\n' +
                                                 '\}\n';
 
 EXTEND FORM servers
@@ -89,7 +88,6 @@ EXTEND FORM servers
 
 importCSV(Server server, CSVFILE file) {
     EVAL importCSVScript(server) PARAMS server, file;
-    APPLY;
 }
 
 // TEST

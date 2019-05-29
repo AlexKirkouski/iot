@@ -59,9 +59,9 @@ public class UDPServer extends MonitorServer {
             public void run() {
                 try {
                     ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
-                    byte[] receiveData = new byte[1024];
                     while(true)
                     {
+                        byte[] receiveData = new byte[1024];
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         if(text.length() > 0)
