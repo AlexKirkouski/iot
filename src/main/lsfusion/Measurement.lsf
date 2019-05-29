@@ -1,242 +1,34 @@
 MODULE Measurement;
 
-REQUIRE Device, Time; 
-
-NAVIGATOR {
-    NEW FOLDER measurementFolder 'Измерения' AFTER tablesFolder WINDOW toolbar { }
-}
-NAVIGATOR {
-    measurementFolder {
-        NEW servers;
-    }
-}
+REQUIRE Device, Time;
 
 CLASS MeasurementType 'Тип измерения';
-TABLE measurementType(MeasurementType);
-
-id 'ИД' = DATA LONG (MeasurementType);
-measurementType (id) = GROUP AGGR MeasurementType m BY id (m);
+TABLE measurementType (MeasurementType);
 
 name 'Наименование' = DATA STRING[100] (MeasurementType) CHARWIDTH 70;
 
-FORM measurementType 'Тип измерения'
-    OBJECTS m = MeasurementType PANEL
-    PROPERTIES(m) id, name
-    
-    EDIT MeasurementType OBJECT m
-;
+number 'Порядковый номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
 
-FORM measurementTypes 'Типы измерений'
+EXTEND FORM deviceTypes
     OBJECTS m = MeasurementType
-    PROPERTIES(m) READONLY id, name
-    PROPERTIES(m) NEWSESSION NEW, EDIT, DELETE
-    
-    LIST MeasurementType OBJECT m
+    PROPERTIES(t, m) number
+    PROPERTIES (m) name, NEW, DELETE
 ;
-
-FORM dialogmeasurementTypes 'Типы измерений'
-    OBJECTS m = MeasurementType
-    PROPERTIES(m) READONLY id, name
-    
-    LIST MeasurementType OBJECT m
-;
-
-NAVIGATOR {
-    tablesFolder {
-        NEW measurementTypes;
-    }
-}
 
 CLASS Measurement 'Измерение';
 device = DATA Device (Measurement);
 deviceId 'ИД устройства' (Measurement m) = id(device(m)) MATERIALIZED;
+nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(m)));
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
-value 'Значение' = DATA DOUBLE (Measurement);
 
-type = DATA MeasurementType(Measurement);
-nameMeasurementType 'Тип измерения' (Measurement m) = name(type(m));
+value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
 
-//////// для просмотра измерений в плоской таблице
-FORM j_measurement 'журнал измерений'
-    OBJECTS m = Measurement
-    PROPERTIES(m) READONLY deviceId, dateTime, nameMeasurementType, value
-    PROPERTIES(m) NEWSESSION NEW, EDIT, DELETE
-    
-    LIST Measurement OBJECT m
+FORM measurements 'Измерения'
+    OBJECTS (m = Measurement, mt = MeasurementType)
+    PROPERTIES(m) nameDeviceType, deviceId, dateTime, NEW, DELETE
+    PROPERTIES name(mt), value(m, mt)
+    FILTERS value(m, mt)
 ;
 NAVIGATOR {
-    measurementFolder {
-        NEW j_measurement;
-    }
+    NEW measurements;
 }
-////////
-
-CLASS DeviceTypeDetail 'Детальная строка';
-TABLE DeviceTypeDetail(DeviceTypeDetail);
-
-deviceType = DATA DeviceType (DeviceTypeDetail) NONULL DELETE INDEXED AUTOSET ;
-measurementType = DATA MeasurementType (DeviceTypeDetail) NONULL ;
-
-nameMeasurementType 'Тип измерения' (DeviceTypeDetail d) = name(measurementType(d));
-number 'Порядковый номер в CSV-файле' = DATA INTEGER (DeviceTypeDetail);
-
-deviceTypeDetail = GROUP AGGR DeviceTypeDetail d BY deviceType(d), measurementType(d);
-
-FORM deviceTypeDetail 'Типы измерений'
-    OBJECTS d = DeviceTypeDetail PANEL
-    PROPERTIES(d) nameMeasurementType, number
-    
-    EDIT DeviceTypeDetail OBJECT d
-;
-
-FORM deviceTypeDetails 'Типы устройств с типами измерений'
-    OBJECTS t=DeviceType
-    PROPERTIES(t) READONLY id, name
-    PROPERTIES(t) NEWSESSION NEW, EDIT, DELETE 
-    
-    OBJECTS d = DeviceTypeDetail
-    PROPERTIES(d) READONLY nameMeasurementType, number
-    PROPERTIES(d) NEWSESSION NEW, EDIT, DELETE
-    FILTERS deviceType(d) == t
-;
-
-DESIGN deviceTypeDetails {
-    OBJECTS {
-     type = CONTAINERH;
-    }
-}
-
-NAVIGATOR {
-    tablesFolder {
-        NEW deviceTypeDetails;
-    } 
-}
-
-server(Measurement m) = server(device(m));
-
-value(Device d, DATETIME t, MeasurementType mt) = GROUP LAST value(Measurement m) 
-            ORDER device(m), dateTime(m), type(m)
-            BY device(m), dateTime(m), type(m);
-
-value(Device d, DATETIME t) = GROUP LAST value(Measurement m) 
-            ORDER device(m), dateTime(m)
-            BY device(m), dateTime(m);
-
-EXTEND FORM servers
-    OBJECTS dd = DeviceTypeDetail
-    FILTERS deviceType(dd) = deviceType(s)
-    
-    OBJECTS dt = DATETIME
-    PROPERTIES dtv = VALUE(dt) READONLY
-    ORDER dtv DESC 
-    
-    PROPERTIES READONLY =value(d, dt, measurementType(dd))  COLUMNS (dd) HEADER nameMeasurementType(dd)
-    FILTERS  value(d, dt)
-;
-
-DESIGN servers {
-    OBJECTS {
-        tab {
-            MOVE BOX(dt) {
-                caption = 'Измерения';
-                flex = 3;
-            }
-            fill = 10;
-        }
-    }
-}
-
-
-// Прием CSV-файлов
-importCSV(Server server, CSVFILE file) {
-    
-    NEWSESSION {
-        LOCAL dt  = DATETIME (INTEGER);
-        LOCAL id_device = LONG (INTEGER);
-        LOCAL field1  = DOUBLE (INTEGER);
-        LOCAL field2  = DOUBLE (INTEGER);
-        LOCAL field3  = DOUBLE (INTEGER);
-        LOCAL field4  = DOUBLE (INTEGER);
-        LOCAL field5  = DOUBLE (INTEGER);
-        LOCAL field6  = DOUBLE (INTEGER);
-        LOCAL field7  = DOUBLE (INTEGER);
-        LOCAL field8  = DOUBLE (INTEGER);
-        LOCAL field9  = DOUBLE (INTEGER);
-        LOCAL field10 = DOUBLE (INTEGER);
-        
-        IMPORT CSV '|' NOHEADER FROM file TO dt, id_device, field1, field2, field3, field4, field5,
-                                         field6, field7, field8, field9, field10;
-        
-        FOR imported(INTEGER i) DO {
-            IF NOT device(id_device(i)) THEN NEW d = Device {
-                id(d) <- id_device(i);
-                type(d) <- deviceType(server);
-            }
-            
-            FOR deviceType(DeviceTypeDetail d)==type(device(id_device(i))) NEW mm = Measurement DO {
-                dateTime(mm) <- dt(i);
-                device(mm) <- device(server, id_device(i));
-                type(mm) <- measurementType(d);
-                CASE 
-                 WHEN number(d)==1  THEN value(mm) <- field1(i);
-                 WHEN number(d)==2  THEN value(mm) <- field2(i);
-                 WHEN number(d)==3  THEN value(mm) <- field3(i);
-                 WHEN number(d)==4  THEN value(mm) <- field4(i);
-                 WHEN number(d)==5  THEN value(mm) <- field5(i);
-                 WHEN number(d)==6  THEN value(mm) <- field6(i);
-                 WHEN number(d)==7  THEN value(mm) <- field7(i);
-                 WHEN number(d)==8  THEN value(mm) <- field8(i);
-                 WHEN number(d)==9  THEN value(mm) <- field9(i);
-                 WHEN number(d)==10 THEN value(mm) <- field10(i);
-            }
-        }
-        APPLY;
-    }        
-}
-
-importCSVTest(Server s) {
-    INPUT f = CSVFILE DO {
-        EXEC importCSV(s,f) ;
-    }
-}
-
-EXTEND FORM servers 
-    PROPERTIES importCSVTest(s) TOOLBAR ;
-
-
-//    LOCAL script  = BPSTRING[20000] ();
-//    script() <- 
-//                'LOCAL dt  = DATETIME (INTEGER);\n'+
-//                'LOCAL id_device = LONG (INTEGER);\n'+
-//                'LOCAL field1  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field2  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field3  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field4  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field5  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field6  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field7  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field8  = DOUBLE (INTEGER);\n'+
-//                'LOCAL field9  = DOUBLE (INTEGER);\n'+
-//                'IMPORT CSV \'|\' NOHEADER FROM file TO dt, id_device, field1,field2,field3,'+
-//                'field4,field5,field6,field7,field8,field9;\n'+
-//                'FOR imported(INTEGER i) DO \{\n'+
-//                '   IF NOT device(server, id_device(i)) THEN NEW d = Device \{\n'+
-//                '       id(d) <- id_device(i);\n'+
-//                '       type(d) <- deviceType(server);\n'+
-//                '    \}\n'+
-//                '    FOR deviceType(DeviceTypeDetail d)==type(device(id_device(i))) NEW mm = Measurement DO \{\n'+
-//                '        dateTime(mm) <- dt(i);\n'+
-//                '        device(mm) <- device(server, id_device(i));\n'+
-//                '        type(mm) <- measurementType(d);\n'+
-//                '        value(mm) <- field1'+ '(i); \};'+
-//                
-//                '    \}\n'+
-//                '\}\n'+
-//                'APPLY;\n';
-//        
-//     MESSAGE script();
-////     RETURN ;
-//     
-//    // EVAL 'run(Server server, CSVFILE file) \n PARAMS server, file;\n\{\n' + script() + '\}';
-//    EVAL 'run(Server server, CSVFILE file) \n \{\n' + script() + '\}' PARAMS server, file;
-//} 

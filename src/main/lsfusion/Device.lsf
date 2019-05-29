@@ -1,111 +1,21 @@
 MODULE Device;
 
-NAVIGATOR {
-    NEW FOLDER tablesFolder 'Таблицы' WINDOW toolbar { }
-}
-
 CLASS DeviceType 'Тип устройства';
 TABLE deviceType(DeviceType);
 
-name 'Имя' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 70;
-
-id 'ИД' = DATA LONG (DeviceType);
-deviceType (id) = GROUP AGGR DeviceType d BY id (d);
-
-FORM deviceType 'Тип устройства'
-    OBJECTS d = DeviceType PANEL
-    PROPERTIES(d) id, name
-    
-    EDIT DeviceType OBJECT d
-;
+name 'Имя' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 70 IN id;
 
 FORM deviceTypes 'Типы устройств'
-    OBJECTS d = DeviceType
-    PROPERTIES(d) READONLY id, name
-    PROPERTIES(d) NEWSESSION NEW, EDIT, DELETE
-    
-    LIST DeviceType OBJECT d
+    OBJECTS t = DeviceType
+    PROPERTIES(t) name, NEW, DELETE
 ;
 
 NAVIGATOR {
-    tablesFolder {
-        NEW deviceTypes;
-    }
+    NEW deviceTypes;
 }
-
 
 CLASS Device 'Устройство';
 id 'ИД' = DATA LONG (Device);
 type 'Тип' = DATA DeviceType (Device);
-device (id) = GROUP AGGR Device d BY id (d);
 
-FORM device 'устройства'
-    OBJECTS d = Device PANEL
-    PROPERTIES(d) id
-    
-    EDIT Device OBJECT d
-;
-
-FORM devices 'устройства'
-    OBJECTS d = Device
-    PROPERTIES(d) READONLY id
-    PROPERTIES(d) NEWSESSION NEW, EDIT, DELETE
-    
-    LIST Device OBJECT d
-;
-
-NAVIGATOR {
-    tablesFolder {
-        NEW devices;
-    }
-}
-
-CLASS Server 'Сервер';
-deviceType = DATA DeviceType (Server);
-nameDeviceType 'Тип устройства' (Server s) = name(deviceType(s));
-name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
-port 'Порт' = DATA INTEGER (Server);
-isRunning = DATA BOOLEAN (Server);
-startServerInternal ABSTRACT (Server);
-stopServerInternal ABSTRACT (Server);
-
-startServer 'Запустить сервер' (Server server) {    
-    APPLY isRunning(server) <- TRUE;
-    
-    startServerInternal(server);
-}
-stopServer 'Остановить сервер' (Server server) {
-    stopServerInternal(server);
-
-    APPLY isRunning(server) <- NULL;
-}
-
-startUDPServer INTERNAL 'mite.StartUDPServerAction' (Server, INTEGER, TEXT);
-stopUDPServer INTERNAL 'mite.StopUDPServerAction' (Server);
-
-server = GROUP AGGR Server server BY deviceType(server);
-server(Device device) = server(type(device)); 
-device = GROUP AGGR Device device BY server(device), id(device);
-
-FORM servers 'Сервера' 
-    OBJECTS s = Server
-    PROPERTIES (s) name, nameDeviceType, port, NEW, DELETE
-    PROPERTIES (s) startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
-    
-    OBJECTS d = Device 
-    PROPERTIES (d) READONLY id
-    FILTERS type(d) = deviceType(s)   
-    ORDER id(d) 
-;
-
-DESIGN servers {
-    OBJECTS {
-        NEW tab {
-            type = SPLITH ;
-            MOVE BOX(d) {
-                caption = 'Устройства';
-                flex = 1;
-            }
-        }
-    }
-}
+device = GROUP AGGR Device device BY type(device), id(device);
