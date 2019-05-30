@@ -1,6 +1,8 @@
 MODULE Device;
 
-CLASS DeviceType 'Тип устройства';
+CLASS DeviceType 'Тип устройства' {
+    unknown 'Неизвестное устройство'
+}
 TABLE deviceType(DeviceType);
 
 name 'Имя' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 70 IN id;
@@ -15,8 +17,18 @@ NAVIGATOR {
 }
 
 CLASS Device 'Устройство';
-id 'ИД' = DATA LONG (Device) IN id;
-type 'Тип' = DATA DeviceType (Device) ;
-nameType 'Наименование типа' = name(type(Device d)) IN id;
+id 'ИД' = DATA LONG (Device);
+type 'Тип' = DATA DeviceType (Device);
 
-device = GROUP AGGR Device device BY type(device), id(device);
+device = GROUP AGGR Device device BY id(device);
+type (LONG l) = type(device(l));
+
+EXTEND FORM deviceTypes
+    OBJECTS d = Device
+    PROPERTIES (d) id, NEW, DELETE
+    FILTERS type(d) = t
+;
+
+dropUDPServerCaches INTERNAL 'mite.DropUDPServerCachesAction' ();
+WHEN GROUP SUM 1 IF CHANGED(type(Device dt)) DO
+    dropUDPServerCaches();

@@ -1,10 +1,8 @@
 MODULE Server;
 
-REQUIRE Device, Measurement;
+REQUIRE Device, SystemEvents, Measurement;
 
 CLASS Server 'Сервер';
-deviceType = DATA DeviceType (Server);
-nameDeviceType 'Тип устройства' (Server s) = name(deviceType(s));
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
 port 'Порт' = DATA INTEGER (Server);
 isRunning 'Запущен' = DATA BOOLEAN (Server);
@@ -23,46 +21,20 @@ stopServer 'Остановить сервер' (Server server) {
     APPLY isRunning(server) <- NULL;
 }
 
-server = GROUP AGGR Server server BY deviceType(server);
-server(Device device) = server(type(device)); 
-device(Server server, LONG id)= device(deviceType(server), id);
+server = DATA Server (Measurement);
 
 FORM servers 'Сервера' 
     OBJECTS s = Server
-    PROPERTIES (s) name, nameDeviceType, port, isRunning, NEW, DELETE
+    PROPERTIES (s) name, port, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
-    OBJECTS d = Device 
-    PROPERTIES (d) id, NEW, DELETE
-    FILTERS type(d) = deviceType(s)   
-
-    OBJECTS mt = MeasurementType
-    FILTERS number(deviceType(s),mt)
-    
-    OBJECTS m = Measurement
-    PROPERTIES (m) dateTime, deviceId, idImport READONLY 
+    OBJECTS (m = Measurement, mt = MeasurementType)
+    PROPERTIES (m) dateTime 
+    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)')
+    PROPERTIES value(m, mt) 
     ORDER dateTime(m) DESC
-    FILTERS type(device(m)) = deviceType(s)  
-    
-    PROPERTIES READONLY =value(m, mt)  COLUMNS (mt) HEADER name(mt)
+    FILTERS server(m) = s  
 ;
-
-DESIGN servers {
-    OBJECTS {
-        NEW tab {
-            type = SPLITH ;
-            MOVE BOX(d) {
-                caption = 'Устройства';
-                flex = 1;
-            }
-            MOVE BOX(m) {
-                caption = 'Измерения';
-                flex = 3;
-            }
-            fill = 10;
-        }
-    }
-}
 
 NAVIGATOR {
     NEW servers;
@@ -75,33 +47,33 @@ onStarted() + {
 }
 
 // IMPORT
-number(Server server, MeasurementType mt) = number(deviceType(server), mt);
-fieldImport(n, Server server, MeasurementType mt) = 'field' + (n IF n=number(deviceType(server), mt));
-importCSVScript 'Скрипт импорта' (Server server) = 'run(Server server, CSVFILE file) \{\n'+
-                                                '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id, ' + (GROUP CONCAT 'DOUBLE '+fieldImport(n, server, MeasurementType mt), ',' ORDER n) + ' DO \{\n' +
+fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
+importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
+                                                '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id, ' + (GROUP CONCAT 'DOUBLE '+fieldImport(n, dt, MeasurementType mt), ',' ORDER n) + ' DO \{\n' +
                                                 '\t\t'+       'NEW m = Measurement \{\n' +
                                                 '\t\t\t'+            'dateTime(m) <- dt;\n' +
-                                                '\t\t\t'+            'device(m) <- device(server, id);\n' +
+                                                '\t\t\t'+            'device(m) <- device(id);\n' +
                                                 '\t\t\t'+            'idImport(m) <- id;\n' +
-                                                '\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE '+ (GROUP CONCAT 'WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, server, mt),' ' ORDER n) + ';\n' + 
+                                                '\t\t\t'+            'server(m) <- server;\n' +
+                                                '\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE '+ (GROUP CONCAT 'WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, dt, mt),' ' ORDER n) + ';\n' + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
                                                 '\t'+  'APPLY;\n' +
                                                 '\}\n';
 
-EXTEND FORM servers
-    PROPERTIES (s) importCSVScript
+EXTEND FORM deviceTypes
+    PROPERTIES (t) importCSVScript
 ;                                                 
 
-importCSV(Server server, CSVFILE file) {
-    EVAL importCSVScript(server) PARAMS server, file;
+importCSV(DeviceType dt, Server server, CSVFILE file) {
+    EVAL importCSVScript(dt) PARAMS server,  file;
 }
 
 // TEST
-importCSVTest(Server s) {
+importCSVTest(DeviceType dt) {
     INPUT f = CSVFILE DO {
-        EXEC importCSV(s,f) ;
+        EXEC importCSV(dt, NULL, f) ;
     }
 }
-EXTEND FORM servers 
-    PROPERTIES importCSVTest(s) TOOLBAR;
+EXTEND FORM deviceTypes
+    PROPERTIES importCSVTest(t) TOOLBAR;

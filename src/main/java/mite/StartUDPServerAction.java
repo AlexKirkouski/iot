@@ -8,6 +8,7 @@ import lsfusion.server.language.ScriptingErrorLog;
 import lsfusion.server.language.ScriptingLogicsModule;
 import lsfusion.server.logics.action.controller.context.ExecutionContext;
 import lsfusion.server.logics.classes.ValueClass;
+import lsfusion.server.logics.classes.user.ConcreteCustomClass;
 import lsfusion.server.logics.property.classes.ClassPropertyInterface;
 import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 
@@ -36,7 +37,8 @@ public class StartUDPServerAction extends InternalAction {
         String actionName = (String)executionContext.getKeyObject(actionInterface);
 
         try {
-            UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), serverObject);
+            ConcreteCustomClass deviceType = (ConcreteCustomClass) findClass("DeviceType");
+            UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), deviceType.getDataObject("unknown"), serverObject);
             server.start();
             UDPServer.runningServers.put(serverObject, server);
         } catch (Throwable e) {

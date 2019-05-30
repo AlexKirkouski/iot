@@ -10,9 +10,9 @@ name 'Наименование' = DATA STRING[100] (MeasurementType) CHARWIDTH 7
 number 'Порядковый номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
 
 EXTEND FORM deviceTypes
-    OBJECTS m = MeasurementType
-    PROPERTIES(t, m) number
-    PROPERTIES (m) name, NEW, DELETE
+    OBJECTS mt = MeasurementType
+    PROPERTIES(t, mt) number
+    PROPERTIES (mt) name, NEW, DELETE
 ;
 
 CLASS Measurement 'Измерение';
@@ -24,12 +24,47 @@ idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
 value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
 
-FORM measurements 'Измерения'
-    OBJECTS (m = Measurement, mt = MeasurementType)
-    PROPERTIES(m) nameDeviceType, deviceId, dateTime, NEW, DELETE
-    PROPERTIES name(mt), value(m, mt)
-    FILTERS value(m, mt)
+EXTEND FORM deviceTypes
+    OBJECTS cmt = MeasurementType
+    FILTERS number(t, cmt)
+      
+    OBJECTS m = Measurement
+    PROPERTIES (m) dateTime
+    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)')
+    PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt)
+    FILTERS type(device(m)) = t OR (t=DeviceType.unknown AND m IS Measurement AND NOT device(m))
+    ORDER dateTime(m)
 ;
-NAVIGATOR {
-    NEW measurements;
+
+DESIGN deviceTypes {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW types {
+                type = SPLITH ;
+                MOVE BOX(t) {
+                    caption = 'Типы устройств';
+                    flex = 1;
+                }
+                MOVE BOX(mt) {
+                    caption = 'Типы измерений';
+                    flex = 3;
+                }
+                fill = 10;
+            }
+            NEW tab {
+                type = SPLITH ;
+                MOVE BOX(d) {
+                    caption = 'Устройства';
+                    flex = 1;
+                }
+                MOVE BOX(m) {
+                    caption = 'Измерения';
+                    flex = 3;
+                }
+                fill = 10;
+            }
+            fill = 1;
+        }
+    }
 }
