@@ -48,7 +48,7 @@ DESIGN deviceTypes {
                 }
                 MOVE BOX(mt) {
                     caption = 'Типы измерений';
-                    flex = 3;
+                    flex = 1;
                 }
                 fill = 10;
             }
@@ -60,7 +60,7 @@ DESIGN deviceTypes {
                 }
                 MOVE BOX(m) {
                     caption = 'Измерения';
-                    flex = 3;
+                    flex = 4;
                 }
                 fill = 10;
             }

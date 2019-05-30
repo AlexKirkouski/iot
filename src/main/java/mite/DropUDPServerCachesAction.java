@@ -11,8 +11,8 @@ import java.sql.SQLException;
 
 public class DropUDPServerCachesAction extends InternalAction {
 
-    public DropUDPServerCachesAction(ScriptingLogicsModule LM, ValueClass... classes) {
-        super(LM, classes);
+    public DropUDPServerCachesAction(ScriptingLogicsModule LM) {
+        super(LM);
     }
 
     @Override
