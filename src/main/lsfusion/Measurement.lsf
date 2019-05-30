@@ -30,10 +30,10 @@ EXTEND FORM deviceTypes
       
     OBJECTS m = Measurement
     PROPERTIES (m) dateTime
-    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)')
+    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + ' (не найдено)')
     PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt)
     FILTERS type(device(m)) = t OR (t=DeviceType.unknown AND m IS Measurement AND NOT device(m))
-    ORDER dateTime(m)
+    ORDER dateTime(m) DESC
 ;
 
 DESIGN deviceTypes {
