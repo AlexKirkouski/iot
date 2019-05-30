@@ -49,13 +49,13 @@ onStarted() + {
 // IMPORT
 fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
-                                                '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id, ' + (GROUP CONCAT 'DOUBLE '+fieldImport(n, dt, MeasurementType mt), ',' ORDER n) + ' DO \{\n' +
+                                                '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
                                                 '\t\t'+       'NEW m = Measurement \{\n' +
                                                 '\t\t\t'+            'dateTime(m) <- dt;\n' +
                                                 '\t\t\t'+            'device(m) <- device(id);\n' +
                                                 '\t\t\t'+            'idImport(m) <- id;\n' +
                                                 '\t\t\t'+            'server(m) <- server;\n' +
-                                                '\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE '+ (GROUP CONCAT 'WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, dt, mt),' ' ORDER n) + ';\n' + 
+                                      (OVERRIDE('\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImport(n, dt, mt),'' ORDER n) + ';\n'),'') + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
                                                 '\t'+  'APPLY;\n' +
