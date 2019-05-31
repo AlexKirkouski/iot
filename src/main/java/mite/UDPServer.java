@@ -92,14 +92,15 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
-                try {
-                    ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
-                    byte[] receiveData = new byte[1024];
-                    while(true)
-                    {
+                ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
+                byte[] receiveData = new byte[1024];
+                while(true)
+                {
+                    String receivedString = null;
+                    try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
-                        String receivedString = new String(receivePacket.getData()).trim();
+                        receivedString = new String(receivePacket.getData()).trim();
 
                         System.out.println("UDP packet received : " + receivedString);
                         if(receivedString.startsWith("b'"))
@@ -133,17 +134,15 @@ public class UDPServer extends MonitorServer {
                                         System.out.println("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
                                     } catch (Throwable t) {
                                         System.out.println("Error while importing : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
-                                        throw Throwables.propagate(t);
                                     }
                                 }
                             });
                             System.out.println("Submitted importing : " + deviceType + " " + serverObject + " " + textToProceed);
                             texts.remove(deviceType);
                         }
-
+                    } catch (Throwable t) {
+                        System.out.println("Error while proceeding UDP package : " + receivedString + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                     }
-                } catch (IOException e) {
-                    throw Throwables.propagate(e);
                 }
             }
         });
