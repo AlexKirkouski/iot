@@ -2,9 +2,11 @@ package mite;
 
 import com.google.common.base.Throwables;
 import lsfusion.base.DaemonThreadFactory;
+import lsfusion.base.ExceptionUtils;
 import lsfusion.base.Pair;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
+import lsfusion.server.base.controller.stack.ExecutionStackAspect;
 import lsfusion.server.base.controller.thread.ExecutorFactory;
 import lsfusion.server.data.sql.exception.SQLHandledException;
 import lsfusion.server.data.value.DataObject;
@@ -123,9 +125,12 @@ public class UDPServer extends MonitorServer {
                             executorService.submit(new Runnable() {
                                 public void run() {
                                     try(DataSession session = createSession()){
+                                        System.out.println("Starting importing : " + deviceType + " " + serverObject + " " + textToProceed);
                                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
-                                    } catch (SQLException | SQLHandledException e) {
-                                        throw Throwables.propagate(e);
+                                        System.out.println("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
+                                    } catch (Throwable t) {
+                                        System.out.println("Error while importing : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                                        throw Throwables.propagate(t);
                                     }
                                 }
                             });
