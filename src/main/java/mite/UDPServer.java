@@ -124,6 +124,7 @@ public class UDPServer extends MonitorServer {
 
                         if(text.length() > 5) {
                             final String textToProceed = text.toString();
+                            System.out.println("Submitting importing : " + deviceType + " " + serverObject + " " + textToProceed);
                             executorService.submit(new Runnable() {
                                 public void run() {
                                     try(DataSession session = createSession()){
@@ -136,6 +137,7 @@ public class UDPServer extends MonitorServer {
                                     }
                                 }
                             });
+                            System.out.println("Submitted importing : " + deviceType + " " + serverObject + " " + textToProceed);
                             texts.remove(deviceType);
                         }
 
