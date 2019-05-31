@@ -100,6 +100,8 @@ public class UDPServer extends MonitorServer {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         String receivedString = new String(receivePacket.getData()).trim();
+
+                        System.out.println("UDP packet received : " + receivedString);
                         if(receivedString.startsWith("b'"))
                             receivedString = receivedString.substring(2);
                         if(receivedString.startsWith(";"))
