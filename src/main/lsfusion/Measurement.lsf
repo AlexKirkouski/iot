@@ -1,10 +1,11 @@
 MODULE Measurement;
 
-REQUIRE Device, Time;
+REQUIRE Device, Utils, Time, System;
 
 CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
 
+id 'ИД' = DATA LONG (MeasurementType);
 name 'Наименование' = DATA STRING[100] (MeasurementType) CHARWIDTH 70;
 
 number 'Порядковый номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
@@ -12,7 +13,7 @@ number 'Порядковый номер в CSV-файле' = DATA INTEGER (Devic
 EXTEND FORM deviceTypes
     OBJECTS mt = MeasurementType
     PROPERTIES(t, mt) number
-    PROPERTIES (mt) name, NEW, DELETE
+    PROPERTIES (mt) id, name, NEW, DELETE
 ;
 
 CLASS Measurement 'Измерение';
@@ -22,7 +23,11 @@ nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
 idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
+TABLE values (Measurement, MeasurementType);
 value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
+dateTime (Measurement m, MeasurementType mt) = dateTime(m) IF value(m, mt) MATERIALIZED ;
+id (Measurement m, MeasurementType mt) = id(device(m)) IF value(m, mt) MATERIALIZED ;
+id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) MATERIALIZED ;
 
 EXTEND FORM deviceTypes
     OBJECTS cmt = MeasurementType
@@ -68,3 +73,81 @@ DESIGN deviceTypes {
         }
     }
 }
+
+///// экспорт  в Grafana
+token_grafana 'TOKEN' = DATA STRING[200]();
+url_grafana 'URL' = DATA STRING[200]();
+
+EXTEND FORM options PROPERTIES() token_grafana;
+EXTEND FORM options PROPERTIES() url_grafana;
+
+DESIGN options {
+    pane {
+        NEW grafana {
+            caption = 'Передача в Grafana';
+            MOVE PROPERTY(token_grafana());
+             MOVE PROPERTY(url_grafana());
+        }
+    }
+}
+
+fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) IN id;
+dirGrafana 'Каталог для сброса JSON-файлов' = DATA STRING[300] (DeviceType) IN id;
+filePanel 'Файл шаблона Panel' = DATA FILE (MeasurementType) IN id;
+
+
+exportToGrafana 'Экспорт в GRAFANA' (Device d) {
+    
+    IF NOT fileDashboard(type(d)) THEN {
+        MESSAGE 'Отсутствует файл шаблона для DashBoard !';
+        RETURN ;
+    }
+    
+    LOCAL textDashboard = TEXT ();
+    LOCAL textAllPanels = TEXT ();
+    
+    fileToString(fileDashboard(type(d)));
+    textDashboard() <- resultString();
+    textAllPanels() <- '';
+    
+    FOR number(DeviceType t, MeasurementType m) AND t=type(d) AND filePanel(m)  ORDER number(t,m)  DO {
+        
+        fileToString(filePanel(m));
+        resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (number(t,m)));
+        resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
+        resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(m)));
+        
+        IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
+        textAllPanels() <- textAllPanels() + resultString(); 
+    }
+    
+    textDashboard() <- replace(textDashboard(), '<<TITLE>>', TEXT (id(d)));
+    textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+    stringToFile(textDashboard());
+//    WRITE resultFile() TO 'file://' + dirGrafana(type(d)) + 'db' + TEXT (id(d)) + '.json' ;
+    
+    LOCAL result = FILE();
+
+    LOCAL httpHeaders = STRING(STRING);
+    httpHeaders(STRING h) <- 'application/json' WHERE h = 'Accept';
+//    httpHeaders(STRING h) <- 'Bearer eyJrIjoia3FNYlFpb1k0MXJ4dG5rTENaWmlYSDlwdDdsZnN3VDUiLCJuIjoiSWdvciIsImlkIjoxfQ==' WHERE h = 'Authorization';
+    httpHeaders(STRING h) <- token_grafana() WHERE h = 'Authorization';
+//    EXTERNAL HTTP POST 'http://127.0.0.1:3000/api/dashboards/db' HEADERS httpHeaders PARAMS JSONFILE(resultFile()) TO result;
+    EXTERNAL HTTP POST trim(url_grafana())+'/api/dashboards/db' HEADERS httpHeaders PARAMS JSONFILE(resultFile()) TO result;
+    
+    IMPORT JSON FROM result() FIELDS () STRING url DO {
+//        MESSAGE url;
+//        open(LINK('http://127.0.0.1:3000' + url + '?orgid=1'));
+        open(LINK(trim(url_grafana()) + url + '?orgid=1'));
+    }  
+    
+//    fileToString(result());
+//    MESSAGE resultFile();
+    
+}
+
+EXTEND FORM deviceTypes
+    PROPERTIES(t) fileDashboard, dirGrafana
+    PROPERTIES(mt) filePanel
+    PROPERTIES exportToGrafana(d) TOOLBAR
+;
