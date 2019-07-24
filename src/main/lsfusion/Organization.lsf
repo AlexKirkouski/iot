@@ -1,0 +1,73 @@
+MODULE Organization;
+
+REQUIRE Options, SystemEvents;
+
+CLASS Organization 'Организации';
+TABLE organization(Organization);
+
+name 'Название организации' = DATA STRING[60] (Organization) NONULL;
+unn 'УНН' = DATA STRING[10] (Organization) NONULL;
+address 'Адрес' = DATA STRING[100] (Organization) NONULL;
+contact 'Контактное лицо' = DATA STRING[40] (Organization) NONULL;
+phone 'Телефон для связи' = DATA STRING[40] (Organization) NONULL;
+site 'Сайт организации' = DATA STRING[100] (Organization) NONULL;
+email 'Электронный адрес' = DATA STRING[100] (Organization) NONULL;
+partner 'Партнер' = DATA BOOLEAN (Organization);
+
+// ----- только для grafana
+orgId 'ID организации' = DATA INTEGER (Organization); // RO
+dsId 'ID datasource' = DATA INTEGER (Organization); // RO
+dsUrl 'URL адрес' = DATA STRING[100] (Organization) ;
+dsName 'Имя DataSource' = DATA STRING[20] (Organization); // RO 
+dsNameDB 'Имя БД' = DATA STRING[20] (Organization) ;
+dsLogin 'Логин к БД' = DATA STRING[20] (Organization) ;
+dsPassword 'Пароль' = DATA STRING[20] (Organization) ;
+dsSSL 'SSL режим' = DATA STRING[15] (Organization) ;
+adminId 'ID админа' = DATA INTEGER (Organization); // RO
+admin 'Логин администратора' = DATA STRING[20] (Organization) ;
+adminPassword 'Пароль администратора' = DATA STRING[20] (Organization) ;
+userId 'ID пользователя' = DATA INTEGER (Organization); // RO  
+user 'Логин пользователя' = DATA STRING[20] (Organization) ;
+userPassword 'Пароль пользователя' = DATA STRING[20] (Organization) ;
+
+organization = GROUP AGGR Organization o BY name(o);
+
+WHEN SET (Organization o IS Organization) DO {
+    dsUrl(o) <- grafanaPsUrl();
+    dsNameDB(o) <- grafanaPsDB();
+    dsLogin(o) <- grafanaPsLogin();
+    dsPassword(o) <- grafanaPsPwd();
+    dsSSL(o) <- grafanaPsSSL();
+}
+
+FORM organization 'Организации'
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name,unn, address
+    PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
+;
+
+FORM editOrganization 'Редактирование организации'
+    OBJECTS o = Organization PANEL
+    PROPERTIES(o) name,unn,address,contact,phone,site,email,partner
+    EDIT Organization OBJECT o
+;
+
+DESIGN editOrganization {
+    NEW cnt FIRST {
+        fill = 1;
+        type = COLUMNS;
+        NEW h1 {
+            type = CONTAINERV;
+            caption = 'Общие сведения';
+            MOVE PROPERTY (name(o));
+            MOVE PROPERTY (unn(o));
+            MOVE PROPERTY (address(o));
+            MOVE PROPERTY (contact(o));
+            MOVE PROPERTY (phone(o));
+            MOVE PROPERTY (site(o));
+            MOVE PROPERTY (email(o));
+            MOVE PROPERTY (partner(o));
+        } 
+        MOVE TOOLBAR ; 
+    }
+}

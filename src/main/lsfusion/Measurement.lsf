@@ -1,20 +1,20 @@
 MODULE Measurement;
 
-REQUIRE Device, Utils, Time, System;
+REQUIRE OrgDevice, Utils, Time, System;
 
 CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
 
-id 'ИД' = DATA LONG (MeasurementType);
-name 'Наименование' = DATA STRING[100] (MeasurementType) CHARWIDTH 70;
+id 'ID панели' = DATA LONG (MeasurementType);
+name 'Название измерения' = DATA STRING[100] (MeasurementType) CHARWIDTH 70;
+filePanel 'Файл шаблона Panel' = DATA FILE (MeasurementType) CHARWIDTH 7 IN id ;
 
-number 'Порядковый номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
+number 'Номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
+index 'Индекс Panel' = DATA INTEGER (DeviceType, MeasurementType) CHARWIDTH 7 IN id;
 
-EXTEND FORM deviceTypes
-    OBJECTS mt = MeasurementType
-    PROPERTIES(t, mt) number
-    PROPERTIES (mt) id, name, NEW, DELETE
-;
+// уникальность и обязательность заполнения
+measurementType = GROUP AGGR MeasurementType mt BY id(mt);
+CONSTRAINT MeasurementType mt IS MeasurementType AND NOT id(mt) MESSAGE 'Не заполнен ID панели для типа измерения !';
 
 CLASS Measurement 'Измерение';
 device = DATA Device (Measurement);
@@ -23,39 +23,88 @@ nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
 idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
+///// Добавляем типы измерений на форму "Устройства и их типы"
+EXTEND FORM devices
+    OBJECTS mt = MeasurementType
+    PROPERTIES (mt) id, name
+    PROPERTIES(t, mt) number, index
+    PROPERTIES (mt) filePanel, NEW, DELETE
+    ORDER id(mt)
+;
+
+DESIGN devices {
+    NEW split {
+        type = SPLITV;
+        NEW types {
+            type = SPLITH ;
+            MOVE BOX(t) {
+                caption = 'Типы устройств';
+                flex = 1;
+            }
+            fill = 1;
+        }
+        NEW tab {
+            type = SPLITH ;
+            MOVE BOX(d) {
+                caption = 'Устройства';
+                flex = 1;
+            }
+            MOVE BOX(mt) {
+                caption = 'Типы измерений';
+                flex = 1;
+            }
+            fill = 2;
+        }
+        fill = 1;
+    }
+    MOVE TOOLBARBOX;
+}
+/////
+
+///// Таблица, из которой Grafana берет данные
 TABLE values (Measurement, MeasurementType);
 value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
 dateTime (Measurement m, MeasurementType mt) = dateTime(m) IF value(m, mt) MATERIALIZED ;
 id (Measurement m, MeasurementType mt) = id(device(m)) IF value(m, mt) MATERIALIZED ;
 id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) MATERIALIZED ;
+/////
 
-EXTEND FORM deviceTypes
+///// Форма "Организации - устройства - измерения"
+allDevice 'По всем устройствам' = DATA LOCAL BOOLEAN ();
+
+FORM orgMeasurements 'Измерения по организациям'
+    PROPERTIES() allDevice
+    
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name
+    
+    OBJECTS d = Device
+    PROPERTIES(d) READONLY id
+    FILTERS organization(d) = o
+    ORDER id(d)
+    
     OBJECTS cmt = MeasurementType
-    FILTERS number(t, cmt)
-      
+    FILTERS index(type(d),cmt)
+    
     OBJECTS m = Measurement
-    PROPERTIES (m) dateTime
-    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + ' (не найдено)')
-    PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt)
-    FILTERS type(device(m)) = t OR (t=DeviceType.unknown AND m IS Measurement AND NOT device(m))
+    PROPERTIES(m) READONLY dateTime 
+    PROPERTIES 'ID устройства'=(OVERRIDE deviceId(m)+'', idImport(m) + ' (не найдено)') READONLY
+    PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
+    FILTERS index(type(device(m)),cmt) AND (allDevice() OR device(m)=d)
     ORDER dateTime(m) DESC
 ;
 
-DESIGN deviceTypes {
+DESIGN orgMeasurements {
     OBJECTS {
         NEW split {
             type = SPLITV;
-            NEW types {
+            NEW clients {
                 type = SPLITH ;
-                MOVE BOX(t) {
-                    caption = 'Типы устройств';
+                MOVE BOX(o) {
+                    caption = 'Организации';
                     flex = 1;
                 }
-                MOVE BOX(mt) {
-                    caption = 'Типы измерений';
-                    flex = 1;
-                }
-                fill = 10;
+                fill = 1;
             }
             NEW tab {
                 type = SPLITH ;
@@ -65,89 +114,107 @@ DESIGN deviceTypes {
                 }
                 MOVE BOX(m) {
                     caption = 'Измерения';
-                    flex = 4;
+                    flex = 10;
+                    MOVE PROPERTY (allDevice());
                 }
-                fill = 10;
+                fill = 2;
             }
             fill = 1;
         }
     }
 }
 
-///// экспорт  в Grafana
-token_grafana 'TOKEN' = DATA STRING[200]();
-url_grafana 'URL' = DATA STRING[200]();
 
-EXTEND FORM options PROPERTIES() token_grafana;
-EXTEND FORM options PROPERTIES() url_grafana;
+///// ПЕРЕДАЧА В GRAFANA
+// Параметры
+cmd 'Команда' = DATA LOCAL INTEGER ();
+eCode 'Код ошибки' = DATA LOCAL INTEGER (); // Если 0 - все хорошо, 1 - ошибка, 9 - критическая ошибка
+eMessage 'Текст последней ошибки' = DATA LOCAL TEXT ();
+grurl 'Адрес URL Grafana' = DATA LOCAL STRING[200] ();
+aut 'Базовая аунтификация' = DATA LOCAL STRING[60] ();
+txtDashBoard 'Текст дашборда' = DATA LOCAL TEXT ();
 
-DESIGN options {
-    pane {
-        NEW grafana {
-            caption = 'Передача в Grafana';
-            MOVE PROPERTY(token_grafana());
-             MOVE PROPERTY(url_grafana());
+setParam 'Начальная установка параметров' () {
+    eCode() <- 0;
+    eMessage() <- '';
+    txtDashBoard() <- '';
+    grurl() <- 'http://' + grafanaUrl() + '/';
+    aut() <- grafanaLogin() + ':' + grafanaPwd();
+}
+
+// Обновление организации
+crGrafana INTERNAL 'grafana.GrafanaAction' (Organization, INTEGER);
+
+onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) {
+    
+    EXEC setParam();
+    cmd() <- 1;
+    // вызываем обработку типа INTERNAL
+    crGrafana(o, 0) ;
+    IF eCode() > 0 THEN MESSAGE eMessage() ;
+    IF eCode() < 9 THEN APPLY ;
+}
+
+
+// Обновление DashBoards
+dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
+
+onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) {
+    
+    IF NOT countSelect() THEN {MESSAGE 'Отсутствуют отмеченные устройства !';RETURN ;}
+    
+    FOR organization(Device d) = o AND select(d) ORDER id(d) DO {
+        
+        IF NOT fileDashboard(type(d)) THEN {
+            MESSAGE 'Отсутствует файл шаблона для устройства ' + id(d) NOWAIT ;
         }
+        ELSE {                
+            LOCAL textDashboard = TEXT ();
+            LOCAL textAllPanels = TEXT ();
+            
+            fileToString(fileDashboard(type(d))) ;
+            textDashboard() <- resultString();
+            textAllPanels() <- '';
+            
+            FOR index(type(d), MeasurementType mt) ORDER index(type(d), mt) DO {
+                fileToString(filePanel(mt));
+                resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (id(mt)));
+                resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
+                resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
+                resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
+                
+                IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
+                textAllPanels() <- textAllPanels() + resultString(); 
+            }
+            
+            textDashboard() <- replace(textDashboard(), '<<TITLE>>', name(o) + '_' + TEXT (id(d)));
+            textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+            
+            ///////// отладка
+            //stringToFile(textDashboard());
+            //WRITE resultFile() TO 'file://d:/00/Grafana/db_new'+ '_' + TEXT (id(d))+'.json';
+            /////////
+            
+            EXEC setParam();
+            cmd() <- 3;
+            txtDashBoard() <- textDashboard();
+            // вызываем обработку типа INTERNAL
+            dsGrafana(o, d);
+            
+            IF eCode() > 0 THEN {
+                ASK 'Устройство  '+ id(d) + '  Ошибка: \n' + eMessage() +'\n\n Продолжить ?' yes = YESNO DO {
+                    IF NOT yes THEN eCode() <- -1;
+                }
+            }
+            IF eCode() < 0 THEN BREAK; 
+        }
+ 
     }
+    APPLY ;
 }
 
-fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) IN id;
-dirGrafana 'Каталог для сброса JSON-файлов' = DATA STRING[300] (DeviceType) IN id;
-filePanel 'Файл шаблона Panel' = DATA FILE (MeasurementType) IN id;
-
-
-exportToGrafana 'Экспорт в GRAFANA' (Device d) {
-    
-    IF NOT fileDashboard(type(d)) THEN {
-        MESSAGE 'Отсутствует файл шаблона для DashBoard !';
-        RETURN ;
-    }
-    
-    LOCAL textDashboard = TEXT ();
-    LOCAL textAllPanels = TEXT ();
-    
-    fileToString(fileDashboard(type(d)));
-    textDashboard() <- resultString();
-    textAllPanels() <- '';
-    
-    FOR number(DeviceType t, MeasurementType m) AND t=type(d) AND filePanel(m)  ORDER number(t,m)  DO {
-        
-        fileToString(filePanel(m));
-        resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (number(t,m)));
-        resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
-        resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(m)));
-        
-        IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
-        textAllPanels() <- textAllPanels() + resultString(); 
-    }
-    
-    textDashboard() <- replace(textDashboard(), '<<TITLE>>', TEXT (id(d)));
-    textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
-    stringToFile(textDashboard());
-//    WRITE resultFile() TO 'file://' + dirGrafana(type(d)) + 'db' + TEXT (id(d)) + '.json' ;
-    
-    LOCAL result = FILE();
-
-    LOCAL httpHeaders = STRING(STRING);
-    httpHeaders(STRING h) <- 'application/json' WHERE h = 'Accept';
-//    httpHeaders(STRING h) <- 'Bearer eyJrIjoia3FNYlFpb1k0MXJ4dG5rTENaWmlYSDlwdDdsZnN3VDUiLCJuIjoiSWdvciIsImlkIjoxfQ==' WHERE h = 'Authorization';
-    httpHeaders(STRING h) <- token_grafana() WHERE h = 'Authorization';
-//    EXTERNAL HTTP POST 'http://127.0.0.1:3000/api/dashboards/db' HEADERS httpHeaders PARAMS JSONFILE(resultFile()) TO result;
-    EXTERNAL HTTP POST trim(url_grafana())+'/api/dashboards/db' HEADERS httpHeaders PARAMS JSONFILE(resultFile()) TO result;
-    
-    IMPORT JSON FROM result() FIELDS () STRING url DO {
-//        MESSAGE url;
-//        open(LINK('http://127.0.0.1:3000' + url + '?orgid=1'));
-        open(LINK(trim(url_grafana()) + url + '?orgid=1'));
-    }  
-    
-//    fileToString(result());
-//    MESSAGE resultFile();
-    
-}
-
-EXTEND FORM deviceTypes
-    PROPERTIES(t) fileDashboard, dirGrafana
-    PROPERTIES(mt) filePanel
-    PROPERTIES exportToGrafana(d) TOOLBAR
+EXTEND FORM orgDevices
+    PROPERTIES (o) onUpdateOrg
+    PROPERTIES(o,d) onUpdateDB
 ;
+/////

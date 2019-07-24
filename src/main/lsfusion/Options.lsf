@@ -1,0 +1,48 @@
+MODULE Options;
+
+// Отдельные опции необходимые для настройки и работы приложения
+grafanaLogin 'Логин администратора Grafana' = DATA STRING[20]();
+grafanaPwd   'Пароль администратора Grafana' = DATA STRING[20]();
+grafanaUrl   'Базовый URL для Grafana' = DATA STRING[100](); 
+
+grafanaPsUrl   'URL для доступа к PostgreSQL' = DATA STRING[100](); 
+grafanaPsDB    'Имя БД PostgreSQL' = DATA STRING[50](); 
+grafanaPsLogin 'Логин к PostgreSQL' = DATA STRING[20](); 
+grafanaPsPwd   'Пароль к PostgreSQL' = DATA STRING[20](); 
+grafanaPsSSL   'SSL mode' = DATA STRING[15](); 
+
+EXTEND FORM options PROPERTIES() grafanaLogin;
+EXTEND FORM options PROPERTIES() grafanaPwd;
+EXTEND FORM options PROPERTIES() grafanaUrl;
+
+EXTEND FORM options PROPERTIES() grafanaPsUrl;
+EXTEND FORM options PROPERTIES() grafanaPsDB;
+EXTEND FORM options PROPERTIES() grafanaPsLogin;
+EXTEND FORM options PROPERTIES() grafanaPsPwd;
+EXTEND FORM options PROPERTIES() grafanaPsSSL;
+
+DESIGN options {
+    pane {
+        NEW grafana {
+            caption = 'Передача в Grafana';
+            type = COLUMNS;
+            NEW h1 {
+                caption = 'Для Grafana'; 
+                type = CONTAINERV;
+                MOVE PROPERTY(grafanaLogin());
+                MOVE PROPERTY(grafanaPwd());
+                MOVE PROPERTY(grafanaUrl());
+            }
+            NEW h2 AFTER h1 {
+                caption = 'Для PostgreSQL'; 
+                type = CONTAINERV;
+                MOVE PROPERTY(grafanaPsUrl());
+                MOVE PROPERTY(grafanaPsDB());
+                MOVE PROPERTY(grafanaPsLogin());
+                MOVE PROPERTY(grafanaPsPwd());
+                MOVE PROPERTY(grafanaPsSSL());
+            }
+        }
+    }
+}
+
