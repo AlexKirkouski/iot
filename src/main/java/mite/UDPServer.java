@@ -108,7 +108,9 @@ public class UDPServer extends MonitorServer {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
-                        if (receivePacket.getData()[0] == 59) {
+                        receivedString = new String(receivePacket.getData()).trim();
+//                        if (receivePacket.getData()[0] == 59) {
+                        if (receivedString.startsWith(";")) {
                             receivedString = new String(receivePacket.getData()).trim();
                             print("old...");
                             if (!parseOld(receivedString)) {
