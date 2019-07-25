@@ -103,20 +103,26 @@ public class UDPServer extends MonitorServer {
                 ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
                 byte[] receiveData = new byte[1024];
                 while(true)
-                {
-                    String receivedString = null;
+                { String receivedString = null;
                     try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                        print("wait ...");
                         serverSocket.receive(receivePacket);
                         print("reseive");
                         if (receivePacket == null) continue;
                         if (receivePacket.getData()[0] == 59) {
+                            print("old receive");
                             receivedString = new String(receivePacket.getData()).trim();
-                            if (!parseOld(receivedString)) continue;
+                            if (!parseOld(receivedString)) {
+                                print("error");
+                                continue;
+                            }
                         } else {
+                            print("new receive");
                             receivedString = BaseEncoding.base16().encode(receiveData);
-                            if (!parseNew(receivedString)) continue;
+                            if (!parseNew(receivedString)) {
+                                print("error");
+                                continue;
+                            }
                         }
                         final DataObject deviceType = getDeviceType(deviceId);
                         StringBuilder text = texts.get(deviceType);
