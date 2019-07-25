@@ -223,16 +223,9 @@ public class UDPServer extends MonitorServer {
     // для отладки, выводит в консоль и пишет лог в корень проекта
     private void print(String cMsg) {
         Date date = new Date();
-        SimpleDateFormat fDate = new SimpleDateFormat("HH.mm.ss");
+        SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         if (cMsg.length() > 0) cMsg = ", " + cMsg;
         cMsg = fDate.format(date) + cMsg;
-        try {
-            FileWriter nFile = new FileWriter("iot_udp.log",true);
-            nFile.write(cMsg + "\n");
-            nFile.close();
-        } catch (IOException e) {
-            System.out.println("ERROR: " + e.getMessage());
-        }
         System.out.println("UDP: " + cMsg);
     }
 
