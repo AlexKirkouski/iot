@@ -134,19 +134,19 @@ public class UDPServer extends MonitorServer {
 
                         if(text.length() > 5) {
                             final String textToProceed = text.toString();
-                            print("Submitting importing : " + deviceType + " " + serverObject + " " + textToProceed);
+//                            print("Submitting importing : " + deviceType + " " + serverObject + " " + textToProceed);
                             executorService.submit(new Runnable() {
                                 public void run() {
                                     try(DataSession session = createSession()){
-                                        print("Starting importing : " + deviceType + " " + serverObject + " " + textToProceed);
+//                                        print("Starting importing : " + deviceType + " " + serverObject + " " + textToProceed);
                                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
-                                        print("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
+//                                        print("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
                                     } catch (Throwable t) {
-                                        System.out.println("Error while importing : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                                        print("Import Error : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                                     }
                                 }
                             });
-                            print("Submitted importing : " + deviceType + " " + serverObject + " " + textToProceed);
+                            print("Import, Ok : " + deviceType + " " + serverObject + " " + textToProceed);
                             texts.remove(deviceType);
                         }
                     } catch (Throwable t) {
