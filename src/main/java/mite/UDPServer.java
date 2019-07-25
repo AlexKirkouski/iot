@@ -107,22 +107,19 @@ public class UDPServer extends MonitorServer {
                     try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
-                        print("reseive");
                         if (receivePacket == null) continue;
                         if (receivePacket.getData()[0] == 59) {
-                            print("old receive");
                             receivedString = new String(receivePacket.getData()).trim();
                             if (!parseOld(receivedString)) {
-                                print("error");
                                 continue;
                             }
                         } else {
                             print("new receive");
-                            receivedString = BaseEncoding.base16().encode(receiveData);
-                            if (!parseNew(receivedString)) {
-                                print("error");
-                                continue;
-                            }
+//                            receivedString = BaseEncoding.base16().encode(receiveData);
+//                            if (!parseNew(receivedString)) {
+//                                print("error");
+//                                continue;
+//                            }
                         }
                         final DataObject deviceType = getDeviceType(deviceId);
                         StringBuilder text = texts.get(deviceType);
