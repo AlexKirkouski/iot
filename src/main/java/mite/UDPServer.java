@@ -116,6 +116,7 @@ public class UDPServer extends MonitorServer {
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
+                            print("--- new ---");
 //                            if (!parseNew(receivedString)) continue;
                             continue;
                         }
