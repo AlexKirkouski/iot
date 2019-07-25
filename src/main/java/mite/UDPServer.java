@@ -110,9 +110,11 @@ public class UDPServer extends MonitorServer {
                         if (receivePacket == null) continue;
                         if (receivePacket.getData()[0] == 59) {
                             receivedString = new String(receivePacket.getData()).trim();
+                            print("old...");
                             if (!parseOld(receivedString)) {
                                 continue;
                             }
+                            print("old ok");
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("new receive 2");
