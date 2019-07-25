@@ -111,8 +111,10 @@ public class UDPServer extends MonitorServer {
                         if (receivePacket == null) continue;
                         receivedString = new String(receivePacket.getData()).trim();
                         if(receivedString.startsWith("b'")) {
+                            receivedString = receivedString.substring(2);
                             if (!parseOld(receivedString)) continue;
                         } else if(receivedString.startsWith(";")) {
+                            receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
 //                            if (!parseNew(receivedString)) continue;
@@ -157,7 +159,6 @@ public class UDPServer extends MonitorServer {
 
     // --- Обработка датчиков, начинается с x3b (;)
     private boolean parseOld(String cPacket) {
-        cPacket = cPacket.substring(1);
         deviceId = Long.parseLong(cPacket.substring(0,cPacket.indexOf(';')));
         cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
         cMeasuring = cPacket;
