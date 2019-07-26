@@ -144,7 +144,7 @@ public class UDPServer extends MonitorServer {
                                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
 //                                        print("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
                                     } catch (Throwable t) {
-                                        print("Import Error : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                                        print("ERROR, import : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                                     }
                                 }
                             });
@@ -160,7 +160,7 @@ public class UDPServer extends MonitorServer {
         });
     }
 
-    // --- Обработка датчиков, начинается с x3b (;)
+    // --- Обработка датчиков, начинается с b'(;)
     private boolean parseOld(String cPacket) {
         deviceId = Long.parseLong(cPacket.substring(0,cPacket.indexOf(';')));
         cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
@@ -190,7 +190,7 @@ public class UDPServer extends MonitorServer {
         return true;
     }
 
-    // Переставляем байты
+    // Переставляем пары байты
     private String revers(String cb,int n1,int n2) {
         String c1;
         StringBuilder cRet = new StringBuilder();
@@ -209,15 +209,15 @@ public class UDPServer extends MonitorServer {
         return  fNum.toString();
     }
 
-    // Получаем символьную строку float
+    // Получаем значение напряжения батареи
     private String getVoltage(String cNum) {
-//        print("ADC: " + cNum); // Значение АЦП для расчета напряжения батареи
+//        print("ADC: " + cNum); // Отладка: Значение АЦП для расчета напряжения батареи
         Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 3.7;
         DecimalFormat df2 = new DecimalFormat("#.##");
         return df2.format(dNum).replace(",",".");
     }
 
-    // Получаем дату-время снятия измерений
+    // Получаем дату-время снятия измерений: дата 15.05.2019 00:00:00 + пришедщее текущие значение счетчика
     private String getDTCounter(String cSecond) {
         int nt = Integer.parseInt(cSecond,16);
         SimpleDateFormat dayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -226,7 +226,7 @@ public class UDPServer extends MonitorServer {
         return dayFormat.format(dt.getTime());
     }
 
-    // для отладки, выводит в консоль
+    // для отладки, выводит в консоль спризнаком UDP дата время текст
     private void print(String cMsg) {
         Date date = new Date();
         SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
