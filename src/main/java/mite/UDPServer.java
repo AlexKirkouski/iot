@@ -113,7 +113,7 @@ public class UDPServer extends MonitorServer {
                             if (!parseOld(receivedString)) continue;
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
-                            print("NEW: " + receivedString.substring(0,70));
+                            print("NEW: " + receivedString.substring(0,70));   // наверное max = 32 байта * 2
                             if (!parseNew(receivedString)) continue;
                         }
 
