@@ -112,8 +112,8 @@ public class UDPServer extends MonitorServer {
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
-                            receivedString = BaseEncoding.base16().encode(receiveData).substring(0,80);
-                            print("NEW: " + receivedString);
+                            receivedString = BaseEncoding.base16().encode(receiveData);
+                            print("NEW: " + receivedString.substring(0,70));
                             if (!parseNew(receivedString)) continue;
                         }
 
