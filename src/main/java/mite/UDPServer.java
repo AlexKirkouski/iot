@@ -213,7 +213,7 @@ public class UDPServer extends MonitorServer {
     // Получаем символьную строку float
     private String getVoltage(String cNum) {
         print("ADC: " + cNum);
-        Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 4;
+        Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 3.7;
         DecimalFormat df2 = new DecimalFormat("#.##");
         return df2.format(dNum).replace(",",".");
     }
