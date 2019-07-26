@@ -112,11 +112,13 @@ public class UDPServer extends MonitorServer {
                         receivedString = new String(receivePacket.getData()).trim();
                         print("Receive: " + receivedString);
                         if(receivedString.startsWith("b'")) {
+                            print("OLD");
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
+                            print("NEW");
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             if (!parseNew(receivedString)) continue;
                         }
@@ -210,6 +212,7 @@ public class UDPServer extends MonitorServer {
 
     // Получаем символьную строку float
     private String getVoltage(String cNum) {
+        print("ADC: " + cNum);
         Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 4;
         DecimalFormat df2 = new DecimalFormat("#.##");
         return df2.format(dNum).replace(",",".");
