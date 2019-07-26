@@ -110,6 +110,7 @@ public class UDPServer extends MonitorServer {
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
                         receivedString = new String(receivePacket.getData()).trim();
+                        print("Receive: " + receivedString);
                         if(receivedString.startsWith("b'")) {
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
