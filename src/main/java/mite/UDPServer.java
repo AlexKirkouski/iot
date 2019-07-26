@@ -110,15 +110,14 @@ public class UDPServer extends MonitorServer {
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
                         receivedString = new String(receivePacket.getData()).trim();
-                        print("Receive: " + receivedString);
                         if(receivedString.startsWith("b'")) {
-                            print("OLD");
+                            print("OLD: " + receivedString);
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
-                            print("NEW");
+                            print("NEW: " + receivedString);
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             if (!parseNew(receivedString)) continue;
                         }
@@ -212,7 +211,7 @@ public class UDPServer extends MonitorServer {
 
     // Получаем символьную строку float
     private String getVoltage(String cNum) {
-        print("ADC: " + cNum);
+//        print("ADC: " + cNum); // Значение АЦП для расчета напряжения батареи
         Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 3.7;
         DecimalFormat df2 = new DecimalFormat("#.##");
         return df2.format(dNum).replace(",",".");
@@ -227,7 +226,7 @@ public class UDPServer extends MonitorServer {
         return dayFormat.format(dt.getTime());
     }
 
-    // для отладки, выводит в консоль и пишет лог в корень проекта
+    // для отладки, выводит в консоль
     private void print(String cMsg) {
         Date date = new Date();
         SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
