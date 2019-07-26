@@ -2,9 +2,7 @@ package mite;
 
 import com.google.common.base.Throwables;
 import com.google.common.io.BaseEncoding;
-import lsfusion.base.DaemonThreadFactory;
 import lsfusion.base.ExceptionUtils;
-import lsfusion.base.Pair;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
 import lsfusion.server.base.controller.stack.ExecutionStackAspect;
@@ -19,8 +17,6 @@ import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.DateTimeClass;
 
-import java.io.FileWriter;
-import java.io.IOException;
 import java.net.*;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -32,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class UDPServer extends MonitorServer {
 
@@ -47,9 +42,9 @@ public class UDPServer extends MonitorServer {
     private final DataObject unknownDevice;
     private final DataObject serverObject;
 
-    public Long deviceId;       // ID устройства из пакета датчика
-    public String cDt;          // Дата и время измерения
-    public String cMeasuring;   // Строка измерений
+    private Long deviceId;       // ID устройства из пакета датчика
+    private String cDt;          // Дата и время измерения
+    private String cMeasuring;   // Строка измерений
 
     public String getEventName() {
         return "udp-server-daemon";
