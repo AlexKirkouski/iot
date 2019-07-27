@@ -42,9 +42,12 @@ public class UDPServer extends MonitorServer {
     private final DataObject unknownDevice;
     private final DataObject serverObject;
 
-    private Long deviceId;       // ID устройства из пакета датчика
-    private String cDt;          // Дата и время измерения
-    private String cMeasuring;   // Строка измерений
+    private Long deviceId;          // ID устройства из пакета датчика
+    private String cDt;             // Дата и время измерения
+    private String cMeasuring;      // Строка измерений
+    public  Integer qps;            // Количество пакетов для записи, устанавливается перед стартом сервера
+    private Integer nQps;           // Текущий счетчик пакетов
+    private Boolean lRead;          // Флаг цикла потока чтения UDP
 
     public String getEventName() {
         return "udp-server-daemon";
@@ -97,7 +100,9 @@ public class UDPServer extends MonitorServer {
             public void run() {
                 ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
                 byte[] receiveData = new byte[1024];
-                while(true)
+                nQps = 0;
+                lRead = true;
+                while(lRead)
                 {
                     String receivedString = null;
                     try {
@@ -128,6 +133,9 @@ public class UDPServer extends MonitorServer {
                         text.append(cDt);
                         text.append(';');
                         text.append(cMeasuring);
+
+                        nQps += 1;
+                        if (nQps >= qps) nQps = 0; else continue;
 
                         if(text.length() > 5) {
                             final String textToProceed = text.toString();
@@ -170,21 +178,11 @@ public class UDPServer extends MonitorServer {
         nt = Integer.parseInt(revers(cPacket,2,4),16);  // тип датчика
         cDt = getDTCounter(revers(cPacket,12,16));
         cMeasuring = deviceId.toString() + ";";
-        if ((nt == 1) || (nt == 2)) {
-            print("TYPE 1-2");
-            cMeasuring += getFloat(revers(cPacket,16,20)) + ";";
-            cMeasuring += getFloat(revers(cPacket,20,24)) + ";";
-            cMeasuring += getFloat(revers(cPacket,24,28)) + ";";
-            cMeasuring += getVoltage(revers(cPacket,28,32));
-        } else if ((nt == 3) || (nt == 4)) {
-            print("TYPE 3-4");
-            cMeasuring += getFloat(revers(cPacket,16,20)) + ";";
-            cMeasuring += getVoltage(revers(cPacket,20,24));
-        } else if ((nt == 5) || (nt == 6)) {
-            print("TYPE 5-6");
-            cMeasuring += getFloat(revers(cPacket,16,20)) + ";";
-            cMeasuring += getVoltage(revers(cPacket,20,24));
-        } else return false;
+        cMeasuring += getFloat(revers(cPacket,16,20)) + ";";
+        cMeasuring += getFloat(revers(cPacket,20,24)) + ";";
+        cMeasuring += getFloat(revers(cPacket,24,28)) + ";";
+        cMeasuring += getVoltage(revers(cPacket,28,32));
+        print("TYPE " + nt.toString());
         return true;
     }
 
@@ -233,7 +231,9 @@ public class UDPServer extends MonitorServer {
         System.out.println("UDP: " + cMsg);
     }
 
+    // остановка сервера
     public void stop() {
+        lRead = false;
         try {
             serverSocket.close();
         } finally {
