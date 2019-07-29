@@ -103,7 +103,7 @@ public class UDPServer extends MonitorServer {
                 lRead = true;
                 while(lRead)
                 {
-                    String receivedString = null;
+                    String receivedString;
                     try {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
