@@ -154,11 +154,11 @@ public class UDPServer extends MonitorServer {
             final String textToProceed = texts.get(deviceType).toString();
             executorService.submit(new Runnable() {
                 public void run() {
-                    print("\n --- IMPORT:\n" + textToProceed);
+                    print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
                     try(DataSession session = createSession()){
                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
                     } catch (Throwable t) {
-                        print("ERROR, import : "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                        print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                     }
                 }
             });
