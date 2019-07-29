@@ -226,7 +226,7 @@ public class UDPServer extends MonitorServer {
         return dayFormat.format(dt.getTime());
     }
 
-    // для отладки, выводит в консоль спризнаком UDP дата время текст
+    // для отладки, выводит в консоль с признаком UDP дата время текст
     private void print(String cMsg) {
         Date date = new Date();
         SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
