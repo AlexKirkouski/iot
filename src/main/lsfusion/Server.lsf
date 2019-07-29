@@ -31,7 +31,7 @@ FORM servers 'Сервера'
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
     OBJECTS (m = Measurement, mt = MeasurementType)
-    PROPERTIES (m) dateTime READONLY 
+    PROPERTIES (m) dateTime, DELETE 
     PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)') READONLY
     PROPERTIES value(m, mt) READONLY 
     ORDER dateTime(m) DESC
