@@ -98,7 +98,6 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
-                ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
                 byte[] receiveData = new byte[1024];
                 nQps = 0;
                 lRead = true;
@@ -122,8 +121,9 @@ public class UDPServer extends MonitorServer {
                             if (!parseNew(receivedString)) continue;
                         }
 
-                        final DataObject deviceType = getDeviceType(deviceId);
+                        DataObject deviceType = getDeviceType(deviceId);
                         StringBuilder text = texts.get(deviceType);
+                        // дозаполняем текст импорта по своему устройству
                         if(text == null) {
                             text = new StringBuilder();
                             texts.put(deviceType, text);
@@ -137,30 +137,34 @@ public class UDPServer extends MonitorServer {
                         nQps += 1;
                         if (nQps >= qps) nQps = 0; else continue;
 
-                        if(text.length() > 5) {
-                            final String textToProceed = text.toString();
-//                            print("Submitting importing : " + deviceType + " " + serverObject + " " + textToProceed);
-                            executorService.submit(new Runnable() {
-                                public void run() {
-                                    try(DataSession session = createSession()){
-//                                        print("Starting importing : " + deviceType + " " + serverObject + " " + textToProceed);
-                                        importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
-//                                        print("Finished importing : " + deviceType + " " + serverObject + " " + textToProceed);
-                                    } catch (Throwable t) {
-                                        print("ERROR, import : " + deviceType + " " + serverObject + " " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
-                                    }
-                                }
-                            });
-                            print("Import, Ok : " + deviceType + " " + serverObject + " " + textToProceed);
-                            texts.remove(deviceType);
-                        }
+                        // импортируем устройства в csv
+                        importCSV();
                     } catch (Throwable t) {
                         print("ERROR: " + t.getMessage());
-//                        print("ERROR: " + receivedString + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                     }
                 }
             }
         });
+    }
+
+    // --- Импорт в CSV
+    private void importCSV() {
+        ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
+        for (final DataObject deviceKey : texts.keySet() ) {
+            final String textToProceed = texts.get(deviceKey).toString();
+            executorService.submit(new Runnable() {
+                public void run() {
+                    final DataObject deviceType = deviceKey;
+                    print("IMPORT:\n" + textToProceed);
+                    try(DataSession session = createSession()){
+                        importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
+                    } catch (Throwable t) {
+                        print("ERROR, import : "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                    }
+                }
+            });
+        }
+        texts.clear();
     }
 
     // --- Обработка датчиков, начинается с b'(;)
@@ -234,6 +238,7 @@ public class UDPServer extends MonitorServer {
     // остановка сервера
     public void stop() {
         lRead = false;
+        importCSV();        // может что-то осталось в буфере
         try {
             serverSocket.close();
         } finally {
