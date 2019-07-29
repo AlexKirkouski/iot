@@ -150,12 +150,11 @@ public class UDPServer extends MonitorServer {
     // --- Импорт в CSV
     private void importCSV() {
         ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
-        for (final DataObject deviceKey : texts.keySet() ) {
-            final String textToProceed = texts.get(deviceKey).toString();
+        for (final DataObject deviceType : texts.keySet() ) {
+            final String textToProceed = texts.get(deviceType).toString();
             executorService.submit(new Runnable() {
                 public void run() {
-                    final DataObject deviceType = deviceKey;
-                    print("IMPORT:\n" + textToProceed);
+                    print("\n --- IMPORT:\n" + textToProceed);
                     try(DataSession session = createSession()){
                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
                     } catch (Throwable t) {
