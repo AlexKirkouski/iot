@@ -66,7 +66,7 @@ public class UDPServer extends MonitorServer {
         this.serverObject = serverObject;
     }
 
-    private Map<DataObject, StringBuilder> texts = new HashMap<>();
+    private Map<DataObject, StringBuilder> texts = new HashMap<>(); // Map: устройство, блок пакетов
 
     private DatagramSocket serverSocket;
     protected ExecutorService daemonTasksExecutor;
@@ -108,16 +108,18 @@ public class UDPServer extends MonitorServer {
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
+                        String cp1 = receivePacket.getAddress().toString();
+                        String cp2 = Integer.toString(receivePacket.getPort());
                         receivedString = new String(receivePacket.getData()).trim();
                         if(receivedString.startsWith("b'")) {
-                            print("OLD: " + receivedString);
+                            print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
-                            print("NEW: " + receivedString.substring(0,100));   // наверное max = 32 байта * 2
+                            print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
                             if (!parseNew(receivedString)) continue;
                         }
 
