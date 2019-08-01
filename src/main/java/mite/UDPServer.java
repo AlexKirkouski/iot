@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-import static lsfusion.base.SystemUtils.sleep;
 
 public class UDPServer extends MonitorServer {
 
@@ -199,8 +198,7 @@ public class UDPServer extends MonitorServer {
     private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
-        long nId = Long.parseLong(revers(cPacket,8,12),16);
-        String cId = Long.toString(nId);
+        String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
         byte[] data;
         try {
             print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
@@ -208,10 +206,7 @@ public class UDPServer extends MonitorServer {
             data = s1.getBytes();
             DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
-            for(int i=0;i<5;i++) {
-                sleep(50);
-                ds.send(dp);
-            }
+            ds.send(dp);
             ds.close();
             print("LABEL TIME, OK " + cId);
         } catch (IOException e) {
