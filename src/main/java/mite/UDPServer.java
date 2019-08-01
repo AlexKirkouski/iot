@@ -201,10 +201,11 @@ public class UDPServer extends MonitorServer {
         if (!cLab.equals("FFFF")) return false;
         long nId = Long.parseLong(revers(cPacket,8,12),16);
         String cId = Long.toString(nId);
-        byte[] data = new byte[1];
-        data[0] = (byte) 255;
+        byte[] data;
         try {
             print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
+            String s1 = "HELOW WILD DEVICE";
+            data = s1.getBytes();
             DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
             for(int i=0;i<5;i++) {
