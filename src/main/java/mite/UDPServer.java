@@ -17,6 +17,7 @@ import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.DateTimeClass;
 
+import java.io.IOException;
 import java.net.*;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -120,6 +121,7 @@ public class UDPServer extends MonitorServer {
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
+                            if (chkLabelTime(receivedString,receivePacket)) continue;
                             if (!parseNew(receivedString)) continue;
                         }
 
@@ -190,6 +192,26 @@ public class UDPServer extends MonitorServer {
         print("TYPE " + nt.toString());
         return true;
     }
+
+    // Проверка, что идет запрос времени
+    private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
+        String cLab = revers(cPacket,0,2);
+        if (!cLab.equals("FFFF")) return false;
+        byte[] data = new byte[1];
+        data[0] = (byte) 255;
+        try {
+            print("LABEL TIME ... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
+            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(), dPacket.getPort());
+            DatagramSocket ds = new DatagramSocket();
+            ds.send(dp);
+            ds.close();
+            print("LABEL TIME, OK");
+        } catch (IOException e) {
+            print("ERROR LABEL TIME: " + e.getMessage());
+        }
+        return true;
+    }
+
 
     // Переставляем пары байты
     private String revers(String cb,int n1,int n2) {
