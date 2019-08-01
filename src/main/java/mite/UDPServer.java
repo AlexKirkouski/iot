@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
+import static lsfusion.base.SystemUtils.sleep;
+
 public class UDPServer extends MonitorServer {
 
     public final static ConcurrentHashMap<DataObject, UDPServer> runningServers = new ConcurrentHashMap<>();
@@ -203,9 +205,12 @@ public class UDPServer extends MonitorServer {
         data[0] = (byte) 255;
         try {
             print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
-            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(), 20001);
+            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
-            ds.send(dp);
+            for(int i=0;i<3;i++) {
+                sleep(50);
+                ds.send(dp);
+            }
             ds.close();
             print("LABEL TIME, OK " + cId);
         } catch (IOException e) {
@@ -213,6 +218,7 @@ public class UDPServer extends MonitorServer {
         }
         return true;
     }
+
 
 
     // Переставляем пары байты
