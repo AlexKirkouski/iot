@@ -197,15 +197,17 @@ public class UDPServer extends MonitorServer {
     private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
+        long nId = Long.parseLong(revers(cPacket,8,12),16);
+        String cId = Long.toString(nId);
         byte[] data = new byte[1];
         data[0] = (byte) 255;
         try {
-            print("LABEL TIME ... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
+            print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
             DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(), dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
             ds.send(dp);
             ds.close();
-            print("LABEL TIME, OK");
+            print("LABEL TIME, OK " + cId);
         } catch (IOException e) {
             print("ERROR LABEL TIME: " + e.getMessage());
         }
