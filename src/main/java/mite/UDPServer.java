@@ -207,7 +207,7 @@ public class UDPServer extends MonitorServer {
             print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
             DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
-            for(int i=0;i<3;i++) {
+            for(int i=0;i<5;i++) {
                 sleep(50);
                 ds.send(dp);
             }
