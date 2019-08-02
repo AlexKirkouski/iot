@@ -202,10 +202,10 @@ public class UDPServer extends MonitorServer {
         byte[] data;
         try {
             print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
-            String s1 = "HELOW WILD DEVICE";
+            String s1 = "AAAAAABBBBBCCCCCDDDDD";
             data = s1.getBytes();
-            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             DatagramSocket ds = new DatagramSocket();
+            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
             ds.send(dp);
             ds.close();
             print("LABEL TIME, OK " + cId);
