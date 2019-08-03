@@ -207,8 +207,8 @@ public class UDPServer extends MonitorServer {
             String s1 = "ABCD";
             data = s1.getBytes();
             DatagramSocket ds = new DatagramSocket();
-            DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,20001);
-            ds.connect(pAddress,20001);
+            DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
+//            ds.connect(pAddress,pPort);
             ds.send(dp);
             ds.close();
         } catch (IOException e) {
