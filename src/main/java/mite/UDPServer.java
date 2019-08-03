@@ -122,7 +122,6 @@ public class UDPServer extends MonitorServer {
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
-                            print(receiveData.toString());
                             if (chkLabelTime(receivedString,receivePacket)) continue;
                             if (!parseNew(receivedString)) continue;
                         }
@@ -201,16 +200,18 @@ public class UDPServer extends MonitorServer {
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
         byte[] data;
+        InetAddress pAddress = dPacket.getAddress();
+        Integer pPort = dPacket.getPort();
         try {
-            print("LABEL TIME, " + cId + "... " + dPacket.getAddress().toString() + ":" + Integer.toString(dPacket.getPort()));
-            String s1 = "AAAAAABBBBBCCCCCDDDDD";
+            print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
+            String s1 = "ABCD";
             data = s1.getBytes();
             DatagramSocket ds = new DatagramSocket();
 //            DatagramPacket dp = new DatagramPacket(data, data.length,dPacket.getAddress() ,dPacket.getPort());
             DatagramPacket dp = new DatagramPacket(data, data.length);
-            dp.setAddress(dPacket.getAddress());
-            dp.setPort(dPacket.getPort());
-            ds.connect(dPacket.getAddress(),dPacket.getPort());
+            dp.setAddress(pAddress);
+            dp.setPort(pPort);
+            ds.connect(pAddress,pPort);
             ds.send(dp);
             ds.close();
         } catch (IOException e) {
