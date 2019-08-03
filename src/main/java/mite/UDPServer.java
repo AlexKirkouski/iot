@@ -203,7 +203,7 @@ public class UDPServer extends MonitorServer {
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
-        pPort = 12345;
+//        pPort = 3;
         try {
             String s1 = "ABCD";
             data = s1.getBytes();
