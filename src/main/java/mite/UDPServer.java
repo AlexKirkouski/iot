@@ -210,7 +210,7 @@ public class UDPServer extends MonitorServer {
             DatagramSocket ds = new DatagramSocket();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
 //            ds.connect(pAddress,pPort);
-            ds.setBroadcast(true);
+//            ds.setBroadcast(true);
             ds.send(dp);
             ds.close();
         } catch (IOException e) {
