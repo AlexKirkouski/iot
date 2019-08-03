@@ -202,8 +202,8 @@ public class UDPServer extends MonitorServer {
         byte[] data;
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
+        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
-            print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
             String s1 = "ABCD";
             data = s1.getBytes();
             DatagramSocket ds = new DatagramSocket();
