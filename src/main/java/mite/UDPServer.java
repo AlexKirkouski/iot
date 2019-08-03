@@ -202,22 +202,18 @@ public class UDPServer extends MonitorServer {
         byte[] data;
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
-        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString() + ", "
-                + dPacket.getSocketAddress().toString());
-//        try {
-//            String s1 = "ABCD\n";
-//            data = s1.getBytes();
-//            DatagramSocket ds = new DatagramSocket();
-//           // DatagramPacket dp = new DatagramPacket(data, data.length,dPacket.getAddress() ,dPacket.getPort());
-//            DatagramPacket dp = new DatagramPacket(data, data.length);
-//            dp.setAddress(pAddress);
-//            dp.setPort(pPort);
-//            ds.connect(pAddress,pPort);
-//            ds.send(dp);
-//            ds.close();
-//        } catch (IOException e) {
-//            print("ERROR LABEL TIME: " + e.getMessage());
-//        }
+        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
+        try {
+            String s1 = "ABCD";
+            data = s1.getBytes();
+            DatagramSocket ds = new DatagramSocket();
+            DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,20001);
+            ds.connect(pAddress,20001);
+            ds.send(dp);
+            ds.close();
+        } catch (IOException e) {
+            print("ERROR LABEL TIME: " + e.getMessage());
+        }
         return true;
     }
 
