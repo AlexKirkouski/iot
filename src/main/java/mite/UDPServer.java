@@ -122,6 +122,7 @@ public class UDPServer extends MonitorServer {
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
+                            print(receiveData.toString());
                             if (chkLabelTime(receivedString,receivePacket)) continue;
                             if (!parseNew(receivedString)) continue;
                         }
@@ -205,10 +206,13 @@ public class UDPServer extends MonitorServer {
             String s1 = "AAAAAABBBBBCCCCCDDDDD";
             data = s1.getBytes();
             DatagramSocket ds = new DatagramSocket();
-            DatagramPacket dp = new DatagramPacket(data, data.length, dPacket.getAddress(),dPacket.getPort());
+//            DatagramPacket dp = new DatagramPacket(data, data.length,dPacket.getAddress() ,dPacket.getPort());
+            DatagramPacket dp = new DatagramPacket(data, data.length);
+            dp.setAddress(dPacket.getAddress());
+            dp.setPort(dPacket.getPort());
+            ds.connect(dPacket.getAddress(),dPacket.getPort());
             ds.send(dp);
             ds.close();
-            print("LABEL TIME, OK " + cId);
         } catch (IOException e) {
             print("ERROR LABEL TIME: " + e.getMessage());
         }
