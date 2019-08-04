@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-import static java.lang.Thread.sleep;
 
 
 public class UDPServer extends MonitorServer {
@@ -104,7 +103,6 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
                 byte[] receiveData = new byte[1024];
-                byte[] rTime;
                 nQps = 0;
                 lRead = true;
                 while(lRead)
@@ -117,25 +115,16 @@ public class UDPServer extends MonitorServer {
                         String cp1 = receivePacket.getAddress().toString();
                         String cp2 = Integer.toString(receivePacket.getPort());
                         receivedString = new String(receivePacket.getData()).trim();
-                        print("R: " + receivedString);
                         if(receivedString.startsWith("b'")) {
                             print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
                             receivedString = receivedString.substring(2);
-                            if(receivedString.startsWith("99")) {                   // !!! ПОТОМ УБРАТЬ !!!
-                                chkLabelTime(receivedString,receivePacket);
-                                continue;
-                            }
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
-                        else if(receivedString.startsWith("99")) {                  // !!! ПОТОМ УБРАТЬ !!!
-                                chkLabelTime(receivedString,receivePacket);
-                                continue;
-                            }
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
-                            if (chkLabelTime(receivedString,receivePacket)) continue;
+                            if (chkLabelTime(serverSocket,receivedString,receivePacket)) continue;
                             if (!parseNew(receivedString)) continue;
                         }
 
@@ -208,9 +197,9 @@ public class UDPServer extends MonitorServer {
     }
 
     // Проверка, что идет запрос времени
-    private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
+    private boolean chkLabelTime(DatagramSocket socket,String cPacket,DatagramPacket dPacket) {
         String cLab = revers(cPacket,0,2);
-//        if (!cLab.equals("FFFF")) return false;
+        if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
         byte[] data;
         InetAddress pAddress = dPacket.getAddress();
@@ -218,12 +207,8 @@ public class UDPServer extends MonitorServer {
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
             data = "01".getBytes();
-//            pAddress = InetAddress.getByName("116.203.197.49");
-//            pPort = 20002;
-            DatagramSocket ds = new DatagramSocket();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
-            ds.send(dp);
-            ds.close();
+            serverSocket.send(dp);
         } catch (IOException e) {
             print("ERROR LABEL TIME: " + e.getMessage());
         }
