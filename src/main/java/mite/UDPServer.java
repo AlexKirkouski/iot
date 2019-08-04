@@ -126,10 +126,9 @@ public class UDPServer extends MonitorServer {
                             String cLab = revers(receivedString,0,2);
                             if (cLab.equals("FFFF")) {
                                 sendData = "A".getBytes();
-                                InetAddress sendAddress = receivePacket.getAddress();
+                                String sendAddress = receivePacket.getAddress().getHostAddress();
                                 Integer sendPort = receivePacket.getPort();
-                                DatagramPacket dp = new DatagramPacket(sendData, sendData.length);
-                                dp.setAddress(sendAddress);
+                                DatagramPacket dp = new DatagramPacket(sendData, sendData.length,InetAddress.getByName(sendAddress),sendPort);
                                 serverSocket.send(dp);
                             }
                             if (!parseNew(receivedString)) continue;
