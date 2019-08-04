@@ -114,6 +114,7 @@ public class UDPServer extends MonitorServer {
                         String cp1 = receivePacket.getAddress().toString();
                         String cp2 = Integer.toString(receivePacket.getPort());
                         receivedString = new String(receivePacket.getData()).trim();
+                        print("R: " + receivedString);
                         if(receivedString.startsWith("b'")) {
                             print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
                             receivedString = receivedString.substring(2);
