@@ -117,9 +117,17 @@ public class UDPServer extends MonitorServer {
                         if(receivedString.startsWith("b'")) {
                             print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
                             receivedString = receivedString.substring(2);
+                            if(receivedString.startsWith("99")) {
+                                chkLabelTime(receivedString,receivePacket);
+                                continue;
+                            }
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
+                        else if(receivedString.startsWith("99")) {
+                                chkLabelTime(receivedString,receivePacket);
+                                continue;
+                            }
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
@@ -198,15 +206,15 @@ public class UDPServer extends MonitorServer {
     // Проверка, что идет запрос времени
     private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
         String cLab = revers(cPacket,0,2);
-        if (!cLab.equals("FFFF")) return false;
+//        if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
         byte[] data = {65,65};
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
-            pAddress = InetAddress.getByName("116.203.197.49");
-            pPort = 20002;
+//            pAddress = InetAddress.getByName("116.203.197.49");
+//            pPort = 20002;
             DatagramSocket ds = new DatagramSocket();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             ds.send(dp);
