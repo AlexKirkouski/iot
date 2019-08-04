@@ -125,11 +125,11 @@ public class UDPServer extends MonitorServer {
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
                             String cLab = revers(receivedString,0,2);
                             if (cLab.equals("FFFF")) {
-                                print("TIME LABEL");
                                 sendData = "A".getBytes();
-                                SocketAddress sendAddress = receivePacket.getSocketAddress();
+                                InetAddress sendAddress = receivePacket.getAddress();
+                                Integer sendPort = receivePacket.getPort();
                                 DatagramPacket dp = new DatagramPacket(sendData, sendData.length);
-                                dp.setSocketAddress(sendAddress);
+                                dp.setAddress(sendAddress);
                                 serverSocket.send(dp);
                             }
                             if (!parseNew(receivedString)) continue;
