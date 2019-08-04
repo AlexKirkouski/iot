@@ -200,19 +200,14 @@ public class UDPServer extends MonitorServer {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        byte[] data = new byte[1];
+        byte[] data = new byte[2];
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
-//        pPort = 3;
         try {
-//            String s1 = "ABCD";
-//            data = s1.getBytes();
-            data[0] = 65;
+            data[0] = 0xF; data[1] = 0xA;
             DatagramSocket ds = new DatagramSocket();
-            DatagramPacket dp = new DatagramPacket(data, 1,pAddress ,pPort);
-//            ds.connect(pAddress,pPort);
-//            ds.setBroadcast(true);
+            DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             ds.send(dp);
             ds.close();
         } catch (IOException e) {
