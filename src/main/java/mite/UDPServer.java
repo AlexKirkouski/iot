@@ -118,14 +118,14 @@ public class UDPServer extends MonitorServer {
                         if(receivedString.startsWith("b'")) {
                             print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
                             receivedString = receivedString.substring(2);
-                            if(receivedString.startsWith("99")) {
+                            if(receivedString.startsWith("99")) {                   // !!! ПОТОМ УБРАТЬ !!!
                                 chkLabelTime(receivedString,receivePacket);
                                 continue;
                             }
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
-                        else if(receivedString.startsWith("99")) {
+                        else if(receivedString.startsWith("99")) {                  // !!! ПОТОМ УБРАТЬ !!!
                                 chkLabelTime(receivedString,receivePacket);
                                 continue;
                             }
