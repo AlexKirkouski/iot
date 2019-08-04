@@ -101,6 +101,7 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
                 byte[] receiveData = new byte[1024];
+                byte[] sendData;
                 nQps = 0;
                 lRead = true;
                 while(lRead)
@@ -122,7 +123,14 @@ public class UDPServer extends MonitorServer {
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
                             print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
-                            if (chkLabelTime(receivedString,receivePacket)) continue;
+                            String cLab = revers(receivedString,0,2);
+                            if (cLab.equals("FFFF")) {
+                                sendData = "A".getBytes();
+                                InetAddress sendAddress = receivePacket.getAddress();
+                                Integer sendPort = receivePacket.getPort();
+                                DatagramPacket dp = new DatagramPacket(sendData, sendData.length,sendAddress,sendPort);
+                                serverSocket.send(dp);
+                            }
                             if (!parseNew(receivedString)) continue;
                         }
 
