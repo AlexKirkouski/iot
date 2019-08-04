@@ -16,6 +16,7 @@ import lsfusion.server.logics.LogicsInstance;
 import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.DateTimeClass;
+import org.apache.tools.ant.taskdefs.Sleep;
 
 import java.io.IOException;
 import java.net.*;
@@ -29,6 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+
+import static java.lang.Thread.sleep;
 
 
 public class UDPServer extends MonitorServer {
@@ -205,7 +208,7 @@ public class UDPServer extends MonitorServer {
     }
 
     // Проверка, что идет запрос времени
-    private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) {
+    private boolean chkLabelTime(String cPacket,DatagramPacket dPacket) throws InterruptedException {
         String cLab = revers(cPacket,0,2);
 //        if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
@@ -214,6 +217,7 @@ public class UDPServer extends MonitorServer {
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
+            sleep(100);
             data = "01".getBytes();
 //            pAddress = InetAddress.getByName("116.203.197.49");
 //            pPort = 20002;
