@@ -201,7 +201,7 @@ public class UDPServer extends MonitorServer {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        byte[] data = {16,36};
+        byte[] data = {-10};
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
