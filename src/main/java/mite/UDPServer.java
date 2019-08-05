@@ -201,13 +201,13 @@ public class UDPServer extends MonitorServer {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        byte[] data = {1,0,2,4};
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME,: " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
             Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
 //            data = time.toString().getBytes();
+            byte[] data = longToBytes(1024);
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             serverSocket.send(dp);
         } catch (IOException e) {
@@ -216,7 +216,14 @@ public class UDPServer extends MonitorServer {
         return true;
     }
 
-
+    public byte[] longToBytes(long x) {
+        byte[] result = new byte[8];
+        for (int i = 7; i >= 0; i--) {
+            result[i] = (byte) (x & 0xFF);
+            x >>= 8;
+        }
+        return result;
+    }
 
     // Переставляем пары байты
     private String revers(String cb,int n1,int n2) {
