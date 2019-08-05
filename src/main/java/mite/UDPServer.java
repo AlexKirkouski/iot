@@ -201,13 +201,12 @@ public class UDPServer extends MonitorServer {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        byte[] data = {16,36};
+        byte[] data;
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
-        print("LABEL TIME,: " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
+        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
-            Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
-//            data = time.toString().getBytes();
+            data = "01".getBytes();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             serverSocket.send(dp);
         } catch (IOException e) {
@@ -216,14 +215,7 @@ public class UDPServer extends MonitorServer {
         return true;
     }
 
-    public byte[] longToBytes(long x) {
-        byte[] result = new byte[8];
-        for (int i = 7; i >= 0; i--) {
-            result[i] = (byte) (x & 0xFF);
-            x >>= 8;
-        }
-        return result;
-    }
+
 
     // Переставляем пары байты
     private String revers(String cb,int n1,int n2) {
@@ -257,7 +249,7 @@ public class UDPServer extends MonitorServer {
         int nt = Integer.parseInt(cSecond,16);
         SimpleDateFormat dayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Calendar dt = Calendar.getInstance();
-        dt.set(1970, Calendar.JANUARY, 1,0,0,nt);
+        dt.set(2019, Calendar.MAY, 15,0,0,nt);
         return dayFormat.format(dt.getTime());
     }
 
