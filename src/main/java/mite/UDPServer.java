@@ -204,7 +204,7 @@ public class UDPServer extends MonitorServer {
         byte[] data = {1,0,2,4};
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
-        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
+        print("LABEL TIME,: " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
             Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
 //            data = time.toString().getBytes();
