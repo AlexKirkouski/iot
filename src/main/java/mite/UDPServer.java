@@ -206,7 +206,8 @@ public class UDPServer extends MonitorServer {
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
-            data = "01".getBytes();
+            Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
+            data = time.toString().getBytes();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             serverSocket.send(dp);
         } catch (IOException e) {
@@ -249,7 +250,7 @@ public class UDPServer extends MonitorServer {
         int nt = Integer.parseInt(cSecond,16);
         SimpleDateFormat dayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Calendar dt = Calendar.getInstance();
-        dt.set(2019, Calendar.MAY, 15,0,0,nt);
+        dt.set(1970, Calendar.JANUARY, 1,0,0,nt);
         return dayFormat.format(dt.getTime());
     }
 
