@@ -201,11 +201,11 @@ public class UDPServer extends MonitorServer {
         String cLab = revers(cPacket,0,2);
         if (!cLab.equals("FFFF")) return false;
         String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        byte[] data = {-119};
         InetAddress pAddress = dPacket.getAddress();
         Integer pPort = dPacket.getPort();
         print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString());
         try {
+            byte[] data = longTo210(1957389);
 //            data = "01".getBytes();
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             serverSocket.send(dp);
@@ -213,6 +213,19 @@ public class UDPServer extends MonitorServer {
             print("ERROR LABEL TIME: " + e.getMessage());
         }
         return true;
+    }
+
+    // Преоразует число лонг в двоично-десятичное число
+    public byte[] longTo210(long x) {
+        String s1 = Long.toString(x);
+        if (s1.length()%2 > 0) s1 = "0" + s1;
+        byte[] br1 = s1.getBytes();
+        byte[] br2 = new byte[s1.length()/2];
+        for (int i=0,j=0;i < s1.length();i+=2) {
+            br2[j]  = (byte) (16 * (br1[i] - 48) + br1[i+1] - 48);
+            j+=1;
+        }
+        return br2;
     }
 
 
