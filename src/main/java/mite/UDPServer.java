@@ -207,7 +207,7 @@ public class UDPServer extends MonitorServer {
         try {
             Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
 //            data = time.toString().getBytes();
-            byte[] data = longToBytes(1024);
+            byte[] data = {16,36};
             DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
             serverSocket.send(dp);
         } catch (IOException e) {
