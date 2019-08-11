@@ -72,6 +72,18 @@ id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) 
 ///// Форма "Организации - устройства - измерения"
 allDevice 'По всем устройствам' = DATA LOCAL BOOLEAN ();
 
+mqttTurnOnOff INTERNAL 'mqtt.MqttTurnOnOffAction' (Device,STRING ); 
+
+onTurnOn 'ON' (Device d) {
+    mqttTurnOnOff(d,'1');
+}
+
+onTurnOff 'OFF' (Device d) {
+    mqttTurnOnOff(d,'0');
+}
+
+
+
 FORM orgMeasurements 'Измерения по организациям'
     PROPERTIES() allDevice
     
@@ -79,7 +91,9 @@ FORM orgMeasurements 'Измерения по организациям'
     PROPERTIES(o) READONLY name
     
     OBJECTS d = Device
+//    PROPERTIES(d) READONLY id
     PROPERTIES(d) READONLY id
+    PROPERTIES(d) onTurnOn, onTurnOff  
     FILTERS organization(d) = o
     ORDER id(d)
     
@@ -87,7 +101,7 @@ FORM orgMeasurements 'Измерения по организациям'
     FILTERS index(type(d),cmt)
     
     OBJECTS m = Measurement
-    PROPERTIES(m) READONLY dateTime 
+    PROPERTIES(m) READONLY dateTime  
     PROPERTIES 'ID устройства'=(OVERRIDE deviceId(m)+'', idImport(m) + ' (не найдено)') READONLY
     PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
     FILTERS index(type(device(m)),cmt) AND (allDevice() OR device(m)=d)
@@ -110,7 +124,7 @@ DESIGN orgMeasurements {
                 type = SPLITH ;
                 MOVE BOX(d) {
                     caption = 'Устройства';
-                    flex = 1;
+                    flex = 2;
                 }
                 MOVE BOX(m) {
                     caption = 'Измерения';

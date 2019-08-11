@@ -11,7 +11,6 @@ import java.net.SocketException;
 public class RSmqtt {
     public String eMessage = "";
     public int qos = 2;
-    public String clientId  = "lsfusion";
 
     // Передача на сервер: tcp://116.203.78.48:1883, power1000, 1 или 0
     public boolean sendData(String URL,String topic,String content) {
@@ -20,7 +19,7 @@ public class RSmqtt {
         if (!chkParams(URL,topic)) return false;
         MemoryPersistence persistence = new MemoryPersistence();
         try {
-            MqttClient sampleClient = new MqttClient(URL, clientId, persistence);
+            MqttClient sampleClient = new MqttClient(URL, "Fusion_Send", persistence);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
             sampleClient.connect(connOpts);
@@ -41,7 +40,7 @@ public class RSmqtt {
         if (!chkParams(URL,topic)) return false;
         MemoryPersistence persistence = new MemoryPersistence();
         try {
-            MqttClient sampleClient = new MqttClient(URL, clientId, persistence);
+            MqttClient sampleClient = new MqttClient(URL, "Fusion_Receive", persistence);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
             sampleClient.setCallback(new MqttCallback() {
@@ -60,7 +59,23 @@ public class RSmqtt {
             lRet = errBox(t.getMessage());
         }
         return lRet;
+    }
 
+    public boolean close(String URL) {
+        boolean lRet = true;
+        URL = URL.trim();
+        if (!chkParams(URL,"___")) return false;
+        MemoryPersistence persistence = new MemoryPersistence();
+        try {
+            MqttClient sampleClient = new MqttClient(URL, "Fusion_Receive", persistence);
+            MqttConnectOptions connOpts = new MqttConnectOptions();
+            connOpts.setCleanSession(true);
+            sampleClient.connect(connOpts);
+            sampleClient.disconnect();
+        } catch(MqttException e) {
+            lRet = errBox(e.getMessage());
+        }
+        return lRet;
     }
 
     private boolean chkParams(String URL, String topic) {

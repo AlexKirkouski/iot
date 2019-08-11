@@ -2,20 +2,31 @@ MODULE ServerMqtt;
 
 CLASS ServerMqtt 'Сервер устройств MQTT';
 use 'Акт' = DATA BOOLEAN (ServerMqtt);
+isRun 'Ст' = DATA BOOLEAN (ServerMqtt);
 name 'Название сервера' = DATA STRING[100] (ServerMqtt) CHARWIDTH 50;
 topic 'Название топика' = DATA STRING[50] (ServerMqtt);
 url 'Адрес сервера' = DATA STRING[100] (ServerMqtt);
 port 'UDP порт' = DATA INTEGER (ServerMqtt);
 
-startMqttServer INTERNAL 'mqtt.MqttServerAction' (ServerMqtt);
+startMqttServer INTERNAL 'mqtt.MqttServerAction' (ServerMqtt,INTEGER);
 
 
-startServer 'Старт сервера' (ServerMqtt s) {
-    startMqttServer(s);
+startServer 'Старт сервер' (ServerMqtt s) {
+    IF (use(s)) THEN {
+        IF (NOT isRun(s)) THEN startMqttServer(s,1); ELSE MESSAGE 'Сервер уже запущен';
+    } ELSE MESSAGE 'Сервер не используется';
 }
+
+stopServer 'Стоп сервер' (ServerMqtt s) {
+    IF (use(s)) THEN {
+        IF (isRun(s)) THEN startMqttServer(s,0); ELSE MESSAGE 'Сервер не запущен';
+    } ELSE MESSAGE 'Сервер не используется';
+}
+
 
 FORM mqttServers 'Серверы MQTT'
     OBJECTS s = ServerMqtt
+    PROPERTIES(s) READONLY isRun 
     PROPERTIES(s) use, name, topic, url, port,
-    NEW, DELETE, startServer 
+    NEW, DELETE, startServer, stopServer 
 ; 

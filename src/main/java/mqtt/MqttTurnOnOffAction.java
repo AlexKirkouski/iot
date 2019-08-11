@@ -12,41 +12,32 @@ import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 
 import java.sql.SQLException;
 
-public class MqttServerAction extends InternalAction {
-    private final ClassPropertyInterface pMqtt;
+public class MqttTurnOnOffAction extends InternalAction {
+
+    private final ClassPropertyInterface pDevice;
     private final ClassPropertyInterface pFlag;
 
-    public MqttServerAction (ScriptingLogicsModule LM, ValueClass... classes) {
+    public MqttTurnOnOffAction(ScriptingLogicsModule LM, ValueClass... classes) {
         super(LM,classes);
-        pMqtt = getOrderInterfaces().get(0);
+        pDevice = getOrderInterfaces().get(0);
         pFlag = getOrderInterfaces().get(1);
     }
 
-
-        @Override
+    @Override
     protected void executeInternal(ExecutionContext<ClassPropertyInterface> context)
-                throws SQLException, SQLHandledException {
+            throws SQLException, SQLHandledException {
         try {
-            DataObject o1 = context.getDataKeyValue(pMqtt);
-            String  topic = (String) findProperty("topic[ServerMqtt]").read(context, o1);
-            String  url   = "tcp://" + (String) findProperty("url[ServerMqtt]").read(context, o1);
-            Integer port  = (Integer) findProperty("port[ServerMqtt]").read(context, o1);
-            Integer flag  = (Integer) context.getKeyObject(pFlag);
+            DataObject o1 = context.getDataKeyValue(pDevice);
+            Long id = (Long) findProperty("id[Device]").read(context,o1);
+            String flag  = (String) context.getKeyObject(pFlag);
+            String topic = "power" + id.toString();
             RSmqtt ob = new RSmqtt();
-            if (flag == 1) {
-                if (ob.receiveData(url, topic, port))
-                    findProperty("isRun[ServerMqtt]").change(true,context.getSession(),o1);
-            } else {
-                if (ob.close(url))
-                    findProperty("isRun[ServerMqtt]").change(false,context.getSession(),o1);
-            }
-            context.apply();
+            ob.sendData("tcp://116.203.78.48:1883",topic,flag);
         } catch (Throwable e) {
             print(e.getMessage());
             context.requestUserInteraction(new MessageClientAction(e.getMessage(), "Error"));
             throw Throwables.propagate(e);
         }
-
     }
 
     private void print(String msg) {
