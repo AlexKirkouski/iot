@@ -1,7 +1,7 @@
 MODULE Server;
 
 //REQUIRE Device, SystemEvents, Measurement, Options, Organization, ClientDevice, ClientMeasurement;
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, ServerMqtt;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -40,12 +40,17 @@ FORM servers 'Сервера'
 
 NAVIGATOR {
     //NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
-    NEW FOLDER measurements 'Измерения' WINDOW toolbar FIRST {
-        NEW servers;
-        NEW organization;
-        NEW devices;
-        NEW orgDevices;
-        NEW orgMeasurements;
+    NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
+        NEW FOLDER serv 'Сервера и устройства' {
+            NEW servers;
+            NEW mqttServers AFTER servers;
+            NEW devices AFTER mqttServers;
+        }
+        NEW FOLDER org 'Организации и измерения' AFTER serv {
+            NEW organization;
+            NEW orgDevices AFTER organization;
+            NEW orgMeasurements AFTER orgDevices;
+        }
     }
 }
 
@@ -86,3 +91,5 @@ importCSVTest(DeviceType dt) {
 }
 EXTEND FORM devices
     PROPERTIES importCSVTest(t) TOOLBAR;
+    
+    

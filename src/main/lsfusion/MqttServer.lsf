@@ -1,0 +1,21 @@
+MODULE ServerMqtt;
+
+CLASS ServerMqtt 'Сервер устройств MQTT';
+use 'Акт' = DATA BOOLEAN (ServerMqtt);
+name 'Название сервера' = DATA STRING[100] (ServerMqtt) CHARWIDTH 50;
+topic 'Название топика' = DATA STRING[50] (ServerMqtt);
+url 'Адрес сервера' = DATA STRING[100] (ServerMqtt);
+port 'UDP порт' = DATA INTEGER (ServerMqtt);
+
+startMqttServer INTERNAL 'mqtt.MqttServerAction' (ServerMqtt);
+
+
+startServer 'Старт сервера' (ServerMqtt s) {
+    startMqttServer(s);
+}
+
+FORM mqttServers 'Серверы MQTT'
+    OBJECTS s = ServerMqtt
+    PROPERTIES(s) use, name, topic, url, port,
+    NEW, DELETE, startServer 
+; 

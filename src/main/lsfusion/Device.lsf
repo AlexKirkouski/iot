@@ -35,7 +35,7 @@ WHEN GROUP SUM 1 IF CHANGED(type(Device dt)) DO
 
 WHEN SET (Device d IS Device) DO IF NOT dateCreation(d) THEN dateCreation(d) <- currentDate(); 
 
-FORM devices 'Устройства со своими типами и типами измерений'
+FORM devices 'Устройства и типы измерений'
     OBJECTS t = DeviceType
     PROPERTIES(t) name, fileDashboard, dirGrafana, NEW, DELETE
     
