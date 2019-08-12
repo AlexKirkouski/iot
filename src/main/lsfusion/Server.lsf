@@ -39,12 +39,12 @@ FORM servers 'Сервера'
 ;
 
 NAVIGATOR {
-    //NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
     NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
         NEW FOLDER serv 'Сервера и устройства' {
             NEW servers;
             NEW mqttServers AFTER servers;
             NEW devices AFTER mqttServers;
+            NEW clsMeasurement AFTER devices;
         }
         NEW FOLDER org 'Организации и измерения' AFTER serv {
             NEW organization;

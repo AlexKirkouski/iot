@@ -23,13 +23,14 @@ public class MqttServerAction extends InternalAction {
     }
 
 
-        @Override
+    @Override
     protected void executeInternal(ExecutionContext<ClassPropertyInterface> context)
                 throws SQLException, SQLHandledException {
         try {
             DataObject o1 = context.getDataKeyValue(pMqtt);
             String  topic = (String) findProperty("topic[ServerMqtt]").read(context, o1);
-            String  url   = "tcp://" + (String) findProperty("url[ServerMqtt]").read(context, o1);
+            String  url   = (String) findProperty("url[ServerMqtt]").read(context, o1);
+            url = "tcp://" + url;
             Integer port  = (Integer) findProperty("port[ServerMqtt]").read(context, o1);
             Integer flag  = (Integer) context.getKeyObject(pFlag);
             RSmqtt ob = new RSmqtt();

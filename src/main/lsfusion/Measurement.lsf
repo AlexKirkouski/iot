@@ -82,6 +82,18 @@ onTurnOff 'OFF' (Device d) {
     mqttTurnOnOff(d,'0');
 }
 
+onDelMeasurement 'Очистка всех измерений' (Measurement) {
+    ASK 'Вы действительно хотите\nочистить все измерения?' DO {
+        DELETE Measurement m WHERE m IS Measurement;
+        APPLY; 
+        MESSAGE 'Операция выполнена';
+    }
+}
+
+FORM clsMeasurement 'Очистка измерений'
+    OBJECTS o1 = Measurement
+    PROPERTIES onDelMeasurement(o1)
+;
 
 
 FORM orgMeasurements 'Измерения по организациям'

@@ -5,8 +5,8 @@ REQUIRE Time;
 CLASS DeviceType 'Тип устройства' {
     unknown 'Неизвестное устройство'
 }
-TABLE deviceType(DeviceType);
 
+TABLE deviceType(DeviceType);
 id 'ID типа устройства' = DATA LONG (DeviceType);
 name 'Название типа устройства' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 70 IN id;
 fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) CHARWIDTH 7 IN id;
