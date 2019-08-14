@@ -65,7 +65,7 @@ public class RSmqtt {
                             errBox(e.getMessage());
                         }
                 }
-                
+
                 // вызывается когда получено сообщение от топика
                 // обработка: пересылаем данные на локальный UDP, который слушает port
                 public void messageArrived(String topic, MqttMessage message) {
