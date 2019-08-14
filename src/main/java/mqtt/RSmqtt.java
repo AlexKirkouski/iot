@@ -57,14 +57,17 @@ public class RSmqtt {
                 public void connectionLost(Throwable cause) { }
 
                 // вызывается когда соединение восстановлено после обрыва
-                // serverURI запомнен, но topic потерян, поэтому его надо восстановить
+                // serverURI существует, но topic потерян, поэтому его надо восстановить
                 public void connectComplete(boolean reconnect, String serverURI) {
                         try {
                             mqttClient.subscribe(recTopic);
                         } catch (Exception e) {
+                            errBox(e.getMessage());
                         }
                 }
+                
                 // вызывается когда получено сообщение от топика
+                // обработка: пересылаем данные на локальный UDP, который слушает port
                 public void messageArrived(String topic, MqttMessage message) {
                     System.out.println(message.toString());
                     try {
@@ -80,7 +83,8 @@ public class RSmqtt {
                 // Вызывается, когда доставка сообщения завершена и все подтверждения получены.
                 public void deliveryComplete(IMqttDeliveryToken token) {}
 
-            }); // конец CallBack
+            // конец CallBack
+            });
         } catch (Throwable t) {
             lRet = errBox(t.getMessage());
         }
