@@ -1,5 +1,7 @@
 MODULE ServerMqtt;
 
+REQUIRE SystemEvents;
+
 CLASS ServerMqtt 'Сервер устройств MQTT';
 use 'Акт' = DATA BOOLEAN (ServerMqtt);
 isRun 'Ст' = DATA BOOLEAN (ServerMqtt);
@@ -29,4 +31,11 @@ FORM mqttServers 'Серверы MQTT'
     PROPERTIES(s) READONLY isRun 
     PROPERTIES(s) use, name, topic, url, port,
     NEW, DELETE, startServer, stopServer 
-; 
+;
+
+onStarted() + {
+    FOR use(ServerMqtt s) DO {
+        startMqttServer(s, 1);
+    }
+}
+ 

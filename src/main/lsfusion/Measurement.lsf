@@ -72,16 +72,6 @@ id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) 
 ///// Форма "Организации - устройства - измерения"
 allDevice 'По всем устройствам' = DATA LOCAL BOOLEAN ();
 
-mqttTurnOnOff INTERNAL 'mqtt.MqttTurnOnOffAction' (Device,STRING ); 
-
-onTurnOn 'ON' (Device d) {
-    mqttTurnOnOff(d,'1');
-}
-
-onTurnOff 'OFF' (Device d) {
-    mqttTurnOnOff(d,'0');
-}
-
 onDelMeasurement 'Очистка всех измерений' (Measurement) {
     ASK 'Вы действительно хотите\nочистить все измерения?' DO {
         DELETE Measurement m WHERE m IS Measurement;
@@ -105,7 +95,6 @@ FORM orgMeasurements 'Измерения по организациям'
     OBJECTS d = Device
 //    PROPERTIES(d) READONLY id
     PROPERTIES(d) READONLY id
-    PROPERTIES(d) onTurnOn, onTurnOff  
     FILTERS organization(d) = o
     ORDER id(d)
     

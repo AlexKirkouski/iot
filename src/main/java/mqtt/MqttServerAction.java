@@ -38,7 +38,7 @@ public class MqttServerAction extends InternalAction {
                 if (ob.receiveData(url, topic, port))
                     findProperty("isRun[ServerMqtt]").change(true,context.getSession(),o1);
             } else {
-                if (ob.close(url))
+                if (ob.close(url, topic))
                     findProperty("isRun[ServerMqtt]").change(false,context.getSession(),o1);
             }
             context.apply();

@@ -1,5 +1,6 @@
 package mqtt;
 
+import com.google.common.base.Throwables;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
@@ -11,6 +12,8 @@ import java.net.SocketException;
 public class RSmqtt {
     public String eMessage = "";
     public int qos = 2;
+    public boolean lRead;
+    private String recTopic; // топик для приема, необходимо при восстановлении соединения
 
     // Передача на сервер: tcp://116.203.78.48:1883, power1000, 1 или 0
     public boolean sendData(String URL,String topic,String content) {
@@ -19,14 +22,14 @@ public class RSmqtt {
         if (!chkParams(URL,topic)) return false;
         MemoryPersistence persistence = new MemoryPersistence();
         try {
-            MqttClient sampleClient = new MqttClient(URL, "Fusion_Send", persistence);
+            MqttClient mqttClient = new MqttClient(URL, "Fusion_Send", persistence);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            sampleClient.connect(connOpts);
+            mqttClient.connect(connOpts);
             MqttMessage message = new MqttMessage(content.getBytes());
             message.setQos(qos);
-            sampleClient.publish(topic,message);
-            sampleClient.disconnect();
+            mqttClient.publish(topic,message);
+            mqttClient.disconnect();
         } catch(MqttException e) {
             lRet = errBox(e.getMessage());
         }
@@ -38,40 +41,64 @@ public class RSmqtt {
         boolean lRet = true;
         URL = URL.trim(); topic = topic.trim();
         if (!chkParams(URL,topic)) return false;
+        recTopic = topic;
         MemoryPersistence persistence = new MemoryPersistence();
+        lRead = true;
         try {
-            MqttClient sampleClient = new MqttClient(URL, "Fusion_Receive", persistence);
-            MqttConnectOptions connOpts = new MqttConnectOptions();
+            final MqttClient mqttClient = new MqttClient(URL, "Fusion_Receive_" + topic, persistence);
+            final MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            sampleClient.setCallback(new MqttCallback() {
-                public void connectionLost(Throwable cause) {}
-                public void messageArrived(String topic, MqttMessage message) throws Exception {
-                    byte data[] = ("b'" + message.toString()).getBytes();
-                    final DatagramSocket ds = new DatagramSocket();
-                    DatagramPacket dp = new DatagramPacket(data,data.length,InetAddress.getByName("127.0.0.1"),port);
-                    ds.send(dp);
+            connOpts.setAutomaticReconnect(true);
+            mqttClient.connect(connOpts);
+            mqttClient.subscribe(topic);
+            mqttClient.setCallback(new MqttCallbackExtended() {
+
+                // вызывается когда сетевое соединение потеряно
+                public void connectionLost(Throwable cause) { }
+
+                // вызывается когда соединение восстановлено после обрыва
+                // serverURI запомнен, но topic потерян, поэтому его надо восстановить
+                public void connectComplete(boolean reconnect, String serverURI) {
+                        try {
+                            mqttClient.subscribe(recTopic);
+                        } catch (Exception e) {
+                        }
                 }
+                // вызывается когда получено сообщение от топика
+                public void messageArrived(String topic, MqttMessage message) {
+                    System.out.println(message.toString());
+                    try {
+                        byte data[] = ("b'" + message.toString()).getBytes();
+                        final DatagramSocket ds = new DatagramSocket();
+                        DatagramPacket dp = new DatagramPacket(data, data.length, InetAddress.getByName("127.0.0.1"), port);
+                        ds.send(dp);
+                    } catch (Exception e) {
+                        errBox(e.getMessage());
+                    }
+                }
+
+                // Вызывается, когда доставка сообщения завершена и все подтверждения получены.
                 public void deliveryComplete(IMqttDeliveryToken token) {}
-            });
-            sampleClient.connect(connOpts);
-            sampleClient.subscribe(topic);
-        } catch(Throwable t) {
+
+            }); // конец CallBack
+        } catch (Throwable t) {
             lRet = errBox(t.getMessage());
         }
         return lRet;
     }
 
-    public boolean close(String URL) {
+    public boolean close(String URL,String topic) {
         boolean lRet = true;
         URL = URL.trim();
-        if (!chkParams(URL,"___")) return false;
+        lRead = false;
+        if (!chkParams(URL,topic)) return false;
         MemoryPersistence persistence = new MemoryPersistence();
         try {
-            MqttClient sampleClient = new MqttClient(URL, "Fusion_Receive", persistence);
+            MqttClient mqttClient = new MqttClient(URL, "Fusion_Receive_" + topic, persistence);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
-            sampleClient.connect(connOpts);
-            sampleClient.disconnect();
+            mqttClient.connect(connOpts);
+            mqttClient.disconnect();
         } catch(MqttException e) {
             lRet = errBox(e.getMessage());
         }
@@ -94,3 +121,5 @@ public class RSmqtt {
         return false;
     }
 }
+
+

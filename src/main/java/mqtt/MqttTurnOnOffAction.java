@@ -14,12 +14,12 @@ import java.sql.SQLException;
 
 public class MqttTurnOnOffAction extends InternalAction {
 
-    private final ClassPropertyInterface pDevice;
+    private final ClassPropertyInterface pCtrl;
     private final ClassPropertyInterface pFlag;
 
     public MqttTurnOnOffAction(ScriptingLogicsModule LM, ValueClass... classes) {
         super(LM,classes);
-        pDevice = getOrderInterfaces().get(0);
+        pCtrl = getOrderInterfaces().get(0);
         pFlag = getOrderInterfaces().get(1);
     }
 
@@ -27,8 +27,8 @@ public class MqttTurnOnOffAction extends InternalAction {
     protected void executeInternal(ExecutionContext<ClassPropertyInterface> context)
             throws SQLException, SQLHandledException {
         try {
-            DataObject o1 = context.getDataKeyValue(pDevice);
-            Long id = (Long) findProperty("id[Device]").read(context,o1);
+            DataObject o1 = context.getDataKeyValue(pCtrl);
+            Long id = (Long) findProperty("id[Controller]").read(context,o1);
             String flag  = (String) context.getKeyObject(pFlag);
             String topic = "power" + id.toString();
             RSmqtt ob = new RSmqtt();

@@ -1,0 +1,26 @@
+MODULE Controller;
+
+CLASS Controller 'Контроллеры управления';
+TABLE controller(Controller);
+id 'ID контроллера' = DATA LONG (Controller);
+protocol 'Протокол управления' = DATA STRING[20] (Controller);
+topic 'Топик управления' = DATA STRING[30] (Controller); 
+state 'Статус' = DATA STRING[20] (Controller);
+
+mqttTurnOnOff INTERNAL 'mqtt.MqttTurnOnOffAction' (Controller,STRING ); 
+
+onTurnOn 'ON' (Controller c) {
+    mqttTurnOnOff(c,'1');
+}
+
+onTurnOff 'OFF' (Controller c) {
+    mqttTurnOnOff(c,'0');
+}
+
+
+FORM controllers 'Контроллеры управления'
+    OBJECTS c = Controller
+    PROPERTIES(c) id, protocol, topic
+    PROPERTIES(c) NEW, DELETE
+    PROPERTIES(c) onTurnOn, onTurnOff  
+;
