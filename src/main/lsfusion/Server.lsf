@@ -1,7 +1,7 @@
 MODULE Server;
 
 //REQUIRE Device, SystemEvents, Measurement, Options, Organization, ClientDevice, ClientMeasurement;
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, ServerMqtt, Controller;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -25,7 +25,7 @@ stopServer 'Остановить сервер' (Server server) {
 
 server = DATA Server (Measurement);
 
-FORM servers 'Сервера' 
+FORM servers 'Сервера UDP' 
     OBJECTS s = Server
     PROPERTIES (s) name, qps, port, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
@@ -59,7 +59,7 @@ NAVIGATOR {
     }
 }
 
-// Автоматический старт UDP сервера 
+// Автоматический старт обработчиков серверов UDP
 onStarted() + {
     FOR isRunning(Server s) DO {
         startUDPServer(s, port(s), 'importCSV');

@@ -1,41 +1,46 @@
-MODULE ServerMqtt;
+MODULE MqttServer;
 
 REQUIRE SystemEvents;
 
-CLASS ServerMqtt 'Сервер устройств MQTT';
-use 'Акт' = DATA BOOLEAN (ServerMqtt);
-isRun 'Ст' = DATA BOOLEAN (ServerMqtt);
-name 'Название сервера' = DATA STRING[100] (ServerMqtt) CHARWIDTH 50;
-topic 'Название топика' = DATA STRING[50] (ServerMqtt);
-url 'Адрес сервера' = DATA STRING[100] (ServerMqtt);
-port 'UDP порт' = DATA INTEGER (ServerMqtt);
+CLASS MqttServer 'Сервер устройств MQTT';
+use     'Акт'               = DATA BOOLEAN      (MqttServer);  // сервер используется, активный
+isRun   'Ст'                = DATA BOOLEAN      (MqttServer);  // поле получит true, при успешном старте сервера
+name    'Название сервера'  = DATA STRING[100]  (MqttServer) NONULL CHARWIDTH 50;
+topic   'Название топика'   = DATA STRING[50]   (MqttServer) NONULL;
+url     'Адрес сервера'     = DATA STRING[100]  (MqttServer) NONULL;
+port    'UDP порт'          = DATA INTEGER      (MqttServer) NONULL;
 
-startMqttServer INTERNAL 'mqtt.MqttServerAction' (ServerMqtt,INTEGER);
+// Внешний модуль приема сообщений от MQTT сервера
+startMqttServer INTERNAL 'mqtt.MqttServerAction' (MqttServer,INTEGER);
 
-
-startServer 'Старт сервер' (ServerMqtt s) {
-    IF (use(s)) THEN {
-        IF (NOT isRun(s)) THEN startMqttServer(s,1); ELSE MESSAGE 'Сервер уже запущен';
+// Запуск сервера вручную
+startServer 'Старт сервер' (MqttServer m) {
+    IF (use(m)) THEN {
+        IF (NOT isRun(m)) THEN startMqttServer(m,1); ELSE MESSAGE 'Сервер уже запущен';
     } ELSE MESSAGE 'Сервер не используется';
 }
 
-stopServer 'Стоп сервер' (ServerMqtt s) {
-    IF (use(s)) THEN {
-        IF (isRun(s)) THEN startMqttServer(s,0); ELSE MESSAGE 'Сервер не запущен';
+// Останов сервера
+stopServer 'Стоп сервер' (MqttServer m) {
+    IF (use(m)) THEN {
+        IF (isRun(m)) THEN startMqttServer(m,0); ELSE MESSAGE 'Сервер не запущен';
     } ELSE MESSAGE 'Сервер не используется';
 }
 
 
-FORM mqttServers 'Серверы MQTT'
-    OBJECTS s = ServerMqtt
-    PROPERTIES(s) READONLY isRun 
-    PROPERTIES(s) use, name, topic, url, port,
-    NEW, DELETE, startServer, stopServer 
+
+FORM mqttServers 'Сервера MQTT'
+    OBJECTS m = MqttServer
+    PROPERTIES(m) READONLY isRun 
+    PROPERTIES(m) use, name, topic, url, port
+    PROPERTIES(m) NEW, DELETE
+    PROPERTIES(m) startServer, stopServer 
 ;
 
+// Автоматический старт обработчиков серверов MQTT, aplay выполняет обработчик
 onStarted() + {
-    FOR use(ServerMqtt s) DO {
-        startMqttServer(s, 1);
-    }
-}
- 
+    FOR MqttServer m IS MqttServer DO {
+        isRun(m) <- NULL;                       // для всех серверов (активных/неактивных) сбрасываем флаг запуска сервера
+        IF use(m) THEN startMqttServer(m, 1);   // только активный сервер
+    } 
+} 

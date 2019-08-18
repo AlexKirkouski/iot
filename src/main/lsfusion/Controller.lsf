@@ -1,26 +1,92 @@
 MODULE Controller;
 
+REQUIRE MqttServer;
+
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
-id 'ID контроллера' = DATA LONG (Controller);
-protocol 'Протокол управления' = DATA STRING[20] (Controller);
-topic 'Топик управления' = DATA STRING[30] (Controller); 
-state 'Статус' = DATA STRING[20] (Controller);
+server      'Сервер'            = DATA MqttServer   (Controller) AUTOSET; // поле связи, ключевое слово AUTOSET для авт. доб. ID сервера в контроллер при создании новой записи
+id          'ID контроллера'    = DATA LONG         (Controller) NONULL;
+topic       'Топик управления'  = DATA STRING[30]   (Controller) NONULL; 
+state       'Статус'            = DATA STRING[20]   (Controller); // пока зарезирвировано
+// выполнение контента по календарю
+d1          'Понедельник'       = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d2          'Вторник'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d3          'Среда'             = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d4          'Четверг'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d5          'Пятница'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d6          'Суббота'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
+d7          'Воскресенье'       = DATA STRING[100]  (Controller) CHARWIDTH 100;
+curDay      'День месяца'       = DATA STRING[2]    (Controller) CHARWIDTH 2;
+expCmp      'Сравнение'         = DATA STRING[30]   (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
 
-mqttTurnOnOff INTERNAL 'mqtt.MqttTurnOnOffAction' (Controller,STRING ); 
 
-onTurnOn 'ON' (Controller c) {
-    mqttTurnOnOff(c,'1');
+// внешний модуль передачи сигналов управления 
+mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer,Controller,STRING ); 
+
+onTurnOn '1' (MqttServer m,Controller c) {
+    mqttRunContent(m,c,'1');
 }
 
-onTurnOff 'OFF' (Controller c) {
-    mqttTurnOnOff(c,'0');
+onTurnOff '0' (MqttServer m,Controller c) {
+    mqttRunContent(m,c,'0');
 }
 
+// Задание для планировщика: Controller.onCalendar[], время 1 раз 300 сек
+onCalendar 'Run Calendar' () {
+    FOR MqttServer m IS MqttServer DO {
+        IF isRun(m) THEN {
+            FOR server(Controller c) = m DO {
+                mqttRunContent(m,c,'');
+            }
+        }
+    }
+}
 
 FORM controllers 'Контроллеры управления'
+    OBJECTS m = MqttServer
+    PROPERTIES(m) READONLY name, url 
     OBJECTS c = Controller
-    PROPERTIES(c) id, protocol, topic
-    PROPERTIES(c) NEW, DELETE
-    PROPERTIES(c) onTurnOn, onTurnOff  
+    PROPERTIES(c) READONLY id, topic
+    PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
+    PROPERTIES(m,c) onTurnOn, onTurnOff
+    PROPERTIES onCalendar()  
+    FILTERS server(c) = m
 ;
+
+FORM editController 'Редактирование контроллера'
+    OBJECTS c = Controller PANEL
+    PROPERTIES(c) id, topic
+    PROPERTIES(c) d1, d2, d3, d4, d5, d6, d7
+    PROPERTIES(c) READONLY curDay, expCmp
+    EDIT Controller OBJECT c
+;
+
+DESIGN editController {
+    NEW cnt FIRST {
+        fill = 1;
+        NEW h1 {
+            type = CONTAINERV;
+            caption = 'Общие свойства';
+            MOVE PROPERTY (id(c));
+            MOVE PROPERTY (topic(c));
+        }
+        NEW h2 AFTER h1 {
+            type = CONTAINERV;
+            caption = 'Календарь управления';
+            MOVE PROPERTY (d1(c));
+            MOVE PROPERTY (d2(c));
+            MOVE PROPERTY (d3(c));
+            MOVE PROPERTY (d4(c));
+            MOVE PROPERTY (d5(c));
+            MOVE PROPERTY (d6(c));
+            MOVE PROPERTY (d7(c));
+        }
+        NEW h3 AFTER h2 {
+            type = CONTAINERV;
+            caption = 'Контроль выполнения';
+            MOVE PROPERTY (curDay(c));
+            MOVE PROPERTY (expCmp(c));
+        }
+        MOVE TOOLBAR ; 
+    }
+}

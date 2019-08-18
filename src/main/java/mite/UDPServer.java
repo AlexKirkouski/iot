@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
+import sclass.ConPrint;
 
 
 public class UDPServer extends MonitorServer {
@@ -266,11 +267,8 @@ public class UDPServer extends MonitorServer {
 
     // для отладки, выводит в консоль с признаком UDP дата время текст
     private void print(String cMsg) {
-        Date date = new Date();
-        SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        if (cMsg.length() > 0) cMsg = ", " + cMsg;
-        cMsg = fDate.format(date) + cMsg;
-        System.out.println("UDP: " + cMsg);
+        ConPrint ob = new ConPrint();
+        ob.print("UDP",cMsg);
     }
 
     // остановка сервера

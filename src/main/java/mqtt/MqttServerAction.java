@@ -28,18 +28,18 @@ public class MqttServerAction extends InternalAction {
                 throws SQLException, SQLHandledException {
         try {
             DataObject o1 = context.getDataKeyValue(pMqtt);
-            String  topic = (String) findProperty("topic[ServerMqtt]").read(context, o1);
-            String  url   = (String) findProperty("url[ServerMqtt]").read(context, o1);
+            String  topic = (String) findProperty("topic[MqttServer]").read(context, o1);
+            String  url   = (String) findProperty("url[MqttServer]").read(context, o1);
             url = "tcp://" + url;
-            Integer port  = (Integer) findProperty("port[ServerMqtt]").read(context, o1);
+            Integer port  = (Integer) findProperty("port[MqttServer]").read(context, o1);
             Integer flag  = (Integer) context.getKeyObject(pFlag);
             RSmqtt ob = new RSmqtt();
             if (flag == 1) {
                 if (ob.receiveData(url, topic, port))
-                    findProperty("isRun[ServerMqtt]").change(true,context.getSession(),o1);
+                    findProperty("isRun[MqttServer]").change(true,context.getSession(),o1);
             } else {
                 if (ob.close(url, topic))
-                    findProperty("isRun[ServerMqtt]").change(false,context.getSession(),o1);
+                    findProperty("isRun[MqttServer]").change(false,context.getSession(),o1);
             }
             context.apply();
         } catch (Throwable e) {

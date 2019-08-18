@@ -31,7 +31,7 @@ public class RSmqtt {
             mqttClient.publish(topic,message);
             mqttClient.disconnect();
         } catch(MqttException e) {
-            lRet = errBox(e.getMessage());
+            lRet = errBox("Ошибка при передаче данных\n" + e.getMessage());
         }
         return lRet;
     }
@@ -76,7 +76,7 @@ public class RSmqtt {
                         DatagramPacket dp = new DatagramPacket(data, data.length, InetAddress.getByName("127.0.0.1"), port);
                         ds.send(dp);
                     } catch (Exception e) {
-                        errBox(e.getMessage());
+                        errBox("Ошибка приема данных\n" + e.getMessage());
                     }
                 }
 
@@ -104,7 +104,7 @@ public class RSmqtt {
             mqttClient.connect(connOpts);
             mqttClient.disconnect();
         } catch(MqttException e) {
-            lRet = errBox(e.getMessage());
+            lRet = errBox("Ошибка при попытке завершить работу потока чтения\n" + e.getMessage());
         }
         return lRet;
     }
