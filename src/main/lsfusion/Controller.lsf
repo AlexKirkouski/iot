@@ -49,7 +49,6 @@ FORM controllers 'Контроллеры управления'
     PROPERTIES(c) READONLY id, topic
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
     PROPERTIES(m,c) onTurnOn, onTurnOff
-    PROPERTIES onCalendar()  
     FILTERS server(c) = m
 ;
 

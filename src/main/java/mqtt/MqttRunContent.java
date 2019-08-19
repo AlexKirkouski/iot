@@ -66,17 +66,19 @@ public class MqttRunContent extends InternalAction {
                     String[] fld = cmdStr.split(";");
                     Integer time1 = getInteger("-1");     // Несуществующее начальное время
                     String cntText = "";                        // Несуществующий начальный контент
+                    String c1 ="";
                     for(int i = 0; i < fld.length; i++) {
                         String[] cPart = fld[i].split("=");
                         Integer time2 = getInteger(cPart[0]);
                         if (time1 <= curTime && curTime < time2) {
                             // нашли нужный диапазон, проверяем команда уже выполнялась?
+                            if (i > 0) c1 = fld[i-1];
                             print(time1.toString() + " <= " + curTime.toString() + " < " + time2.toString());
-                            print("RunContent ВРЕМЯ" + ", expCmp: " + expCmp + ", fld[i-1]: " + fld[i-1]);
-                            if (!expCmp.equals(fld[i-1])) {
+                            print("RunContent ВРЕМЯ" + ", expCmp: " + expCmp + ", fld[i-1]: " + c1);
+                            if (!expCmp.equals(c1)) {
                                 if (runContent(cntText)) {
                                     findProperty("curDay[Controller]").change(cdt[0],context.getSession(),o2);
-                                    findProperty("expCmp[Controller]").change(fld[i-1],context.getSession(),o2);
+                                    findProperty("expCmp[Controller]").change(c1,context.getSession(),o2);
                                     context.apply();
                                 }
                             }
