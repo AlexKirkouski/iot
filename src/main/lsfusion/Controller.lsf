@@ -23,13 +23,34 @@ expCmp      'Сравнение'         = DATA STRING[30]   (Controller); // в
 // внешний модуль передачи сигналов управления 
 mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer,Controller,STRING ); 
 
-onTurnOn '1' (MqttServer m,Controller c) {
-    mqttRunContent(m,c,'1');
+// ввод и передача сигнала управления на контроллер
+FORM dialogControlSignal 'Передача сигнала управления'
+    OBJECTS dialogSignal = STRING[50] PANEL
+    PROPERTIES dialogSignalv = VALUE(dialogSignal)
+;
+
+DESIGN dialogControlSignal {
+    NEW date BEFORE TOOLBARBOX {
+        fill = 1;
+        type = SPLITH;
+        MOVE PROPERTY (dialogSignalv) {
+            fill = 1;
+            font = 'bold 16';
+            caption = 'Сигнал управления: ';
+        }
+    }
 }
 
-onTurnOff '0' (MqttServer m,Controller c) {
-    mqttRunContent(m,c,'0');
+onTurnControlSignal 'Передача сигнала управления' (MqttServer m,Controller c) {
+    
+    DIALOG dialogControlSignal OBJECTS dialogSignal INPUT DO {
+        
+        IF NOT dialogSignal THEN RETURN ;
+ 
+        mqttRunContent(m, c, dialogSignal);
+    }
 }
+
 
 // Задание для планировщика: Controller.onCalendar[], время 1 раз 300 сек
 onCalendar 'Run Calendar' () {
@@ -48,7 +69,8 @@ FORM controllers 'Контроллеры управления'
     OBJECTS c = Controller
     PROPERTIES(c) READONLY id, topic
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
-    PROPERTIES(m,c) onTurnOn, onTurnOff
+    PROPERTIES(m,c) onTurnControlSignal
+    PROPERTIES onCalendar()  
     FILTERS server(c) = m
 ;
 
