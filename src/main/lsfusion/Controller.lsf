@@ -70,7 +70,6 @@ FORM controllers 'Контроллеры управления'
     PROPERTIES(c) READONLY id, topic
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
     PROPERTIES(m,c) onTurnControlSignal
-    PROPERTIES onCalendar()  
     FILTERS server(c) = m
 ;
 
