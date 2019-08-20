@@ -30,17 +30,17 @@ EXTEND FORM options PROPERTIES() mqttPrnConsole;
 DESIGN options {
     pane {
         NEW grafana {
-            caption = 'Передача в Grafana';
-            type = COLUMNS;
+            caption = 'Настройка приложения';
+//            type = COLUMNS;
             NEW h1 {
-                caption = 'Для Grafana'; 
+                caption = 'Grafana: доступ'; 
                 type = CONTAINERV;
                 MOVE PROPERTY(grafanaLogin());
                 MOVE PROPERTY(grafanaPwd());
                 MOVE PROPERTY(grafanaUrl());
             }
             NEW h2 AFTER h1 {
-                caption = 'Для PostgreSQL'; 
+                caption = 'Grafana: доступ к PostgreSQL'; 
                 type = CONTAINERV;
                 MOVE PROPERTY(grafanaPsUrl());
                 MOVE PROPERTY(grafanaPsDB());

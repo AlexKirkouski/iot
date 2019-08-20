@@ -42,7 +42,8 @@ public class MqttRunContent extends InternalAction {
             boolean lRet = true;
             DataObject o1   = context.getDataKeyValue(pSrv);
             DataObject o2   = context.getDataKeyValue(pCtrl);
-            prnConsole      = (Integer) findProperty("cntPrnConsole[]").read(context);
+            prnConsole      = (Integer) findProperty("mqttPrnConsole[]").read(context);
+            if (prnConsole == null) prnConsole = 0;
             String cnt      = (String) context.getKeyObject(pCnt);
             url = "tcp://" + (String) findProperty("url[MqttServer]").read(context,o1);
             topic = (String) findProperty("topic[Controller]").read(context,o2);

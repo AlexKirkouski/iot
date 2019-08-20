@@ -2,16 +2,8 @@ MODULE Controller;
 
 REQUIRE MqttServer, Options;
 
-cntPrnConsole  'Печать в консоль'  = DATA INTEGER (); 
 cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
 cntECode       'Код ошибки'        = DATA INTEGER ();
-
-onSetProp 'параметры обратной связи' () {
-    cntPrnConsole() <- mqttPrnConsole();
-    cntEMessage()   <- '';
-    cntECode()      <- 0; 
-}
-
 
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
@@ -57,15 +49,15 @@ onTurnControlSignal 'Передача сигнала управления' (Mqtt
     DIALOG dialogControlSignal OBJECTS dialogSignal INPUT DO {
         
         IF NOT dialogSignal THEN RETURN ;
-        EXEC onSetProp();
+        cntEMessage() <- ''; cntECode() <- 0;
         mqttRunContent(m, c, dialogSignal);
+        IF cntECode() > 0 THEN MESSAGE cntEMessage();
     }
 }
 
 
 // Задание для планировщика: Controller.onCalendar[], время 1 раз nn сек - задается в планировщике
 onCalendar 'Run Calendar' () {
-    EXEC onSetProp();
     FOR MqttServer m IS MqttServer DO {
         IF isRun(m) THEN {
             FOR server(Controller c) = m DO {
