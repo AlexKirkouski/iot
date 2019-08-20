@@ -46,12 +46,13 @@ public class UDPServer extends MonitorServer {
     private final DataObject unknownDevice;
     private final DataObject serverObject;
 
-    private Long deviceId;          // ID устройства из пакета датчика
-    private String cDt;             // Дата и время измерения
-    private String cMeasuring;      // Строка измерений
-    public  Integer qps;            // Количество пакетов для записи, устанавливается перед стартом сервера
-    private Integer nQps;           // Текущий счетчик пакетов
-    private Boolean lRead;          // Флаг цикла потока чтения UDP
+    private Long deviceId;              // ID устройства из пакета датчика
+    private String cDt;                 // Дата и время измерения
+    private String cMeasuring;          // Строка измерений
+    public  Integer qps;                // Количество пакетов для записи, устанавливается перед стартом сервера
+    private Integer nQps;               // Текущий счетчик пакетов
+    private Boolean lRead;              // Флаг цикла потока чтения UDP
+    public  Integer prnConsole = 0;     // печать отладочной информации в консоль
 
     public String getEventName() {
         return "udp-server-daemon";
@@ -267,8 +268,10 @@ public class UDPServer extends MonitorServer {
 
     // для отладки, выводит в консоль с признаком UDP дата время текст
     private void print(String cMsg) {
-        ConPrint ob = new ConPrint();
-        ob.print("UDP",cMsg);
+        if (prnConsole > 0) {
+            ConPrint ob = new ConPrint();
+            ob.print("UDP", cMsg);
+        }
     }
 
     // остановка сервера

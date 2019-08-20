@@ -1,7 +1,16 @@
 MODULE Server;
 
-//REQUIRE Device, SystemEvents, Measurement, Options, Organization, ClientDevice, ClientMeasurement;
 REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller;
+
+servPrnConsole  'Печать в консоль'  = DATA INTEGER (); 
+servEMessage    'Текст ошибки'      = DATA STRING[100] ();
+servECode       'Код ошибки'        = DATA INTEGER ();
+
+onSetProp 'параметры обратной связи' () {
+    servPrnConsole() <- udpPrnConsole();
+    servEMessage()   <- '';
+    servECode()      <- 0; 
+}
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -61,6 +70,7 @@ NAVIGATOR {
 
 // Автоматический старт обработчиков серверов UDP
 onStarted() + {
+    prnConsole() <- udpPrnConsole();
     FOR isRunning(Server s) DO {
         startUDPServer(s, port(s), 'importCSV');
     }

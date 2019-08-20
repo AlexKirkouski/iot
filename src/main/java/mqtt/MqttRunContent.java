@@ -26,6 +26,7 @@ public class MqttRunContent extends InternalAction {
     private String url;                                 // URL mqtt сервера
     private String topic;                               // топик управления контроллером
     private String eMessage;                            // сообщение об ошибке
+    private Integer prnConsole = 0;                     // печать отладочной информации в консоль
 
     public MqttRunContent(ScriptingLogicsModule LM, ValueClass... classes) {
         super(LM,classes);
@@ -41,11 +42,15 @@ public class MqttRunContent extends InternalAction {
             boolean lRet = true;
             DataObject o1   = context.getDataKeyValue(pSrv);
             DataObject o2   = context.getDataKeyValue(pCtrl);
+            prnConsole      = (Integer) findProperty("cntPrnConsole[]").read(context);
             String cnt      = (String) context.getKeyObject(pCnt);
             url = "tcp://" + (String) findProperty("url[MqttServer]").read(context,o1);
             topic = (String) findProperty("topic[Controller]").read(context,o2);
             if (cnt.length() > 0) {
-                lRet = runContent(cnt);
+                if (!runContent(cnt)) {
+                    findProperty("cntECode[]").change(1,context.getSession());
+                    findProperty("cntEMessage[]").change(eMessage, context.getSession());
+                };
             } else {
                 Date date = new Date();
                 String[] cdt  = new SimpleDateFormat("dd-HH.mm").format(date).split("-");
@@ -117,8 +122,10 @@ public class MqttRunContent extends InternalAction {
 
     // печать строки
     private void print(String cMsg) {
-        ConPrint ob = new ConPrint();
-        ob.print("Calendar",cMsg);
+        if (prnConsole > 0) {
+            ConPrint ob = new ConPrint();
+            ob.print("UDP", cMsg);
+        }
     }
 
 }

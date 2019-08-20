@@ -11,6 +11,9 @@ grafanaPsLogin 'Логин к PostgreSQL' = DATA STRING[20]();
 grafanaPsPwd   'Пароль к PostgreSQL' = DATA STRING[20](); 
 grafanaPsSSL   'SSL mode' = DATA STRING[15](); 
 
+mqttPrnConsole 'Печать отладочной информации MQTT в консоль (0 или 1)' = DATA INTEGER ();  
+udpPrnConsole  'Печать отладочной информации UDP в консоль (0 или 1)' = DATA INTEGER ();  
+
 EXTEND FORM options PROPERTIES() grafanaLogin;
 EXTEND FORM options PROPERTIES() grafanaPwd;
 EXTEND FORM options PROPERTIES() grafanaUrl;
@@ -20,6 +23,9 @@ EXTEND FORM options PROPERTIES() grafanaPsDB;
 EXTEND FORM options PROPERTIES() grafanaPsLogin;
 EXTEND FORM options PROPERTIES() grafanaPsPwd;
 EXTEND FORM options PROPERTIES() grafanaPsSSL;
+
+EXTEND FORM options PROPERTIES() udpPrnConsole;
+EXTEND FORM options PROPERTIES() mqttPrnConsole;
 
 DESIGN options {
     pane {
@@ -41,6 +47,12 @@ DESIGN options {
                 MOVE PROPERTY(grafanaPsLogin());
                 MOVE PROPERTY(grafanaPsPwd());
                 MOVE PROPERTY(grafanaPsSSL());
+            }
+            NEW h3 AFTER h2 {
+                caption = 'Отладка'; 
+                type = CONTAINERV;
+                MOVE PROPERTY(udpPrnConsole());
+                MOVE PROPERTY(mqttPrnConsole());
             }
         }
     }

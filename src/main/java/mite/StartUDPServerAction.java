@@ -41,6 +41,7 @@ public class StartUDPServerAction extends InternalAction {
             UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), deviceType.getDataObject("unknown"), serverObject);
             server.qps = (Integer) findProperty("qps[Server]").read(executionContext,serverObject);
             if (server.qps == null) server.qps = 1;
+            server.prnConsole = (Integer) findProperty("servPrnConsole[]").read(executionContext);
             server.start();
             UDPServer.runningServers.put(serverObject, server);
         } catch (Throwable e) {

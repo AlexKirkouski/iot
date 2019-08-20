@@ -1,6 +1,17 @@
 MODULE Controller;
 
-REQUIRE MqttServer;
+REQUIRE MqttServer, Options;
+
+cntPrnConsole  'Печать в консоль'  = DATA INTEGER (); 
+cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
+cntECode       'Код ошибки'        = DATA INTEGER ();
+
+onSetProp 'параметры обратной связи' () {
+    cntPrnConsole() <- mqttPrnConsole();
+    cntEMessage()   <- '';
+    cntECode()      <- 0; 
+}
+
 
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
@@ -17,7 +28,7 @@ d5          'Пятница'           = DATA STRING[100]  (Controller) CHARWIDT
 d6          'Суббота'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
 d7          'Воскресенье'       = DATA STRING[100]  (Controller) CHARWIDTH 100;
 curDay      'День месяца'       = DATA STRING[2]    (Controller) CHARWIDTH 2;
-expCmp      'Сравнение'         = DATA STRING[30]   (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
+expCmp      'Посл. команда'     = DATA STRING[30]   (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
 
 
 // внешний модуль передачи сигналов управления 
@@ -46,14 +57,15 @@ onTurnControlSignal 'Передача сигнала управления' (Mqtt
     DIALOG dialogControlSignal OBJECTS dialogSignal INPUT DO {
         
         IF NOT dialogSignal THEN RETURN ;
- 
+        EXEC onSetProp();
         mqttRunContent(m, c, dialogSignal);
     }
 }
 
 
-// Задание для планировщика: Controller.onCalendar[], время 1 раз 300 сек
+// Задание для планировщика: Controller.onCalendar[], время 1 раз nn сек - задается в планировщике
 onCalendar 'Run Calendar' () {
+    EXEC onSetProp();
     FOR MqttServer m IS MqttServer DO {
         IF isRun(m) THEN {
             FOR server(Controller c) = m DO {
@@ -63,15 +75,37 @@ onCalendar 'Run Calendar' () {
     }
 }
 
+onClear 'Очистить' (Controller c) {
+    curDay(c) <- '';
+    expCmp(c) <- '';
+    APPLY; 
+} 
+
 FORM controllers 'Контроллеры управления'
     OBJECTS m = MqttServer
     PROPERTIES(m) READONLY name, url 
     OBJECTS c = Controller
     PROPERTIES(c) READONLY id, topic
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
+//    PROPERTIES(c) onClear                             // очистка контрольной точки
     PROPERTIES(m,c) onTurnControlSignal
     FILTERS server(c) = m
 ;
+
+//DESIGN controllers {
+//    NEW mbox FIRST {
+//        fill = 1;
+//        type = SPLITV;
+//        MOVE BOX(m) {}
+//        MOVE BOX(c) {
+//            PANEL(c) {
+//                MOVE PROPERTY(topic(c)); 
+//            }
+//        }
+//    }
+//}
+
+
 
 FORM editController 'Редактирование контроллера'
     OBJECTS c = Controller PANEL

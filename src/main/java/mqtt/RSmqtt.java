@@ -69,7 +69,6 @@ public class RSmqtt {
                 // вызывается когда получено сообщение от топика
                 // обработка: пересылаем данные на локальный UDP, который слушает port
                 public void messageArrived(String topic, MqttMessage message) {
-                    System.out.println(message.toString());
                     try {
                         byte data[] = ("b'" + message.toString()).getBytes();
                         final DatagramSocket ds = new DatagramSocket();
