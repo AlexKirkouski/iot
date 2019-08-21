@@ -39,7 +39,7 @@ FORM devices 'Устройства измерений'
     OBJECTS t = DeviceType
     PROPERTIES(t) name, fileDashboard, dirGrafana, NEW, DELETE
     OBJECTS d = Device
-    PROPERTIES (d) select, id, dateCreation, NEW, DELETE
+    PROPERTIES (d) select, id, dateCreation, DELETE
     ORDER id(d)
     FILTERS type(d) = t
 ;
@@ -71,7 +71,7 @@ DESIGN dialogDiapasonID {
 
 iterateLong(LONG i, LONG from, LONG to) = RECURSION i==from AND from IS LONG AND to IS LONG STEP i==$i+1 AND i<=to CYCLES IMPOSSIBLE;
 
-insertDeviceDiapasonID 'Добавить устройства по диапазону ID' (DeviceType t) {
+insertDeviceDiapasonID 'Добавить устройства' (DeviceType t) {
     
     LOCAL limit = LONG ();
     LOCAL start = LONG ();
@@ -91,9 +91,10 @@ insertDeviceDiapasonID 'Добавить устройства по диапаз�
         FOR iterateLong(LONG j, start(), limit()) NEW d = Device DO {
             id(d) <- j;
             type(d) <- t;
+            dateCreation(d) <- currentDate();
         }
+        MESSAGE 'Добавлено новых устройств: ' + (limit() - start() + 1);
     }
-    MESSAGE 'Добавлено новых устройств: ' + (limit() - start() + 1);
 }
 
 EXTEND FORM devices

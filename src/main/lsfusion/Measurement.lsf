@@ -1,6 +1,6 @@
 MODULE Measurement;
 
-REQUIRE OrgDevice, Utils, Time, System;
+REQUIRE OrgDevice, Utils, Time, System, Security;
 
 CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
@@ -69,9 +69,6 @@ id (Measurement m, MeasurementType mt) = id(device(m)) IF value(m, mt) MATERIALI
 id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) MATERIALIZED ;
 /////
 
-///// Форма "Организации - устройства - измерения"
-allDevice 'По всем устройствам' = DATA LOCAL BOOLEAN ();
-
 onDelMeasurement 'Очистка всех измерений' (Measurement) {
     ASK 'Вы действительно хотите\nочистить все измерения?' DO {
         DELETE Measurement m WHERE m IS Measurement;
@@ -85,12 +82,27 @@ FORM clsMeasurement 'Очистка измерений'
     PROPERTIES onDelMeasurement(o1)
 ;
 
+// Организация - для каждого юзера
+organization 'Организация' = DATA Organization (CustomUser);
+nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
+
+EXTEND FORM customUser
+    PROPERTIES(u) nameOrganization
+;
+
+EXTEND FORM customUsers
+    PROPERTIES(u) READONLY nameOrganization BEFORE login(u)
+;
+//
+
+
+///// Форма "Организации - устройства - измерения"
 
 FORM orgMeasurements 'Измерения по организациям'
-    PROPERTIES() allDevice
     
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name
+    FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users') AND organization(currentUser()) == o) 
     
     OBJECTS d = Device
 //    PROPERTIES(d) READONLY id
@@ -105,7 +117,7 @@ FORM orgMeasurements 'Измерения по организациям'
     PROPERTIES(m) READONLY dateTime  
     PROPERTIES 'ID устройства'=(OVERRIDE deviceId(m)+'', idImport(m) + ' (не найдено)') READONLY
     PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
-    FILTERS index(type(device(m)),cmt) AND (allDevice() OR device(m)=d)
+    FILTERS index(type(device(m)),cmt) AND device(m)=d
     ORDER dateTime(m) DESC
 ;
 
@@ -130,7 +142,6 @@ DESIGN orgMeasurements {
                 MOVE BOX(m) {
                     caption = 'Измерения';
                     flex = 10;
-                    MOVE PROPERTY (allDevice());
                 }
                 fill = 2;
             }

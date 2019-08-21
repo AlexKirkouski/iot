@@ -52,6 +52,12 @@ FORM editOrganization 'Редактирование организации'
     EDIT Organization OBJECT o
 ;
 
+FORM organizations 'Организация'
+    OBJECTS o=Organization
+    PROPERTIES(o) READONLY name, unn, address
+    LIST Organization OBJECT o
+;
+
 DESIGN editOrganization {
     NEW cnt FIRST {
         fill = 1;

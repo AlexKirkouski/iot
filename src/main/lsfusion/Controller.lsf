@@ -49,7 +49,8 @@ onTurnControlSignal 'Передача сигнала управления' (Mqtt
     DIALOG dialogControlSignal OBJECTS dialogSignal INPUT DO {
         
         IF NOT dialogSignal THEN RETURN ;
-        cntEMessage() <- ''; cntECode() <- 0;
+        cntEMessage() <- '';
+        cntECode() <- 0;
         mqttRunContent(m, c, dialogSignal);
         IF cntECode() > 0 THEN MESSAGE cntEMessage();
     }
