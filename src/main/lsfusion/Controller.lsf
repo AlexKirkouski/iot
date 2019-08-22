@@ -1,26 +1,46 @@
 MODULE Controller;
 
-REQUIRE MqttServer, Options;
+REQUIRE MqttServer, Options, Utils;
 
 cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
 cntECode       'Код ошибки'        = DATA INTEGER ();
 
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
-server      'Сервер'            = DATA MqttServer   (Controller) AUTOSET; // поле связи, ключевое слово AUTOSET для авт. доб. ID сервера в контроллер при создании новой записи
-id          'ID контроллера'    = DATA LONG         (Controller) NONULL;
-topic       'Топик управления'  = DATA STRING[30]   (Controller) NONULL; 
-state       'Статус'            = DATA STRING[20]   (Controller); // пока зарезирвировано
+// обязательные
+server          'Сервер'            = DATA MqttServer       (Controller) AUTOSET; // поле связи, ключевое слово AUTOSET для авт. доб. ID сервера в контроллер при создании новой записи
+id              'ID контроллера'    = DATA LONG             (Controller) NONULL;
+topic           'Топик управления'  = DATA STRING[30]       (Controller) NONULL; 
+// дополнительно
+note            'Примечание'        = DATA STRING[100]      (Controller);
+base            'Основание'         = DATA STRING[100]      (Controller);    
+place           'Место установки'   = DATA STRING[100]      (Controller);
+signMes         'Признак измерений' = DATA BOOLEAN          (Controller); 
+state           'Статус'            = DATA STRING[20]       (Controller); // пока зарезирвировано
+// логирование
+dateCreation    'Дата создания'     = DATA DATETIME         (Controller);
+userCreation    'Кто создал'        = DATA BPSTRING[100]    (Controller);
 // выполнение контента по календарю
-d1          'Понедельник'       = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d2          'Вторник'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d3          'Среда'             = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d4          'Четверг'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d5          'Пятница'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d6          'Суббота'           = DATA STRING[100]  (Controller) CHARWIDTH 100;
-d7          'Воскресенье'       = DATA STRING[100]  (Controller) CHARWIDTH 100;
-curDay      'День месяца'       = DATA STRING[2]    (Controller) CHARWIDTH 2;
-expCmp      'Посл. команда'     = DATA STRING[30]   (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
+d1              'Понедельник'       = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d2              'Вторник'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d3              'Среда'             = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d4              'Четверг'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d5              'Пятница'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d6              'Суббота'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
+d7              'Воскресенье'       = DATA STRING[100]      (Controller) CHARWIDTH 100;
+curDay          'День месяца'       = DATA STRING[2]        (Controller) CHARWIDTH 6;
+expCmp          'Посл. команда'     = DATA STRING[30]       (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
+
+// уникальное значение имени при создании (изменении)
+controller = GROUP AGGR Controller c BY id(c);
+
+
+
+// при сохранении, форма редактирования
+WHEN SET (Controller c IS Controller) DO {
+    dateCreation(c) <- currentDateTime();
+    userCreation(c) <- login(currentUser());
+} 
 
 
 // внешний модуль передачи сигналов управления 
@@ -77,34 +97,24 @@ onClear 'Очистить' (Controller c) {
 FORM controllers 'Контроллеры управления'
     OBJECTS m = MqttServer
     PROPERTIES(m) READONLY name, url 
-    OBJECTS c = Controller
-    PROPERTIES(c) READONLY id, topic
-    PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
-//    PROPERTIES(c) onClear                             // очистка контрольной точки
-    PROPERTIES(m,c) onTurnControlSignal
-    FILTERS server(c) = m
+//    OBJECTS c1 = Controller PANEL PROPERTIES curDay(c1), expCmp(c1)
+    OBJECTS c2 = Controller
+    PROPERTIES(c2) READONLY id, topic, curDay, expCmp
+    PROPERTIES(c2) NEWSESSION NEW, EDIT, DELETE
+    PROPERTIES(m,c2) onTurnControlSignal
+//    FILTERS server(c1) = server(c2) 
+    FILTERS server(c2) = m
 ;
 
-//DESIGN controllers {
-//    NEW mbox FIRST {
-//        fill = 1;
-//        type = SPLITV;
-//        MOVE BOX(m) {}
-//        MOVE BOX(c) {
-//            PANEL(c) {
-//                MOVE PROPERTY(topic(c)); 
-//            }
-//        }
-//    }
-//}
-
-
+//    PROPERTIES(c2) onClear                             // очистка контрольной точки
 
 FORM editController 'Редактирование контроллера'
     OBJECTS c = Controller PANEL
     PROPERTIES(c) id, topic
+    PROPERTIES(c) note, signMes
     PROPERTIES(c) d1, d2, d3, d4, d5, d6, d7
     PROPERTIES(c) READONLY curDay, expCmp
+    PROPERTIES(c) READONLY userCreation, dateCreation
     EDIT Controller OBJECT c
 ;
 
@@ -116,6 +126,8 @@ DESIGN editController {
             caption = 'Общие свойства';
             MOVE PROPERTY (id(c));
             MOVE PROPERTY (topic(c));
+            MOVE PROPERTY (note(c));
+            MOVE PROPERTY (signMes(c));
         }
         NEW h2 AFTER h1 {
             type = CONTAINERV;
@@ -134,6 +146,13 @@ DESIGN editController {
             MOVE PROPERTY (curDay(c));
             MOVE PROPERTY (expCmp(c));
         }
+        NEW h4 AFTER h3 {
+            type = CONTAINERV;
+            caption = 'Создано';
+            MOVE PROPERTY(userCreation(c));
+            MOVE PROPERTY(dateCreation(c));
+        }
         MOVE TOOLBAR ; 
     }
 }
+

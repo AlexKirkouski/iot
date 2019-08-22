@@ -4,32 +4,35 @@ REQUIRE Options, SystemEvents;
 
 CLASS Organization 'Организации';
 TABLE organization(Organization);
+// основные
+name            'Название организации'      = DATA STRING[60]   (Organization) NONULL;
+unn             'УНН'                       = DATA STRING[10]   (Organization) NONULL;
+address         'Адрес'                     = DATA STRING[100]  (Organization) NONULL;
+contact         'Контактное лицо'           = DATA STRING[40]   (Organization) NONULL;
+phone           'Телефон для связи'         = DATA STRING[40]   (Organization) NONULL;
+site            'Сайт организации'          = DATA STRING[100]  (Organization) NONULL;
+email           'Электронный адрес'         = DATA STRING[100]  (Organization) NONULL;
+partner         'Партнер'                   = DATA BOOLEAN      (Organization);
+// логирование
+dateCreation    'Дата создания'             = DATA DATETIME     (Organization);
+userCreation    'Кто создал'                = DATA BPSTRING[100](Organization);
+// свойства только для grafana
+orgId           'ID организации'            = DATA INTEGER      (Organization); // RO
+dsId            'ID datasource'             = DATA INTEGER      (Organization); // RO
+dsUrl           'URL адрес'                 = DATA STRING[100]  (Organization) ;
+dsName          'Имя DataSource'            = DATA STRING[20]   (Organization); // RO 
+dsNameDB        'Имя БД'                    = DATA STRING[50]   (Organization) ;
+dsLogin         'Логин к БД'                = DATA STRING[20]   (Organization) ;
+dsPassword      'Пароль'                    = DATA STRING[20]   (Organization) ;
+dsSSL           'SSL режим'                 = DATA STRING[15]   (Organization) ;
+adminId         'ID админа'                 = DATA INTEGER      (Organization); // RO
+admin           'Логин администратора'      = DATA STRING[20]   (Organization) ;
+adminPassword   'Пароль администратора'     = DATA STRING[20]   (Organization) ;
+userId          'ID пользователя'           = DATA INTEGER      (Organization); // RO  
+user            'Логин пользователя'        = DATA STRING[20]   (Organization) ;
+userPassword    'Пароль пользователя'       = DATA STRING[20]   (Organization) ;
 
-name 'Название организации' = DATA STRING[60] (Organization) NONULL;
-unn 'УНН' = DATA STRING[10] (Organization) NONULL;
-address 'Адрес' = DATA STRING[100] (Organization) NONULL;
-contact 'Контактное лицо' = DATA STRING[40] (Organization) NONULL;
-phone 'Телефон для связи' = DATA STRING[40] (Organization) NONULL;
-site 'Сайт организации' = DATA STRING[100] (Organization) NONULL;
-email 'Электронный адрес' = DATA STRING[100] (Organization) NONULL;
-partner 'Партнер' = DATA BOOLEAN (Organization);
-
-// ----- только для grafana
-orgId 'ID организации' = DATA INTEGER (Organization); // RO
-dsId 'ID datasource' = DATA INTEGER (Organization); // RO
-dsUrl 'URL адрес' = DATA STRING[100] (Organization) ;
-dsName 'Имя DataSource' = DATA STRING[20] (Organization); // RO 
-dsNameDB 'Имя БД' = DATA STRING[50] (Organization) ;
-dsLogin 'Логин к БД' = DATA STRING[20] (Organization) ;
-dsPassword 'Пароль' = DATA STRING[20] (Organization) ;
-dsSSL 'SSL режим' = DATA STRING[15] (Organization) ;
-adminId 'ID админа' = DATA INTEGER (Organization); // RO
-admin 'Логин администратора' = DATA STRING[20] (Organization) ;
-adminPassword 'Пароль администратора' = DATA STRING[20] (Organization) ;
-userId 'ID пользователя' = DATA INTEGER (Organization); // RO  
-user 'Логин пользователя' = DATA STRING[20] (Organization) ;
-userPassword 'Пароль пользователя' = DATA STRING[20] (Organization) ;
-
+// уникальное значение имени при создании (изменении)
 organization = GROUP AGGR Organization o BY name(o);
 
 WHEN SET (Organization o IS Organization) DO {
@@ -38,17 +41,40 @@ WHEN SET (Organization o IS Organization) DO {
     dsLogin(o) <- grafanaPsLogin();
     dsPassword(o) <- grafanaPsPwd();
     dsSSL(o) <- grafanaPsSSL();
+    dateCreation(o) <- currentDateTime();
+    userCreation(o) <- login(currentUser());
+}
+
+CLASS SubUnit 'Подразделения';
+TABLE subunit(SubUnit);
+// основные
+orgId           'Организация'              = DATA Organization  (SubUnit) AUTOSET; // поле связи, ключевое слово AUTOSET
+name            'Название подразделения'   = DATA STRING[60]    (SubUnit) NONULL;
+contact         'Контактное лицо'          = DATA STRING[40]    (SubUnit) NONULL;
+phone           'Телефон для связи'        = DATA STRING[40]    (SubUnit) NONULL;
+// логирование
+dateCreation    'Дата создания'             = DATA DATETIME     (SubUnit);
+userCreation    'Кто создал'                = DATA BPSTRING[100](SubUnit);
+
+WHEN SET (SubUnit s IS SubUnit) DO {
+    dateCreation(s) <- currentDateTime();
+    userCreation(s) <- login(currentUser());
 }
 
 FORM organization 'Организации'
     OBJECTS o = Organization
-    PROPERTIES(o) READONLY name,unn, address
+    PROPERTIES(o) READONLY name, unn, address
     PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
+    OBJECTS s = SubUnit
+    PROPERTIES(s) name, contact, phone
+    PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE 
+    FILTERS orgId(s) = o   
 ;
 
 FORM editOrganization 'Редактирование организации'
     OBJECTS o = Organization PANEL
     PROPERTIES(o) name,unn,address,contact,phone,site,email,partner
+    PROPERTIES(o) READONLY userCreation, dateCreation
     EDIT Organization OBJECT o
 ;
 
@@ -61,7 +87,7 @@ FORM organizations 'Организация'
 DESIGN editOrganization {
     NEW cnt FIRST {
         fill = 1;
-        type = COLUMNS;
+//        type = COLUMNS;
         NEW h1 {
             type = CONTAINERV;
             caption = 'Общие сведения';
@@ -74,6 +100,39 @@ DESIGN editOrganization {
             MOVE PROPERTY (email(o));
             MOVE PROPERTY (partner(o));
         } 
+        NEW h2 AFTER h1 {
+            type = CONTAINERV;
+            caption = 'Создано';
+            MOVE PROPERTY(userCreation(o));
+            MOVE PROPERTY(dateCreation(o));
+        }
         MOVE TOOLBAR ; 
     }
+}
+
+FORM editSubUnit 'Редактирование подразделения'
+    OBJECTS s = SubUnit PANEL
+    PROPERTIES(s) name, contact, phone
+    PROPERTIES(s) READONLY userCreation, dateCreation
+    EDIT SubUnit OBJECT s
+;
+
+DESIGN editSubUnit {
+    NEW cnt FIRST {
+        fill = 1;
+        NEW h1 {
+            type = CONTAINERV;
+            caption = 'Общие сведения';
+            MOVE PROPERTY (name(s));
+            MOVE PROPERTY (contact(s));
+            MOVE PROPERTY (phone(s));
+        }
+        NEW h2 AFTER h1 {
+            type = CONTAINERV;
+            caption = 'Создано';
+            MOVE PROPERTY(userCreation(s));
+            MOVE PROPERTY(dateCreation(s));
+        }
+        MOVE TOOLBAR ; 
+    }    
 }
