@@ -27,7 +27,8 @@ type 'Тип' = DATA DeviceType (Device);
 nametype 'Тип' = name(type(Device d));
 
 device = GROUP AGGR Device d BY id(d);
-//type (LONG l) = type(device(l));
+// Не удалять, используется в DropUDPServerCachesAction.java !!!
+type (LONG l) = type(device(l));
 
 select 'Отм.' = DATA LOCAL BOOLEAN (Device);
 countSelect = GROUP SUM 1 IF select(Device d);

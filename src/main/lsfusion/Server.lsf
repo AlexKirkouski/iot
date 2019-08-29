@@ -1,6 +1,6 @@
 MODULE Server;
 
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, Schedule;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, OrgController, Schedule;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -44,27 +44,30 @@ NAVIGATOR {
                 NEW servers;
                 NEW mqttServers AFTER servers;
             }
-            NEW FOLDER dev 'Устройства' {
+            NEW FOLDER dev 'Устройства измерения' {
                 NEW devices;
-                NEW controllers AFTER devices;
-                NEW controllerTypeCommands AFTER devices;
+            }
+            NEW FOLDER control 'Контроллеры' {
+                NEW controllers;
+                NEW controllerTypeCommands AFTER controllers;
             }
             NEW clsMeasurement;
         }
-        NEW FOLDER org 'Организации и измерения' AFTER srvDevice {
+        NEW FOLDER org 'Организации' AFTER srvDevice {
             NEW organization;
             NEW orgDevices AFTER organization;
             NEW orgMeasurements AFTER orgDevices;
+            NEW orgControllers AFTER orgMeasurements;
         }
     }
 }
 
 // Автоматический старт обработчиков серверов UDP
-//onStarted() + {
-//    FOR isRunning(Server s) DO {
-//        startUDPServer(s, port(s), 'importCSV');
-//    }
-//}
+onStarted() + {
+    FOR isRunning(Server s) DO {
+        startUDPServer(s, port(s), 'importCSV');
+    }
+}
 
 
 

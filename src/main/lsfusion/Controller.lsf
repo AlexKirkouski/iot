@@ -74,6 +74,7 @@ nametype 'Тип' = name(type(Controller c));
 
 // уникальное значение при создании (изменении)
 controller = GROUP AGGR Controller c BY id(c);
+typeController (LONG l) = type(controller(l));
 
 // дополнительно
 note            'Примечание'        = DATA STRING[100]      (Controller);
@@ -109,7 +110,7 @@ FORM controllers 'Контроллеры управления'
     OBJECTS t = ControllerType
     PROPERTIES(t) name, NEW, DELETE
     OBJECTS c = Controller
-    PROPERTIES (c) select, id, nameServer, topic, note, base, subUnit, signMes, dateCreation, DELETE
+    PROPERTIES (c) select, id, nameServer, topic, note, base, signMes, dateCreation, DELETE
     ORDER id(c)
     FILTERS type(c) = t
 ;
@@ -180,7 +181,7 @@ FORM dialogControllerType 'Выбор типа контроллера'
 
 changeControllerType 'Изменить тип для отм. контроллеров' (ControllerType tt) {
     DIALOG dialogControllerType OBJECTS t INPUT DO {
-        ASK 'Для отмеченных устройств ('+ countSelect()+') изменяется тип. Изменять ?' yes = YESNO DO {
+        ASK 'Для отмеченных контроллеров ('+ countSelect()+') изменяется тип. Изменять ?' yes = YESNO DO {
             IF yes THEN { 
                 FOR select(Controller c) DO {
                     type(c) <- t;

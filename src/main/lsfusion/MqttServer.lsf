@@ -37,6 +37,13 @@ FORM mqttServers 'Сервера MQTT'
     PROPERTIES(m) startServer, stopServer 
 ;
 
+// Выбор сервера
+FORM listMqttServers 'Сервера MQTT'
+    OBJECTS m = MqttServer
+    PROPERTIES(m) READONLY name, topic, url, port
+    LIST MqttServer OBJECT m
+;
+
 // Автоматический старт обработчиков серверов MQTT, aplay выполняет обработчик
 onStarted() + {
     FOR MqttServer m IS MqttServer DO {

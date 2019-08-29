@@ -115,7 +115,7 @@ DESIGN editOrgGrafana {
 FORM insertDevices 'Свободные устройства'
     OBJECTS d = Device
     PROPERTIES(d) select
-    PROPERTIES(d) READONLY nametype, id, dateCreation
+    PROPERTIES(d) READONLY id, nametype, dateCreation
     ORDER nametype(d), id(d)
     FILTERS NOT organization(d)
 ;

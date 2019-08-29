@@ -117,6 +117,12 @@ FORM editSubUnit 'Редактирование подразделения'
     EDIT SubUnit OBJECT s
 ;
 
+FORM SubUnits 'Подразделения'
+    OBJECTS s = SubUnit
+    PROPERTIES(s) READONLY name, contact, phone
+    LIST SubUnit OBJECT s
+;
+
 DESIGN editSubUnit {
     NEW cnt FIRST {
         fill = 1;

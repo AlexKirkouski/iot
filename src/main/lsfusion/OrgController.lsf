@@ -1,0 +1,75 @@
+MODULE OrgController;
+
+REQUIRE Organization, Controller, Options, Utils;
+
+organization 'Организация' = DATA Organization (Controller) ;
+
+
+FORM orgControllers 'Организации и их контроллеры'
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name, unn, address
+
+    OBJECTS c = Controller
+    PROPERTIES(c) select
+    PROPERTIES(c) READONLY id, dateCreation, nametype
+    ORDER nametype(c), id(c)
+    FILTERS organization(c) = o
+;
+
+DESIGN orgControllers {
+    NEW split {
+        type = SPLITV;
+        NEW types {
+            type = SPLITH ;
+            MOVE BOX(o) {
+                caption = 'Организации';
+                flex = 1;
+            }
+            fill = 1;
+        }
+        NEW tab {
+            type = SPLITH ;
+            MOVE BOX(c) {
+                caption = 'Контроллеры';
+                flex = 1;
+            }
+            fill = 2;
+        }
+        fill = 1;
+    }
+    MOVE TOOLBARBOX;
+}
+/////
+
+///// Ввод новых контроллеров по организации (контроллеров, которые не принадлежат организации)
+FORM insertControllers 'Свободные контроллеры'
+    OBJECTS c = Controller
+    PROPERTIES(c) select
+    PROPERTIES(c) READONLY id, nametype, dateCreation
+    ORDER nametype(c), id(c)
+    FILTERS NOT organization(c)
+;
+
+insertControllersOrg 'Добавить контроллеры' (Organization o) {
+    NEWSESSION {
+        SHOW insertControllers ;
+        FOR select(Controller c) AND NOT organization(c) DO {
+            organization(c) <- o;
+            select(c) <- NULL;
+        }
+        APPLY ;
+    }
+}
+
+///// Удаление отмеченных по организации контроллеров
+deleteControllersOrg 'Удалить отмеченные контроллеры' (Organization o) {
+    NEWSESSION NESTED(select) {
+        FOR select(Controller c) AND organization(c) = o DO {
+            organization(c) <- NULL;
+        }
+        APPLY ;
+    }
+}
+
+EXTEND FORM orgControllers
+    PROPERTIES(o) insertControllersOrg, deleteControllersOrg ;
