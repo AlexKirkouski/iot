@@ -1,6 +1,6 @@
 MODULE Server;
 
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, Schedule;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -39,7 +39,7 @@ FORM servers 'Сервера UDP'
 
 NAVIGATOR {
     NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
-        NEW FOLDER srvDevice 'Сервера и устройства' {
+        NEW FOLDER srvDevice 'Серверы и устройства' {
             NEW FOLDER srv 'Серверы' {
                 NEW servers;
                 NEW mqttServers AFTER servers;
@@ -47,6 +47,7 @@ NAVIGATOR {
             NEW FOLDER dev 'Устройства' {
                 NEW devices;
                 NEW controllers AFTER devices;
+                NEW controllerTypeCommands AFTER devices;
             }
             NEW clsMeasurement;
         }
@@ -59,11 +60,11 @@ NAVIGATOR {
 }
 
 // Автоматический старт обработчиков серверов UDP
-onStarted() + {
-    FOR isRunning(Server s) DO {
-        startUDPServer(s, port(s), 'importCSV');
-    }
-}
+//onStarted() + {
+//    FOR isRunning(Server s) DO {
+//        startUDPServer(s, port(s), 'importCSV');
+//    }
+//}
 
 
 

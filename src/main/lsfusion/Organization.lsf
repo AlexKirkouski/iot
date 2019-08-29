@@ -78,7 +78,7 @@ FORM editOrganization 'Редактирование организации'
     EDIT Organization OBJECT o
 ;
 
-FORM organizations 'Организация'
+FORM organizations 'Организации'
     OBJECTS o=Organization
     PROPERTIES(o) READONLY name, unn, address
     LIST Organization OBJECT o

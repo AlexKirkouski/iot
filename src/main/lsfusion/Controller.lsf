@@ -1,46 +1,200 @@
 MODULE Controller;
 
-REQUIRE MqttServer, Options, Utils;
+REQUIRE MqttServer, Organization, Options, Utils;
 
+///// Типы контроллеров
+CLASS ControllerType 'Тип контроллера' {
+    unknown 'Неизвестное устройство'
+}
+
+TABLE controllerType(ControllerType);
+id 'ID типа контроллера' = DATA LONG (ControllerType);
+name 'Название типа контроллера' = DATA BPISTRING[1000] (ControllerType) CHARWIDTH 70 IN id;
+
+// уникальное значение при создании (изменении)
+controllerType = GROUP AGGR ControllerType c BY id(c);
+
+dateCreation 'Дата создания' = DATA DATE (ControllerType);
+userCreation 'Создал' = DATA User (ControllerType);
+
+WHEN SET (ControllerType c IS ControllerType) DO {
+    dateCreation(c) <- currentDate();
+    userCreation(c) <- currentUser();
+} 
+/////
+
+///// Команды по типам контроллера
+CLASS Command 'Команды контроллеров';
+TABLE command(Command);
+id 'ID команды' = DATA LONG (Command);
+name 'Название команды' = DATA BPISTRING[1000] (Command) CHARWIDTH 100 IN id;
+signal 'Сигнал управления' = DATA BPISTRING[100] (Command) CHARWIDTH 30 IN id;
+
+controllerType 'Тип' = DATA ControllerType (Command);
+nametype 'Тип' = name(controllerType(Command c));
+
+// уникальное значение при создании (изменении)
+command = GROUP AGGR Command c BY id(c);
+
+dateCreation 'Дата создания' = DATA DATE (Command);
+userCreation 'Создал' = DATA User (Command);
+
+WHEN SET (Command c IS Command) DO {
+    dateCreation(c) <- currentDate();
+    userCreation(c) <- currentUser();
+}
+
+//FORM editCommand 'Редактирование команды'
+//    OBJECTS c = Command PANEL
+//    PROPERTIES(c) name, signal
+//    EDIT Command OBJECT c
+//;
+
+FORM Commands 'Команда контроллера'
+    OBJECTS c = Command
+    PROPERTIES(c) READONLY name, signal
+    LIST Command OBJECT c
+;
+/////
+
+///// Контроллеры
 cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
 cntECode       'Код ошибки'        = DATA INTEGER ();
 
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
 // обязательные
-server          'Сервер'            = DATA MqttServer       (Controller) AUTOSET; // поле связи, ключевое слово AUTOSET для авт. доб. ID сервера в контроллер при создании новой записи
+server          'Сервер'            = DATA MqttServer       (Controller) NONULL ;
+nameServer      'Сервер'            = name(server(Controller c)); 
 id              'ID контроллера'    = DATA LONG             (Controller) NONULL;
-topic           'Топик управления'  = DATA STRING[30]       (Controller) NONULL; 
+topic           'Топик управления'  = DATA STRING[30]       (Controller) NONULL;
+
+type            'Тип'               = DATA ControllerType   (Controller);
+nametype 'Тип' = name(type(Controller c));
+
+// уникальное значение при создании (изменении)
+controller = GROUP AGGR Controller c BY id(c);
+
 // дополнительно
 note            'Примечание'        = DATA STRING[100]      (Controller);
 base            'Основание'         = DATA STRING[100]      (Controller);    
-place           'Место установки'   = DATA STRING[100]      (Controller);
+subUnit         'Место установки'   = DATA SubUnit          (Controller);
 signMes         'Признак измерений' = DATA BOOLEAN          (Controller); 
 state           'Статус'            = DATA STRING[20]       (Controller); // пока зарезирвировано
 // логирование
 dateCreation    'Дата создания'     = DATA DATETIME         (Controller);
 userCreation    'Кто создал'        = DATA BPSTRING[100]    (Controller);
-// выполнение контента по календарю
-d1              'Понедельник'       = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d2              'Вторник'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d3              'Среда'             = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d4              'Четверг'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d5              'Пятница'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d6              'Суббота'           = DATA STRING[100]      (Controller) CHARWIDTH 100;
-d7              'Воскресенье'       = DATA STRING[100]      (Controller) CHARWIDTH 100;
-curDay          'День месяца'       = DATA STRING[2]        (Controller) CHARWIDTH 6;
-expCmp          'Посл. команда'     = DATA STRING[30]       (Controller); // время и контент точки, например: 10=1 - 10 часов, включить
 
-// уникальное значение имени при создании (изменении)
-controller = GROUP AGGR Controller c BY id(c);
-
-
+select 'Отм.' = DATA LOCAL BOOLEAN (Controller);
+countSelect = GROUP SUM 1 IF select(Controller d);
 
 // при сохранении, форма редактирования
 WHEN SET (Controller c IS Controller) DO {
     dateCreation(c) <- currentDateTime();
     userCreation(c) <- login(currentUser());
 } 
+/////
+
+FORM controllerTypeCommands 'Типы контроллеров и их команды'
+    OBJECTS t = ControllerType
+    PROPERTIES(t) id, name, NEW, DELETE
+    ORDER id(t)
+    OBJECTS c = Command
+    PROPERTIES (c) id, name, signal, NEW, DELETE
+    ORDER id(c)
+    FILTERS controllerType(c) = t
+;
+
+FORM controllers 'Контроллеры управления'
+    OBJECTS t = ControllerType
+    PROPERTIES(t) name, NEW, DELETE
+    OBJECTS c = Controller
+    PROPERTIES (c) select, id, nameServer, topic, note, base, subUnit, signMes, dateCreation, DELETE
+    ORDER id(c)
+    FILTERS type(c) = t
+;
+
+///// Создание контроллеров по диапазону ID
+FORM dialogDiapasonID 'Создание контроллеров по диапазону ID'
+    OBJECTS diapasonID = (withID = LONG, byID = LONG ) PANEL
+    PROPERTIES withIDv = VALUE(withID), byIDv = VALUE(byID)
+;
+
+DESIGN dialogDiapasonID {
+    NEW date BEFORE TOOLBARBOX {
+        fill = 1;
+        type = SPLITH;
+        MOVE PROPERTY (withIDv) {
+            fill = 1;
+            caption = 'Диапазон ID c  ';
+            font = 'bold 32';
+            panelCaptionAbove = TRUE;
+        }
+        MOVE PROPERTY (byIDv) {
+            fill = 1;
+            caption = 'Диапазон ID по ';
+            font = 'bold 32';
+            panelCaptionAbove = TRUE;
+        }        
+    }
+}
+
+iterateLong(LONG i, LONG from, LONG to) = RECURSION i==from AND from IS LONG AND to IS LONG STEP i==$i+1 AND i<=to CYCLES IMPOSSIBLE;
+
+insertControllerDiapasonID 'Добавить контроллеры' (ControllerType t) {
+    
+    LOCAL limit = LONG ();
+    LOCAL start = LONG ();
+    
+    DIALOG dialogDiapasonID  OBJECTS withID INPUT, byID INPUT  DO {
+        
+        IF withID > byID AND byID > 0 THEN
+        {
+            MESSAGE 'Неверно указан диапазон !' ;
+            RETURN ;
+        }
+        
+        IF byID = 0 THEN limit() <- withID;
+            ELSE limit() <- byID;
+        start() <- withID;
+        
+        FOR iterateLong(LONG j, start(), limit()) NEW c = Controller DO {
+            id(c) <- j;
+            type(c) <- t;
+            dateCreation(c) <- currentDateTime();
+            userCreation(c) <- login(currentUser());
+        }
+        MESSAGE 'Добавлено новых контроллеров: ' + (limit() - start() + 1);
+    }
+}
+
+EXTEND FORM controllers
+    PROPERTIES(t) insertControllerDiapasonID ;
+
+///// Изменение типа устройства для отмеченных контроллеров
+FORM dialogControllerType 'Выбор типа контроллера'
+    OBJECTS t = ControllerType
+    PROPERTIES(t) READONLY name
+    ORDER name(t)
+;
+
+changeControllerType 'Изменить тип для отм. контроллеров' (ControllerType tt) {
+    DIALOG dialogControllerType OBJECTS t INPUT DO {
+        ASK 'Для отмеченных устройств ('+ countSelect()+') изменяется тип. Изменять ?' yes = YESNO DO {
+            IF yes THEN { 
+                FOR select(Controller c) DO {
+                    type(c) <- t;
+                    select(c) <- NULL ;
+                }
+            }
+        }
+    }
+}
+
+EXTEND FORM controllers
+    PROPERTIES(t) changeControllerType AFTER insertControllerDiapasonID(t);
+
+
 
 
 // внешний модуль передачи сигналов управления 
@@ -77,43 +231,10 @@ onTurnControlSignal 'Передача сигнала управления' (Mqtt
 }
 
 
-// Задание для планировщика: Controller.onCalendar[], время 1 раз nn сек - задается в планировщике
-onCalendar 'Run Calendar' () {
-    FOR MqttServer m IS MqttServer DO {
-        IF isRun(m) THEN {
-            FOR server(Controller c) = m DO {
-                mqttRunContent(m,c,'');
-            }
-        }
-    }
-}
-
-onClear 'Очистить' (Controller c) {
-    curDay(c) <- '';
-    expCmp(c) <- '';
-    APPLY; 
-} 
-
-FORM controllers 'Контроллеры управления'
-    OBJECTS m = MqttServer
-    PROPERTIES(m) READONLY name, url 
-//    OBJECTS c1 = Controller PANEL PROPERTIES curDay(c1), expCmp(c1)
-    OBJECTS c2 = Controller
-    PROPERTIES(c2) READONLY id, topic, curDay, expCmp
-    PROPERTIES(c2) NEWSESSION NEW, EDIT, DELETE
-    PROPERTIES(m,c2) onTurnControlSignal
-//    FILTERS server(c1) = server(c2) 
-    FILTERS server(c2) = m
-;
-
-//    PROPERTIES(c2) onClear                             // очистка контрольной точки
-
 FORM editController 'Редактирование контроллера'
     OBJECTS c = Controller PANEL
     PROPERTIES(c) id, topic
     PROPERTIES(c) note, signMes
-    PROPERTIES(c) d1, d2, d3, d4, d5, d6, d7
-    PROPERTIES(c) READONLY curDay, expCmp
     PROPERTIES(c) READONLY userCreation, dateCreation
     EDIT Controller OBJECT c
 ;
@@ -130,23 +251,6 @@ DESIGN editController {
             MOVE PROPERTY (signMes(c));
         }
         NEW h2 AFTER h1 {
-            type = CONTAINERV;
-            caption = 'Календарь управления';
-            MOVE PROPERTY (d1(c));
-            MOVE PROPERTY (d2(c));
-            MOVE PROPERTY (d3(c));
-            MOVE PROPERTY (d4(c));
-            MOVE PROPERTY (d5(c));
-            MOVE PROPERTY (d6(c));
-            MOVE PROPERTY (d7(c));
-        }
-        NEW h3 AFTER h2 {
-            type = CONTAINERV;
-            caption = 'Контроль выполнения';
-            MOVE PROPERTY (curDay(c));
-            MOVE PROPERTY (expCmp(c));
-        }
-        NEW h4 AFTER h3 {
             type = CONTAINERV;
             caption = 'Создано';
             MOVE PROPERTY(userCreation(c));
