@@ -1,0 +1,100 @@
+MODULE MyScheduler;
+
+REQUIRE Time;
+
+CLASS SchedulerStartType 'Отсчет времени' {
+    afterStart 'От запуска предыдущего',
+    afterFinish 'От окончания предыдущего'
+}
+TABLE schedulerStartType(SchedulerStartType);
+
+FORM schedulerStartTypes 'Отсчет времени'
+    OBJECTS s = SchedulerStartType
+    PROPERTIES(s) READONLY staticCaption
+    LIST SchedulerStartType OBJECT s
+;
+
+DESIGN schedulerStartTypes {
+    BOX {
+        PROPERTY(staticCaption(s)) {
+            caption = 'Отсчет времени';
+        }
+    }
+}
+
+CLASS SchedulerType 'Тип' {
+    days 'Ежедневно',
+    period 'Периодически'
+}
+TABLE schedulerType(SchedulerType);
+
+FORM schedulerTypes 'Тип'
+    OBJECTS t = SchedulerType
+    PROPERTIES(t) READONLY staticCaption
+    LIST SchedulerType OBJECT t
+;
+
+DESIGN schedulerTypes {
+    BOX {
+        PROPERTY(staticCaption(t)) {
+            caption = 'Тип';
+        }
+    }
+}
+
+
+CLASS ScheduledTask 'Планировщик';
+TABLE scheduledTask (ScheduledTask);
+
+name 'Имя' = DATA STRING[100] (ScheduledTask);
+active 'Активно' = DATA BOOLEAN (ScheduledTask);
+
+schedulerType 'Тип' = DATA SchedulerType (ScheduledTask);
+nameSchedulerType 'Тип' = staticCaption(schedulerType(ScheduledTask ScheduledTask));
+
+isPeriod(ScheduledTask s)  = TRUE IF nameSchedulerType(s) == staticCaption(SchedulerType.period);
+
+startDate 'Дата начала' = DATA DATETIME (ScheduledTask);
+in '' = DATA BOOLEAN (DOW, ScheduledTask); 
+
+timeFrom 'Время с' = DATA TIME (ScheduledTask);
+timeTo 'Время по' = DATA TIME (ScheduledTask);
+period 'Повторять каждые (секунд)' = DATA INTEGER (ScheduledTask);
+schedulerStartType 'Отсчет времени' = DATA SchedulerStartType (ScheduledTask);
+nameSchedulerStartType 'Отсчет времени' = staticCaption(schedulerStartType(ScheduledTask ScheduledTask));
+
+FORM scheduledTask 'Планировщик'
+    
+    OBJECTS t = ScheduledTask
+    PROPERTIES (t) GRID active, name, nameSchedulerType, startDate
+    PROPERTIES (t) NEW, DELETE GRID
+    PROPERTIES (t) SHOWIF isPeriod(t)  PANEL timeFrom, timeTo, period, nameSchedulerStartType  
+    
+    OBJECTS dow=DOW
+    PROPERTIES (dow) number, staticCaption 
+    PROPERTIES (dow, t) in
+    ORDER number(dow)
+     
+    FILTERGROUP filtersScheduler
+            FILTER 'Активные' active(t) 'F9'
+;
+
+DESIGN scheduledTask {
+    NEW specContainer {
+        fill = 1; 
+        MOVE BOX(t) {fill = 3;};
+        MOVE BOX(dow) {fill = 1;};
+        PROPERTY(number(dow)) {
+            hide = TRUE;
+        }
+        NEW period {
+            fill = 1;
+            type = CONTAINERV;
+            MOVE PROPERTY(timeFrom(t));
+            MOVE PROPERTY(timeTo(t));
+            MOVE PROPERTY(period(t));
+            MOVE PROPERTY(nameSchedulerStartType(t));
+        }
+    }
+    MOVE TOOLBARBOX;
+}

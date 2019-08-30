@@ -1,6 +1,6 @@
 MODULE Server;
 
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, OrgController, Schedule;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, OrgController, MyScheduler;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -59,6 +59,7 @@ NAVIGATOR {
             NEW orgMeasurements AFTER orgDevices;
             NEW orgControllers AFTER orgMeasurements;
         }
+        NEW scheduledTask;
     }
 }
 

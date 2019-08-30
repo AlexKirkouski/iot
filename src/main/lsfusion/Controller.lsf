@@ -119,24 +119,32 @@ FORM controllers 'Контроллеры управления'
 FORM dialogDiapasonID 'Создание контроллеров по диапазону ID'
     OBJECTS diapasonID = (withID = LONG, byID = LONG ) PANEL
     PROPERTIES withIDv = VALUE(withID), byIDv = VALUE(byID)
+    OBJECTS prefix = STRING[30] PANEL
+    PROPERTIES prefixv = VALUE(prefix)
 ;
 
 DESIGN dialogDiapasonID {
     NEW date BEFORE TOOLBARBOX {
         fill = 1;
-        type = SPLITH;
+        type = CONTAINERH;
         MOVE PROPERTY (withIDv) {
             fill = 1;
             caption = 'Диапазон ID c  ';
-            font = 'bold 32';
+            font = 'bold 16';
             panelCaptionAbove = TRUE;
         }
         MOVE PROPERTY (byIDv) {
             fill = 1;
             caption = 'Диапазон ID по ';
-            font = 'bold 32';
+            font = 'bold 16';
             panelCaptionAbove = TRUE;
-        }        
+        }
+        MOVE PROPERTY (prefixv) {
+            fill = 1;
+            caption = 'Префикс для топика';
+            font = 'bold 16';
+            panelCaptionAbove = TRUE;
+        }
     }
 }
 
@@ -147,7 +155,7 @@ insertControllerDiapasonID 'Добавить контроллеры' (Controller
     LOCAL limit = LONG ();
     LOCAL start = LONG ();
     
-    DIALOG dialogDiapasonID  OBJECTS withID INPUT, byID INPUT  DO {
+    DIALOG dialogDiapasonID  OBJECTS withID INPUT, byID INPUT, prefix INPUT  DO {
         
         IF withID > byID AND byID > 0 THEN
         {
@@ -162,6 +170,7 @@ insertControllerDiapasonID 'Добавить контроллеры' (Controller
         FOR iterateLong(LONG j, start(), limit()) NEW c = Controller DO {
             id(c) <- j;
             type(c) <- t;
+            topic(c) <- prefix + ' ' + j;
             dateCreation(c) <- currentDateTime();
             userCreation(c) <- login(currentUser());
         }
