@@ -60,8 +60,8 @@ NAVIGATOR {
             NEW orgDevices AFTER organization;
             NEW orgMeasurements AFTER orgDevices;
             NEW orgControllers AFTER orgMeasurements;
+            NEW orgControllerCommands AFTER orgControllers;
         }
-        NEW scheduledTask;
     }
 }
 

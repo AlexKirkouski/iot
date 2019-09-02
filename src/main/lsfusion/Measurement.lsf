@@ -1,6 +1,6 @@
 MODULE Measurement;
 
-REQUIRE OrgDevice, Utils, Time, System, Security;
+REQUIRE OrgDevice, Utils, Time, Security;
 
 CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
@@ -81,10 +81,6 @@ FORM clsMeasurement 'Очистка измерений'
     OBJECTS o1 = Measurement
     PROPERTIES onDelMeasurement(o1)
 ;
-
-// Организация - для каждого юзера
-organization 'Организация' = DATA Organization (CustomUser);
-nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
 
 EXTEND FORM customUser
     PROPERTIES(u) nameOrganization

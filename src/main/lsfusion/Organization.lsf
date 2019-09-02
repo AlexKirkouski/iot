@@ -45,6 +45,10 @@ WHEN SET (Organization o IS Organization) DO {
     userCreation(o) <- login(currentUser());
 }
 
+// Организация - для каждого юзера
+organization 'Организация' = DATA Organization (CustomUser);
+nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
+
 CLASS SubUnit 'Подразделения';
 TABLE subunit(SubUnit);
 // основные

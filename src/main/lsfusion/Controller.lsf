@@ -17,6 +17,9 @@ controllerType = GROUP AGGR ControllerType c BY id(c);
 dateCreation 'Дата создания' = DATA DATE (ControllerType);
 userCreation 'Создал' = DATA User (ControllerType);
 
+//organization 'Организация' = DATA Organization (Controller) ;
+
+
 WHEN SET (ControllerType c IS ControllerType) DO {
     dateCreation(c) <- currentDate();
     userCreation(c) <- currentUser();
@@ -203,6 +206,9 @@ changeControllerType 'Изменить тип для отм. контролле�
 
 EXTEND FORM controllers
     PROPERTIES(t) changeControllerType AFTER insertControllerDiapasonID(t);
+
+
+
 
 
 

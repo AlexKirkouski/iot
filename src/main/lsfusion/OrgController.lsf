@@ -1,6 +1,6 @@
 MODULE OrgController;
 
-REQUIRE Organization, Controller, Options, Utils;
+REQUIRE Controller, Options, Security;
 
 organization 'Организация' = DATA Organization (Controller) ;
 
@@ -73,3 +73,52 @@ deleteControllersOrg 'Удалить отмеченные контроллеры
 
 EXTEND FORM orgControllers
     PROPERTIES(o) insertControllersOrg, deleteControllersOrg ;
+
+
+///// Форма "Организации - контроллеры - команды"
+FORM orgControllerCommands 'Команды контроллеров'
+    
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name
+    FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users')  AND organization(currentUser()) == o) 
+    
+    OBJECTS c = Controller
+    PROPERTIES(c) READONLY id, dateCreation, nametype
+    ORDER nametype(c), id(c)
+    FILTERS organization(c) = o
+    
+    OBJECTS cm = Command
+    PROPERTIES(cm) READONLY id, name, signal  
+    FILTERS controllerType(cm) = type(c)
+    ORDER name(cm)
+;
+
+DESIGN orgControllerCommands {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW clients {
+                type = SPLITH ;
+                MOVE BOX(o) {
+                    caption = 'Организации';
+                    flex = 1;
+                }
+                fill = 1;
+            }
+            NEW tab {
+                type = SPLITH ;
+                MOVE BOX(c) {
+                    caption = 'Контроллеры';
+                    flex = 2;
+                }
+                MOVE BOX(cm) {
+                    caption = 'Команды';
+                    flex = 5;
+                }
+                fill = 2;
+            }
+            fill = 1;
+        }
+    }
+}
+/////

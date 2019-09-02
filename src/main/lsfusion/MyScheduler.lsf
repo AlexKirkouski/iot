@@ -1,6 +1,6 @@
 MODULE MyScheduler;
 
-REQUIRE Time;
+REQUIRE Time, Scheduler;
 
 CLASS SchedulerStartType 'Отсчет времени' {
     afterStart 'От запуска предыдущего',
@@ -43,47 +43,28 @@ DESIGN schedulerTypes {
 }
 
 
-CLASS ScheduledTask 'Планировщик';
-TABLE scheduledTask (ScheduledTask);
-
-name 'Имя' = DATA STRING[100] (ScheduledTask);
-active 'Активно' = DATA BOOLEAN (ScheduledTask);
-
-schedulerType 'Тип' = DATA SchedulerType (ScheduledTask);
+schedulerType 'Тип' (ScheduledTask t) = IF period(t) = 86400 THEN SchedulerType.days ELSE SchedulerType.period;
 nameSchedulerType 'Тип' = staticCaption(schedulerType(ScheduledTask ScheduledTask));
 
 isPeriod(ScheduledTask s)  = TRUE IF nameSchedulerType(s) == staticCaption(SchedulerType.period);
 
-startDate 'Дата начала' = DATA DATETIME (ScheduledTask);
-in '' = DATA BOOLEAN (DOW, ScheduledTask); 
-
-timeFrom 'Время с' = DATA TIME (ScheduledTask);
-timeTo 'Время по' = DATA TIME (ScheduledTask);
-period 'Повторять каждые (секунд)' = DATA INTEGER (ScheduledTask);
-schedulerStartType 'Отсчет времени' = DATA SchedulerStartType (ScheduledTask);
-nameSchedulerStartType 'Отсчет времени' = staticCaption(schedulerStartType(ScheduledTask ScheduledTask));
-
-FORM scheduledTask 'Планировщик'
+FORM scheduleEdit 'Задание планировщика'
     
-    OBJECTS t = ScheduledTask
-    PROPERTIES (t) GRID active, name, nameSchedulerType, startDate
-    PROPERTIES (t) NEW, DELETE GRID
+    OBJECTS t = ScheduledTask PANEL 
+    PROPERTIES (t) active, name, nameSchedulerType, startDate
     PROPERTIES (t) SHOWIF isPeriod(t)  PANEL timeFrom, timeTo, period, nameSchedulerStartType  
     
     OBJECTS dow=DOW
     PROPERTIES (dow) number, staticCaption 
     PROPERTIES (dow, t) in
     ORDER number(dow)
-     
-    FILTERGROUP filtersScheduler
-            FILTER 'Активные' active(t) 'F9'
 ;
 
-DESIGN scheduledTask {
+DESIGN scheduleEdit {
     NEW specContainer {
         fill = 1; 
-        MOVE BOX(t) {fill = 3;};
-        MOVE BOX(dow) {fill = 1;};
+        MOVE BOX(t) {fill = 1;};
+        MOVE BOX(dow) {fill = 4;};
         PROPERTY(number(dow)) {
             hide = TRUE;
         }
@@ -98,3 +79,11 @@ DESIGN scheduledTask {
     }
     MOVE TOOLBARBOX;
 }
+
+editSchedule 'Редактировать' (ScheduledTask t) {
+    NEWSESSION {
+        SHOW scheduleEdit ;
+    }
+}
+EXTEND FORM scheduledTask
+    PROPERTIES(t) editSchedule;
