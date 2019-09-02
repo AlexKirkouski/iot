@@ -1,0 +1,71 @@
+MODULE DevThreshold;
+
+REQUIRE Organization, Device, OrgDevice, Measurement;
+
+minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
+maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
+
+
+FORM DevThreshold 'Пороговые значения' 
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name  
+
+    OBJECTS d = Device
+    PROPERTIES(d) READONLY id
+
+    OBJECTS m = MeasurementType
+    PROPERTIES(m) READONLY name, id
+    PROPERTIES(d,m) minValue, maxValue 
+
+    ORDER id(d)
+    FILTERS organization(d) = o
+    FILTERS index(type(d),m)
+;    
+    
+DESIGN DevThreshold {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW clients {
+                type = SPLITH ;
+                MOVE BOX(o) {
+                    caption = 'Организации';
+                    flex = 1;
+                }
+                fill = 1;
+            }
+            NEW tab {
+                type = SPLITH ;
+                MOVE BOX(d) {
+                    caption = 'Устройства';
+                    flex = 2;
+                }
+                MOVE BOX(m) {
+                    caption = 'Пороговые значения измерений';
+                    flex = 10;
+                }
+                fill = 2;
+            }
+            fill = 1;
+        }
+    }
+}   
+
+onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
+
+toString = FORMULA TEXT 'to_char($1,$2)';
+cid '' = DATA STRING ();
+
+// событие превышения над диапазоном
+WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
+    IF minValue(d,mt) AND maxValue(d,mt) THEN {
+        cid() <- 'ID ' + toString(id(m,mt),'99999') + ', ' + name(mt);
+        IF value(m,mt) < minValue(d,mt) OR value(m,mt) > maxValue(d,mt) THEN {
+            onPrint(cid() + ', вне диапазона: ' + 
+                toString(minValue(d,mt),'9999.999') + ' ' +   
+                toString(value(m,mt),'9999.999') + ' ' +  
+                toString(maxValue(d,mt),'9999.999')   
+                );
+        } ELSE onPrint(cid() + ', Ok');
+    }    
+} 

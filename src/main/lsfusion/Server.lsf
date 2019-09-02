@@ -1,6 +1,7 @@
 MODULE Server;
 
-REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, MqttServer, Controller, OrgController, MyScheduler;
+REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, 
+        MqttServer, Controller, OrgController, MyScheduler, DevThreshold;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -46,6 +47,7 @@ NAVIGATOR {
             }
             NEW FOLDER dev 'Устройства измерения' {
                 NEW devices;
+                NEW DevThreshold;
             }
             NEW FOLDER control 'Контроллеры' {
                 NEW controllers;
@@ -62,6 +64,7 @@ NAVIGATOR {
         NEW scheduledTask;
     }
 }
+
 
 // Автоматический старт обработчиков серверов UDP
 onStarted() + {
