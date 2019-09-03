@@ -61,8 +61,6 @@ FORM Commands 'Команда контроллера'
 /////
 
 ///// Контроллеры
-cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
-cntECode       'Код ошибки'        = DATA INTEGER ();
 
 CLASS Controller 'Контроллеры управления';
 TABLE controller(Controller);
@@ -211,41 +209,7 @@ EXTEND FORM controllers
 
 
 
-
-
-// внешний модуль передачи сигналов управления 
-mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer,Controller,STRING ); 
-
-// ввод и передача сигнала управления на контроллер
-FORM dialogControlSignal 'Передача сигнала управления'
-    OBJECTS dialogSignal = STRING[50] PANEL
-    PROPERTIES dialogSignalv = VALUE(dialogSignal)
-;
-
-DESIGN dialogControlSignal {
-    NEW date BEFORE TOOLBARBOX {
-        fill = 1;
-        type = SPLITH;
-        MOVE PROPERTY (dialogSignalv) {
-            fill = 1;
-            font = 'bold 16';
-            caption = 'Сигнал управления: ';
-        }
-    }
-}
-
-onTurnControlSignal 'Передача сигнала управления' (MqttServer m,Controller c) {
-    
-    DIALOG dialogControlSignal OBJECTS dialogSignal INPUT DO {
-        
-        IF NOT dialogSignal THEN RETURN ;
-        cntEMessage() <- '';
-        cntECode() <- 0;
-        mqttRunContent(m, c, dialogSignal);
-        IF cntECode() > 0 THEN MESSAGE cntEMessage();
-    }
-}
-
+////////////////////// Ниже -  удалить или что-то оставить ????????????????
 
 FORM editController 'Редактирование контроллера'
     OBJECTS c = Controller PANEL
@@ -276,3 +240,4 @@ DESIGN editController {
     }
 }
 
+//////////////////////////////////////

@@ -61,6 +61,7 @@ NAVIGATOR {
             NEW orgMeasurements AFTER orgDevices;
             NEW orgControllers AFTER orgMeasurements;
             NEW orgControllerCommands AFTER orgControllers;
+            NEW runCommands AFTER orgControllerCommands;
         }
     }
 }

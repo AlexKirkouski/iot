@@ -73,7 +73,75 @@ deleteControllersOrg 'Удалить отмеченные контроллеры
 
 EXTEND FORM orgControllers
     PROPERTIES(o) insertControllersOrg, deleteControllersOrg ;
+/////
 
+///// Журнал переданных команд на контроллеры
+CLASS RunCommand 'Переданные команды на контроллеры';
+TABLE runCommand(RunCommand);
+
+controller =   DATA Controller    (RunCommand);
+controllerId  'ИД устройства'     (RunCommand r) = id(controller(r)) MATERIALIZED;
+command =      DATA Command       (RunCommand);
+commandId     'ИД команды'        (RunCommand r) = id(command(r)) MATERIALIZED;
+commandName   'Название команды'  (RunCommand r) = name(command(r)) MATERIALIZED;
+commandSignal 'Сигнал управления' (RunCommand r) = signal(command(r)) MATERIALIZED;
+
+dateTime      'Время'        = DATA DATETIME      (RunCommand);
+userCreation  'Кто передал'  = DATA BPSTRING[100] (RunCommand);
+
+eMessage      'Текст ошибки' = DATA STRING[100]   (RunCommand);
+eCode         'Код ошибки'   = DATA INTEGER       (RunCommand);
+
+FORM runCommands 'Журнал переданных команд на контроллеры'
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name, unn, address
+    FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users')  AND organization(currentUser()) == o)
+    
+    OBJECTS r = RunCommand 
+    PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, userCreation, eCode, eMessage
+    ORDER dateTime(r)
+    FILTERS organization(controller(r)) = o   
+;
+/////
+
+///// Передача сигнала управления на контроллер
+cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
+cntECode       'Код ошибки'        = DATA INTEGER ();
+
+// внешний модуль передачи сигналов управления 
+mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer, Controller, STRING ); 
+
+transmitControlSignal 'Передача сигнала управления' (Command cm, Controller c, STRING[100] login) {
+    NEWSESSION {    
+        cntEMessage() <- '';
+        cntECode() <- 0;
+        mqttRunContent(server(c), c, signal(cm));
+        
+        NEW r = RunCommand {
+            controller(r) <- c;
+            command(r) <- cm;
+            dateTime(r) <- currentDateTime();
+            userCreation(r) <- OVERRIDE login, 'Планировщик';
+            IF cntECode() > 0 THEN {
+                eCode(r) <- cntECode();
+                eMessage(r) <- cntEMessage();
+            }
+        }
+        APPLY ;
+        
+        IF cntECode() > 0 AND login THEN MESSAGE cntEMessage();
+    }
+}
+
+// вызов 'Передача сигнала управления' из планировщика
+transmitControlSignalScheduler 'Передача сигнала управления (планировщик)' (Command cm, Controller c) {
+    EXEC transmitControlSignal(cm, c, NULL);
+}
+// вызов 'Передача сигнала управления' вручную
+transmitControlSignalUser 'Передача сигнала управления' (Command cm, Controller c) {
+    EXEC transmitControlSignal(cm, c, login(currentUser()));
+}
+/////
 
 ///// Форма "Организации - контроллеры - команды"
 FORM orgControllerCommands 'Команды контроллеров'
@@ -88,7 +156,8 @@ FORM orgControllerCommands 'Команды контроллеров'
     FILTERS organization(c) = o
     
     OBJECTS cm = Command
-    PROPERTIES(cm) READONLY id, name, signal  
+    PROPERTIES(cm) READONLY id, name, signal
+    PROPERTIES(cm, c) transmitControlSignalUser 
     FILTERS controllerType(cm) = type(c)
     ORDER name(cm)
 ;
