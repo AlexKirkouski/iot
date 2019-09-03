@@ -5,14 +5,16 @@ grafanaLogin 'Логин администратора Grafana' = DATA STRING[20]
 grafanaPwd   'Пароль администратора Grafana' = DATA STRING[20]();
 grafanaUrl   'Базовый URL для Grafana' = DATA STRING[100](); 
 
-grafanaPsUrl   'URL для доступа к PostgreSQL' = DATA STRING[100](); 
-grafanaPsDB    'Имя БД PostgreSQL' = DATA STRING[50](); 
-grafanaPsLogin 'Логин к PostgreSQL' = DATA STRING[20](); 
-grafanaPsPwd   'Пароль к PostgreSQL' = DATA STRING[20](); 
-grafanaPsSSL   'SSL mode' = DATA STRING[15](); 
+grafanaPsUrl    'URL для доступа к PostgreSQL' = DATA STRING[100](); 
+grafanaPsDB     'Имя БД PostgreSQL' = DATA STRING[50](); 
+grafanaPsLogin  'Логин к PostgreSQL' = DATA STRING[20](); 
+grafanaPsPwd    'Пароль к PostgreSQL' = DATA STRING[20](); 
+grafanaPsSSL    'SSL mode' = DATA STRING[15](); 
 
-mqttPrnConsole 'Печать отладочной информации MQTT в консоль (0 или 1)' = DATA INTEGER ();  
-udpPrnConsole  'Печать отладочной информации UDP в консоль (0 или 1)' = DATA INTEGER ();  
+mqttPrnConsole  'Печать отладочной информации MQTT в консоль (0 или 1)' = DATA INTEGER ();  
+udpPrnConsole   'Печать отладочной информации UDP в консоль (0 или 1)' = DATA INTEGER ();
+
+emailAccount    'Почтовый аккаунт' = DATA STRING[100] ();  
 
 EXTEND FORM options PROPERTIES() grafanaLogin;
 EXTEND FORM options PROPERTIES() grafanaPwd;
@@ -27,19 +29,27 @@ EXTEND FORM options PROPERTIES() grafanaPsSSL;
 EXTEND FORM options PROPERTIES() udpPrnConsole;
 EXTEND FORM options PROPERTIES() mqttPrnConsole;
 
+EXTEND FORM options PROPERTIES() emailAccount;
+
+
 DESIGN options {
     pane {
         NEW grafana {
             caption = 'Настройка приложения';
 //            type = COLUMNS;
             NEW h1 {
+                caption = 'Общие свойства';
+                type = CONTAINERV;
+                MOVE PROPERTY(emailAccount()); 
+            }
+            NEW h2 {
                 caption = 'Grafana: доступ'; 
                 type = CONTAINERV;
                 MOVE PROPERTY(grafanaLogin());
                 MOVE PROPERTY(grafanaPwd());
                 MOVE PROPERTY(grafanaUrl());
             }
-            NEW h2 AFTER h1 {
+            NEW h3 AFTER h2 {
                 caption = 'Grafana: доступ к PostgreSQL'; 
                 type = CONTAINERV;
                 MOVE PROPERTY(grafanaPsUrl());
@@ -48,7 +58,7 @@ DESIGN options {
                 MOVE PROPERTY(grafanaPsPwd());
                 MOVE PROPERTY(grafanaPsSSL());
             }
-            NEW h3 AFTER h2 {
+            NEW h4 AFTER h3 {
                 caption = 'Отладка'; 
                 type = CONTAINERV;
                 MOVE PROPERTY(udpPrnConsole());

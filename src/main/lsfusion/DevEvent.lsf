@@ -1,0 +1,46 @@
+MODULE DevEvent;
+
+REQUIRE Organization;
+
+CLASS DevEvent 'События для устройств';
+TABLE devEvent (DevEvent);
+
+organization    'Организация'       = DATA Organization (DevEvent) ;
+id              'ID'                = DATA LONG         (DevEvent) CHARWIDTH 8;
+dt              'Дата события'      = DATA DATETIME     (DevEvent);
+subject         'Событие'           = DATA BPISTRING    (DevEvent); 
+body            'Текст сообщения'   = DATA BPISTRING    (DevEvent);
+action          'Действие'          = DATA BPISTRING    (DevEvent);
+
+FORM devEvents 'Лог событий'
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name, unn, address
+
+    OBJECTS d = DevEvent
+    PROPERTIES(d) READONLY dt, id, subject, body, action 
+    FILTERS organization(d) = o
+;
+
+DESIGN devEvents {
+    NEW split {
+        type = SPLITV;
+        NEW types {
+            type = SPLITH ;
+            MOVE BOX(o) {
+                caption = 'Организации';
+                flex = 1;
+            }
+            fill = 1;
+        }
+        NEW tab {
+            type = SPLITH ;
+            MOVE BOX(d) {
+                caption = 'Лог событий';
+                flex = 1;
+            }
+            fill = 2;
+        }
+        fill = 1;
+    }
+    MOVE TOOLBARBOX;
+}

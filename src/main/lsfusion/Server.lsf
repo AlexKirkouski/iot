@@ -1,7 +1,7 @@
 MODULE Server;
 
 REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, 
-        MqttServer, Controller, OrgController, MyScheduler, DevThreshold;
+        MqttServer, Controller, OrgController, MyScheduler, DevThreshold, DevEvent;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -47,7 +47,8 @@ NAVIGATOR {
             }
             NEW FOLDER dev 'Устройства измерения' {
                 NEW devices;
-                NEW DevThreshold;
+                NEW devThreshold;
+                NEW devEvents;
             }
             NEW FOLDER control 'Контроллеры' {
                 NEW controllers;

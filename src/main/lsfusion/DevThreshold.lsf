@@ -1,12 +1,12 @@
 MODULE DevThreshold;
 
-REQUIRE Organization, Device, OrgDevice, Measurement;
+REQUIRE Organization, Device, OrgDevice, Measurement, DevEvent, Utils;
 
 minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
 maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
 
 
-FORM DevThreshold 'Пороговые значения' 
+FORM devThreshold 'Пороговые значения' 
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name  
 
@@ -22,7 +22,7 @@ FORM DevThreshold 'Пороговые значения'
     FILTERS index(type(d),m)
 ;    
     
-DESIGN DevThreshold {
+DESIGN devThreshold {
     OBJECTS {
         NEW split {
             type = SPLITV;
@@ -53,19 +53,29 @@ DESIGN DevThreshold {
 
 onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
 
-toString = FORMULA TEXT 'to_char($1,$2)';
-cid '' = DATA STRING ();
+toString    = FORMULA TEXT 'trim(to_char($1,$2))';
+subject ''  = DATA BPSTRING ();
+body    ''  = DATA BPSTRING ();
 
-// событие превышения над диапазоном
 WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
     IF minValue(d,mt) AND maxValue(d,mt) THEN {
-        cid() <- 'ID ' + toString(id(m,mt),'99999') + ', ' + name(mt);
         IF value(m,mt) < minValue(d,mt) OR value(m,mt) > maxValue(d,mt) THEN {
-            onPrint(cid() + ', вне диапазона: ' + 
-                toString(minValue(d,mt),'9999.999') + ' ' +   
-                toString(value(m,mt),'9999.999') + ' ' +  
-                toString(maxValue(d,mt),'9999.999')   
-                );
-        } ELSE onPrint(cid() + ', Ok');
-    }    
+                subject()   <- '#' + toString(id(m,mt),'99999999') + ', значение вне диапазона';
+                body()      <- name(mt) + ': ' + 
+                            toString(minValue(d,mt) ,'999999.999') + ' [ ' +  
+                            toString(value(m,mt)    ,'999999.999') + ' ] ' +
+                            toString(maxValue(d,mt) ,'999999.999');
+//                onPrint(subject() + ': ' + body());
+                NEW e = DevEvent {
+                    id(e)           <- id(m,mt);
+                    subject(e)      <- 'Значение вне диапазона';
+                    dt(e)           <- currentDateTime();
+                    body(e)         <- body();
+                    action(e)       <- 'email: ' + email(organization(d));
+                    organization(e) <- organization(d);
+                }
+            EMAIL FROM emailAccount() SUBJECT subject() TO email(organization(d)) BODY body();
+        };
+    }
 } 
+
