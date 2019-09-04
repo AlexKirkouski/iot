@@ -79,7 +79,7 @@ WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
                     action(e)       <- etxt();
                     organization(e) <- organization(d);
                 }
-        };
+        }
     }
 } 
 
