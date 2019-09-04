@@ -2,8 +2,12 @@ MODULE DevThreshold;
 
 REQUIRE Organization, Device, OrgDevice, Measurement, DevEvent, Utils;
 
+// значение для проверки выхода за диапазон
 minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
 maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
+
+// дата-время последнено приема
+lastMeasurement '' = GROUP MAX dateTime(Measurement m) BY device(m);
 
 
 FORM devThreshold 'Пороговые значения' 
@@ -51,11 +55,17 @@ DESIGN devThreshold {
     }
 }   
 
-toString    = FORMULA TEXT 'trim(to_char($1,$2))';
+// преобразование значений для вывода
+toString  = FORMULA TEXT 'trim(to_char($1,$2))';
+toDTime   = FORMULA STRING[20] 'to_char(($1),\'YYYY-MM-DD\') || \' \' || to_char(($1),\'HH24:MI:SS\')';
+
+// локальные переменные
 subject ''  = DATA BPSTRING ();
 body    ''  = DATA BPSTRING ();
 etxt    ''  = DATA BPSTRING ();    
 
+
+// ----- проверка выхода измерений за диапазон
 WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
     IF minValue(d,mt) AND maxValue(d,mt) THEN {
         IF value(m,mt) < minValue(d,mt) OR value(m,mt) > maxValue(d,mt) THEN {
@@ -83,3 +93,11 @@ WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
     }
 } 
 
+onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
+
+// ----- проверка, что условие измерение не отвечает
+onHushDevice 'Молчание датчика' () {
+    FOR lastMeasurement(Device d) DO {
+        onPrint(toString(id(d),'99999') + ', ' + toDTime(lastMeasurement(d)) );    
+    }
+}

@@ -1,7 +1,7 @@
 MODULE Server;
 
 REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, 
-        MqttServer, Controller, OrgController, MyScheduler, DevThreshold, DevEvent;
+        MqttServer, Controller, OrgController, DevThreshold, DevEvent;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
