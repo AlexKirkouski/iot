@@ -1,0 +1,135 @@
+MODULE ControllerManagement;
+
+REQUIRE Controller, Device, Measurement, Schedule, OrgController;
+
+CLASS ControllerManager;
+organization = ABSTRACT Organization (ControllerManager);
+
+EXTEND CLASS Controller : ControllerManager;
+organization(Controller c) += OrgController.organization(c); 
+
+CLASS ForceMode {
+    on 'Включить принудительно',
+    off 'Выключить принудительно'
+}
+mode = DATA ForceMode (ControllerManager);
+nameMode 'Ручной режим управления' (ControllerManager c) = staticCaption(mode(c)); 
+
+CLASS ConditionType {
+    and 'И',
+    or 'ИЛИ'
+}
+CLASS ManagerCondition 'Условие работы';
+name 'Описание' = ABSTRACT STRING (ManagerCondition) IN id;
+type = DATA ConditionType (ManagerCondition);
+type(ManagerCondition c) <- ConditionType.and WHEN SET(c IS ManagerCondition);
+controller = DATA ControllerManager (ManagerCondition) AUTOSET;
+order 'Порядок' = DATA INTEGER (ManagerCondition) CHARWIDTH 2;
+lastOrder = GROUP MAX order(ManagerCondition m) BY controller(m);
+WHEN LOCAL SETCHANGED(controller(ManagerCondition m)) DO 
+    order(m) <- lastOrder(controller(m)) (+) 1;
+isLast (ManagerCondition c) = lastOrder(controller(c)) = order(c);
+nameType 'Условие' (ManagerCondition c) = IF isLast(c) THEN '' ELSE staticCaption(type(c)) CHARWIDTH 3 ON CHANGE {
+    IF NOT isLast(c) THEN
+        DIALOG LIST ConditionType = type(c) CHANGE;  
+}
+
+conditionGroup (ManagerCondition m) = PARTITION SUM IF type(m) = ConditionType.or THEN 1 ELSE 0 ORDER DESC order(m), m BY controller(m) MATERIALIZED;
+cgCount = GROUP SUM 1 BY controller(ManagerCondition g), conditionGroup(g) MATERIALIZED;
+isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
+isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m), conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
+isAutoTrue(ControllerManager mg) = GROUP SUM 1 IF cgCount(mg, INTEGER g) = isTrue(mg, g) MATERIALIZED;
+isTrue 'Работает сейчас' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)); // проверяет работает условие или нет 
+
+CLASS TimeCondition : ManagerCondition;
+
+CLASS ABSTRACT ConditionValue 'Значение';
+name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50;
+currentValue 'Значение' = ABSTRACT DOUBLE (ConditionValue) MATERIALIZED;
+organization 'Организация' = ABSTRACT Organization (ConditionValue);
+
+CLASS MeasurementConditionValue 'Значение измерения' : ConditionValue;
+measurementConditionValue = AGGR MeasurementConditionValue WHERE index(type(Device device), MeasurementType measurementType);
+currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
+name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+organization(MeasurementConditionValue v) += organization(device(v));
+
+CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
+value = DATA DOUBLE (FixedConditionValue);
+name = DATA STRING (FixedConditionValue); 
+organization = DATA Organization (FixedConditionValue) AUTOSET;
+currentValue(FixedConditionValue v) += value(v);
+name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
+organization(FixedConditionValue v) += organization(v);
+
+FORM conditionValues 'Значения'
+    OBJECTS o = Organization
+    OBJECTS v = ConditionValue
+    PROPERTIES (v) objectClassName READONLY, name ON CHANGE {
+        FOR FixedConditionValue fv = v AS FixedConditionValue DO
+            INPUT n = name(fv) CHANGE;
+    }, currentValue, 'Добавить фиксированное значение'=NEW[FixedConditionValue]
+    FILTERS organization(v) = o
+;
+
+CLASS ValuesCondition 'Значение A больше или равно B' : ManagerCondition; // пока >=
+left = DATA ConditionValue (ValuesCondition) NONULL;
+right = DATA ConditionValue (ValuesCondition) NONULL;
+CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT index(type(device(v)), measurementType(v)) CHECKED BY measurementType, device MESSAGE 'Тип измерения должен соответствовать типу устройства';
+ 
+nameLeft 'A ' (ValuesCondition c) = name(left(c));
+nameRight 'B ' (ValuesCondition c) = name(right(c));
+name(ValuesCondition v) += nameLeft(v) + ' >= ' + nameRight(v);
+isTrue(ValuesCondition v) += currentValue(left(v)) >= currentValue(right(v)); 
+
+FORM valuesCondition 'Сравнение значений'
+    OBJECTS vc = ValuesCondition PANEL
+    PROPERTIES nameLeft(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE; }, 
+               ''='>' IF vc, 
+               nameRight(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE; } 
+;
+edit(ValuesCondition v) + { DIALOG valuesCondition OBJECTS vc=v; }; // чтобы не во вкладке, а в диалоге показывалось
+
+EXTEND CLASS Schedule : ManagerCondition;
+isTrue(Schedule s) += in(currentDateTimeSnapshot(), s);
+name(Schedule s) += Schedule.name(s);
+
+FORM controller 'Контроллер'
+    OBJECTS c = Controller PANEL
+    PROPERTIES (c) id, nametype, topic, nameServer, isTrue, nameMode //, nameOn, nameOff
+    OBJECTS mc = ManagerCondition
+    PROPERTIES (mc) order, name READONLY, nameType, isTrue, 'Добавить расписание' = NEWEDIT[Schedule], 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
+    FILTERS c = controller(mc)
+    ORDER order(mc)
+    
+    EDIT Controller OBJECT c;
+;
+
+DESIGN controller {
+    GROUP (,c) {
+        type = CONTAINERV;
+    }
+    OBJECTS {
+        NEW boxC BEFORE BOX(mc) {
+            type = CONTAINERH;
+            MOVE BOX(c);
+            NEW params AFTER BOX(c) {
+                caption = 'Параметры работы';
+                MOVE PROPERTY (isTrue(c));
+                MOVE PROPERTY (nameMode(c));
+            }
+//            NEW commands AFTER params {
+//                caption = 'Команды';
+//                MOVE PROPERTY (nameOn(c));
+//                MOVE PROPERTY (nameOff(c));
+//            }
+        }        
+    }
+}
+
+WHEN CHANGED(isTrue(Controller c)) DO {
+    IF isTrue(c) THEN 
+        runOn(c);
+    ELSE 
+        runOff(c);
+}

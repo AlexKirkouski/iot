@@ -9,7 +9,7 @@ CLASS ControllerType 'Тип контроллера' {
 
 TABLE controllerType(ControllerType);
 id 'ID типа контроллера' = DATA LONG (ControllerType);
-name 'Название типа контроллера' = DATA BPISTRING[1000] (ControllerType) CHARWIDTH 70 IN id;
+name 'Название типа контроллера' = DATA BPISTRING[1000] (ControllerType) CHARWIDTH 20 IN id;
 
 // уникальное значение при создании (изменении)
 controllerType = GROUP AGGR ControllerType c BY id(c);
@@ -47,6 +47,13 @@ WHEN SET (Command c IS Command) DO {
     userCreation(c) <- currentUser();
 }
 
+on = DATA Command (ControllerType);
+CONSTRAINT controllerType(on(ControllerType t)) != t CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
+off = DATA Command (ControllerType);
+CONSTRAINT controllerType(off(ControllerType t)) != t CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
+nameOn 'Команда вкл.' (ControllerType t) = name(on(t));
+nameOff 'Команда выкл.' (ControllerType t) = name(off(t));
+
 //FORM editCommand 'Редактирование команды'
 //    OBJECTS c = Command PANEL
 //    PROPERTIES(c) name, signal
@@ -62,7 +69,7 @@ FORM Commands 'Команда контроллера'
 
 ///// Контроллеры
 
-CLASS Controller 'Контроллеры управления';
+CLASS Controller 'Контроллер';
 TABLE controller(Controller);
 // обязательные
 server          'Сервер'            = DATA MqttServer       (Controller) NONULL ;
@@ -71,7 +78,7 @@ id              'ID контроллера'    = DATA LONG             (Controll
 topic           'Топик управления'  = DATA STRING[30]       (Controller) NONULL;
 
 type            'Тип'               = DATA ControllerType   (Controller);
-nametype 'Тип' = name(type(Controller c));
+nametype 'Тип' = name(type(Controller c)) CHARWIDTH 70;
 
 // уникальное значение при создании (изменении)
 controller = GROUP AGGR Controller c BY id(c);
@@ -87,6 +94,11 @@ state           'Статус'            = DATA STRING[20]       (Controller); 
 dateCreation    'Дата создания'     = DATA DATETIME         (Controller);
 userCreation    'Кто создал'        = DATA BPSTRING[100]    (Controller);
 
+on = on(type(Controller c));
+off = off(type(Controller c));
+nameOn 'Команда вкл.' (Controller t) = name(on(t));
+nameOff 'Команда выкл.' (Controller t) = name(off(t));
+
 select 'Отм.' = DATA LOCAL BOOLEAN (Controller);
 countSelect = GROUP SUM 1 IF select(Controller d);
 
@@ -99,7 +111,7 @@ WHEN SET (Controller c IS Controller) DO {
 
 FORM controllerTypeCommands 'Типы контроллеров и их команды'
     OBJECTS t = ControllerType
-    PROPERTIES(t) id, name, NEW, DELETE
+    PROPERTIES(t) id, name, nameOn, nameOff, NEW, DELETE
     ORDER id(t)
     OBJECTS c = Command
     PROPERTIES (c) id, name, signal, NEW, DELETE

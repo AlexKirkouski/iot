@@ -2,7 +2,7 @@ MODULE OrgController;
 
 REQUIRE Controller, Options, Security;
 
-organization 'Организация' = DATA Organization (Controller) ;
+organization 'Организация' = DATA Organization (Controller) AUTOSET;
 
 
 FORM orgControllers 'Организации и их контроллеры'
@@ -12,6 +12,7 @@ FORM orgControllers 'Организации и их контроллеры'
     OBJECTS c = Controller
     PROPERTIES(c) select
     PROPERTIES(c) READONLY id, dateCreation, nametype
+    PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
     ORDER nametype(c), id(c)
     FILTERS organization(c) = o
 ;
@@ -191,3 +192,12 @@ DESIGN orgControllerCommands {
     }
 }
 /////
+
+runOn(Controller c) {
+    MESSAGE 'ON';
+//    transmitControlSignal(on(c), c, NULL);
+} 
+runOff(Controller c) {
+    MESSAGE 'OFF';
+//    transmitControlSignal(off(c), c, NULL);
+}

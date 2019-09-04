@@ -69,6 +69,10 @@ id (Measurement m, MeasurementType mt) = id(device(m)) IF value(m, mt) MATERIALI
 id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) MATERIALIZED ;
 /////
 
+INDEX dateTime(Measurement m), m;
+lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
+lastValue (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
+
 onDelMeasurement 'Очистка всех измерений' (Measurement) {
     ASK 'Вы действительно хотите\nочистить все измерения?' DO {
         DELETE Measurement m WHERE m IS Measurement;
