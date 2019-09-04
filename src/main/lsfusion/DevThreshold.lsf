@@ -51,30 +51,34 @@ DESIGN devThreshold {
     }
 }   
 
-onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
-
 toString    = FORMULA TEXT 'trim(to_char($1,$2))';
 subject ''  = DATA BPSTRING ();
 body    ''  = DATA BPSTRING ();
+etxt    ''  = DATA BPSTRING ();    
 
 WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
     IF minValue(d,mt) AND maxValue(d,mt) THEN {
         IF value(m,mt) < minValue(d,mt) OR value(m,mt) > maxValue(d,mt) THEN {
-                subject()   <- '#' + toString(id(m,mt),'99999999') + ', значение вне диапазона';
-                body()      <- name(mt) + ': ' + 
-                            toString(minValue(d,mt) ,'999999.999') + ' [ ' +  
-                            toString(value(m,mt)    ,'999999.999') + ' ] ' +
-                            toString(maxValue(d,mt) ,'999999.999');
-//                onPrint(subject() + ': ' + body());
+                subject()   <-  '#' + toString(id(m,mt),'99999999') + ', значение вне диапазона';
+                body()      <-  name(mt) + ': ' + 
+                                toString(minValue(d,mt) ,'999999.999') + ' [ ' +  
+                                toString(value(m,mt)    ,'999999.999') + ' ] ' +
+                                toString(maxValue(d,mt) ,'999999.999');
+                TRY {
+                    EMAIL SUBJECT subject() TO email(organization(d)) BODY body();
+                    etxt()  <-  'email: ' + email(organization(d));            
+                } CATCH {
+                    etxt()  <-  'email: ' + email(organization(d)) + ', Error ' + messageCaughtException();            
+                }
+                // пишим лог в таблицу
                 NEW e = DevEvent {
                     id(e)           <- id(m,mt);
                     subject(e)      <- 'Значение вне диапазона';
                     dt(e)           <- currentDateTime();
                     body(e)         <- body();
-                    action(e)       <- 'email: ' + email(organization(d));
+                    action(e)       <- etxt();
                     organization(e) <- organization(d);
                 }
-            EMAIL FROM emailAccount() SUBJECT subject() TO email(organization(d)) BODY body();
         };
     }
 } 

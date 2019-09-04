@@ -14,7 +14,6 @@ grafanaPsSSL    'SSL mode' = DATA STRING[15]();
 mqttPrnConsole  'Печать отладочной информации MQTT в консоль (0 или 1)' = DATA INTEGER ();  
 udpPrnConsole   'Печать отладочной информации UDP в консоль (0 или 1)' = DATA INTEGER ();
 
-emailAccount    'Почтовый аккаунт' = DATA STRING[100] ();  
 
 EXTEND FORM options PROPERTIES() grafanaLogin;
 EXTEND FORM options PROPERTIES() grafanaPwd;
@@ -29,19 +28,12 @@ EXTEND FORM options PROPERTIES() grafanaPsSSL;
 EXTEND FORM options PROPERTIES() udpPrnConsole;
 EXTEND FORM options PROPERTIES() mqttPrnConsole;
 
-EXTEND FORM options PROPERTIES() emailAccount;
-
 
 DESIGN options {
     pane {
         NEW grafana {
             caption = 'Настройка приложения';
 //            type = COLUMNS;
-            NEW h1 {
-                caption = 'Общие свойства';
-                type = CONTAINERV;
-                MOVE PROPERTY(emailAccount()); 
-            }
             NEW h2 {
                 caption = 'Grafana: доступ'; 
                 type = CONTAINERV;
