@@ -6,19 +6,16 @@ REQUIRE Organization, Device, OrgDevice, Measurement, DevEvent, Utils;
 minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
 maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
 
-// дата-время последнено приема
-lastMeasurement '' = GROUP MAX dateTime(Measurement m) BY device(m);
-
-
 FORM devThreshold 'Пороговые значения' 
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name  
-
+    
     OBJECTS d = Device
     PROPERTIES(d) READONLY id
+    PROPERTIES(d) maxTimeWaiting
 
     OBJECTS m = MeasurementType
-    PROPERTIES(m) READONLY name, id
+    PROPERTIES(m) READONLY name
     PROPERTIES(d,m) minValue, maxValue 
 
     ORDER id(d)
@@ -46,7 +43,7 @@ DESIGN devThreshold {
                 }
                 MOVE BOX(m) {
                     caption = 'Пороговые значения измерений';
-                    flex = 10;
+                    flex = 6;
                 }
                 fill = 2;
             }
@@ -60,10 +57,10 @@ toString  = FORMULA TEXT 'trim(to_char($1,$2))';
 toDTime   = FORMULA STRING[20] 'to_char(($1),\'YYYY-MM-DD\') || \' \' || to_char(($1),\'HH24:MI:SS\')';
 
 // локальные переменные
-subject ''  = DATA BPSTRING ();
-body    ''  = DATA BPSTRING ();
-etxt    ''  = DATA BPSTRING ();    
-
+subject ''  = DATA LOCAL BPSTRING ();
+body    ''  = DATA LOCAL BPSTRING ();
+etxt    ''  = DATA LOCAL BPSTRING ();    
+minutes ''  = DATA LOCAL INTEGER ();
 
 // ----- проверка выхода измерений за диапазон
 WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
@@ -80,7 +77,7 @@ WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
             } CATCH {
                 etxt()  <-  'email: ' + email(organization(d)) + ', Error ' + messageCaughtException();            
             }
-            // пишим лог в таблицу
+            // пишем лог в таблицу
             NEW e = DevEvent {
                 id(e)           <- id(m,mt);
                 subject(e)      <- 'Значение вне диапазона';
@@ -93,11 +90,49 @@ WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
     }
 } 
 
+// дата-время последнено приема
+lastMeasurement '' = GROUP MAX dateTime(Measurement m) BY device(m) IF maxTimeWaiting(device(m));
+
 onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
 
-// ----- проверка, что условие измерение не отвечает
+// ----- проверка, что устройство измерения не отвечает
 onHushDevice 'Молчание датчика' () {
-    FOR lastMeasurement(Device d) DO {
-        onPrint(toString(id(d),'99999') + ', ' + toDTime(lastMeasurement(d)) );    
+    NEWSESSION {
+        LOCAL subject = BPSTRING ();
+        LOCAL body    = BPSTRING ();
+        LOCAL etxt    = BPSTRING ();    
+        LOCAL minutes = INTEGER ();
+        
+        FOR lastMeasurement(Device d)  DO {
+            
+            minutes() <- round0(secondsBetweenDates(currentDateTime(), lastMeasurement(d)) / 60);
+             
+            IF minutes() > maxTimeWaiting(d) THEN {
+//                onPrint(toString(id(d),'99999') + ', ' + toDTime(lastMeasurement(d)) );
+                subject()   <-  '#' + toString(id(d),'99999999') + ', нет сигнала';
+                body()      <-  '#' + toString(id(d),'99999999') + ', нет сигнала более ' + toString(minutes(),'99999999') + ' минут'; 
+                
+                TRY {
+                    EMAIL SUBJECT subject() TO email(organization(d)) BODY body();
+                    etxt()  <-  'email: ' + email(organization(d));            
+                } CATCH {
+                    etxt()  <-  'email: ' + email(organization(d)) + ', Error ' + messageCaughtException();            
+                }
+                // пишем лог в таблицу
+                NEW e = DevEvent {
+                    id(e)           <- id(d);
+                    subject(e)      <- 'Отсутствует сигнал';
+                    dt(e)           <- currentDateTime();
+                    body(e)         <- body();
+                    action(e)       <- etxt();
+                    organization(e) <- organization(d);
+                }
+            }
+        }
+     APPLY ; 
     }
 }
+
+EXTEND FORM devThreshold
+ PROPERTIES onHushDevice();
+ 

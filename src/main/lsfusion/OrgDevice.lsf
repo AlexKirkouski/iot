@@ -12,6 +12,7 @@ FORM orgDevices 'Организации и их устройства'
     OBJECTS d = Device
     PROPERTIES(d) select
     PROPERTIES(d) READONLY id, dateCreation, nametype, dbId
+    PROPERTIES(d) maxTimeWaiting
     ORDER nametype(d), id(d)
     FILTERS organization(d) = o
 ;

@@ -194,10 +194,10 @@ DESIGN orgControllerCommands {
 /////
 
 runOn(Controller c) {
-    MESSAGE 'ON';
-//    transmitControlSignal(on(c), c, NULL);
+//    MESSAGE 'ON';
+    transmitControlSignal(on(c), c, NULL);
 } 
 runOff(Controller c) {
-    MESSAGE 'OFF';
-//    transmitControlSignal(off(c), c, NULL);
+//    MESSAGE 'OFF';
+    transmitControlSignal(off(c), c, NULL);
 }

@@ -25,6 +25,7 @@ id 'ID устройства' = DATA LONG (Device) CHARWIDTH 8;
 dbId 'ID DashBoard' = DATA INTEGER (Device) CHARWIDTH 7;
 type 'Тип' = DATA DeviceType (Device);
 nametype 'Тип' = name(type(Device d));
+maxTimeWaiting 'Макс. время ожидания ответа, мин' = DATA INTEGER (Device) CHARWIDTH 6;
 
 device = GROUP AGGR Device d BY id(d);
 // Не удалять, используется в DropUDPServerCachesAction.java !!!
