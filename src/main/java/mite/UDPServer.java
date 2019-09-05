@@ -17,14 +17,11 @@ import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.DateTimeClass;
 
-import java.io.IOException;
 import java.net.*;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -118,15 +115,15 @@ public class UDPServer extends MonitorServer {
                         receivedString = new String(receivePacket.getData()).trim();
                         if(receivedString.startsWith("b'")) {
                             print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
+                            receivedString = receivedString.substring(0,receivedString.lastIndexOf(";")+1);
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
                             receivedString = BaseEncoding.base16().encode(receiveData);
-                            print("NEW: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
-                            if (chkLabelTime(serverSocket,receivedString,receivePacket)) continue;
-                            if (!parseNew(receivedString)) continue;
+                            print("NOT SAVE: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
+                            continue;
                         }
 
                         DataObject deviceType = getDeviceType(deviceId);
@@ -180,81 +177,6 @@ public class UDPServer extends MonitorServer {
         cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
         cMeasuring = cPacket;
         return true;
-    }
-
-    // --- Обработка новых типов датчиков
-    private boolean parseNew(String cPacket) {
-        Integer nt;
-        deviceId = Long.parseLong(revers(cPacket,8,12),16);
-        nt = Integer.parseInt(revers(cPacket,2,4),16);  // тип датчика
-        cDt = getDTCounter(revers(cPacket,12,16));
-        cMeasuring = deviceId.toString() + ";";
-        cMeasuring += getFloat(revers(cPacket,16,20)) + ";";
-        cMeasuring += getFloat(revers(cPacket,20,24)) + ";";
-        cMeasuring += getFloat(revers(cPacket,24,28)) + ";";
-        cMeasuring += getVoltage(revers(cPacket,28,32));
-        print("TYPE " + nt.toString());
-        return true;
-    }
-
-    // Проверка, что идет запрос времени
-    private boolean chkLabelTime(DatagramSocket socket,String cPacket,DatagramPacket dPacket) {
-        String cLab = revers(cPacket,0,2);
-        if (!cLab.equals("FFFF")) return false;
-        String cId = Long.toString(Long.parseLong(revers(cPacket,8,12),16));
-        Long time = System.currentTimeMillis() / 1000L + 3600 * 2;
-        byte[] data = longTo210(time);
-        InetAddress pAddress = dPacket.getAddress();
-        Integer pPort = dPacket.getPort();
-        print("LABEL TIME, " + cId + "... " + pAddress.toString() + ":" + pPort.toString() + ", UTIME+2: " + time.toString());
-        try {
-            DatagramPacket dp = new DatagramPacket(data, data.length,pAddress ,pPort);
-            serverSocket.send(dp);
-        } catch (IOException e) {
-            print("ERROR LABEL TIME: " + e.getMessage());
-        }
-        return true;
-    }
-
-    // Преоразует число лонг в двоично-десятичное число
-    public byte[] longTo210(long x) {
-        String s1 = Long.toString(x);
-        if (s1.length()%2 > 0) s1 = "0" + s1;
-        byte[] br1 = s1.getBytes();
-        byte[] br2 = new byte[s1.length()/2];
-        for (int i=0,j=0;i < s1.length();i+=2) {
-            br2[j]  = (byte) (16 * (br1[i] - 48) + br1[i+1] - 48);
-            j+=1;
-        }
-        return br2;
-    }
-
-
-    // Переставляем пары байты
-    private String revers(String cb,int n1,int n2) {
-        String c1;
-        StringBuilder cRet = new StringBuilder();
-        cb = cb.substring(n1*2,n2*2);
-        for (int i=cb.length();i>0;i-=2) {
-            c1 = cb.substring(i-2, i);
-            cRet.append(c1);
-        }
-        return cRet.toString();
-    }
-
-    // Получаем символьную строку float
-    private String getFloat(String cNum) {
-        Long num = Long.parseLong(cNum, 16);
-        Float fNum = Float.intBitsToFloat(num.intValue());
-        return  fNum.toString();
-    }
-
-    // Получаем значение напряжения батареи
-    private String getVoltage(String cNum) {
-//        print("ADC: " + cNum); // Отладка: Значение АЦП для расчета напряжения батареи
-        Double dNum = ((Long.parseLong(cNum,16) * 1.1)/1023) * 3.7;
-        DecimalFormat df2 = new DecimalFormat("#.##");
-        return df2.format(dNum).replace(",",".");
     }
 
     // Получаем дату-время снятия измерений: дата 15.05.2019 00:00:00 + пришедщее текущие значение счетчика
