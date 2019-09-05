@@ -47,10 +47,8 @@ NAVIGATOR {
             }
             NEW FOLDER dev 'Устройства измерения' {
                 NEW devices;
-                NEW devThreshold;
-                NEW devEvents;
             }
-            NEW FOLDER control 'Контроллеры' {
+            NEW FOLDER cnt 'Контроллеры' {
                 NEW controllers;
                 NEW controllerTypeCommands AFTER controllers;
             }
@@ -58,11 +56,17 @@ NAVIGATOR {
         }
         NEW FOLDER org 'Организации' AFTER srvDevice {
             NEW organization;
-            NEW orgDevices AFTER organization;
-            NEW orgMeasurements AFTER orgDevices;
-            NEW orgControllers AFTER orgMeasurements;
-            NEW orgControllerCommands AFTER orgControllers;
-            NEW runCommands AFTER orgControllerCommands;
+            NEW FOLDER dev2 'Устройства измерения' {
+                NEW orgDevices;
+                NEW orgMeasurements;
+                NEW devThreshold;
+                NEW devEvents;
+            }
+            NEW FOLDER cnt2 'Контроллеры' {
+                NEW orgControllers;
+                NEW orgControllerCommands;
+                NEW runCommands;
+            }
         }
     }
 }
