@@ -100,30 +100,34 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
-                byte[] receiveData = new byte[1024];
+//                byte[] receiveData = new byte[1024];
                 nQps = 0;
                 lRead = true;
                 while(lRead)
                 {
                     String receivedString;
                     try {
+                        byte[] receiveData = new byte[1024];
                         DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
-                        String cp1 = receivePacket.getAddress().toString();
-                        String cp2 = Integer.toString(receivePacket.getPort());
                         receivedString = new String(receivePacket.getData()).trim();
-                        print("PACKET: " + receivedString);   // наверное max = 32 байта * 2
+                        int nb = 0;
                         if(receivedString.startsWith("b'")) {
-                            print("SAVE OLD");
-                            receivedString = receivedString.substring(0,receivedString.lastIndexOf(";")+1);
-                            receivedString = receivedString.substring(2);
-                            if(receivedString.startsWith(";"))
-                                receivedString = receivedString.substring(1);
-                            if (!parseOld(receivedString)) continue;
+                            print("OLD PACKET: " + receivedString);
+                            nb = 2;
+                        } else if (receivedString.startsWith("b\"b'")) {
+                            print("NEW PACKET: " + receivedString);
+                            nb = 4;
                         } else {
+                            print("??? PACKET: " + receivedString);
                             continue;
                         }
+                        receivedString = receivedString.substring(nb);
+                        receivedString = receivedString.substring(0,receivedString.lastIndexOf(";")+1);
+                        if(receivedString.startsWith(";"))
+                            receivedString = receivedString.substring(1);
+                        if (!parsePacket(receivedString, nb)) continue;
 
                         DataObject deviceType = getDeviceType(deviceId);
                         StringBuilder text = texts.get(deviceType);
@@ -171,16 +175,25 @@ public class UDPServer extends MonitorServer {
     }
 
     // --- Обработка датчиков, начинается с b'(;)
-    private boolean parseOld(String cPacket) {
+    private boolean parsePacket(String cPacket, int nb) {
         deviceId = Long.parseLong(cPacket.substring(0,cPacket.indexOf(';')));
-        cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
-        cMeasuring = cPacket;
+        if (nb == 2) {
+            cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
+            cMeasuring = cPacket;
+        } else {
+            String [] cSplit = cPacket.split(";");
+            cMeasuring = "";
+            for (int i=0; i < cSplit.length - 1; i++) {
+                cMeasuring += cSplit[i] + ";";
+            }
+           cDt = getDTCounter(cSplit[cSplit.length - 1]);
+        }
         return true;
     }
 
     // Получаем дату-время снятия измерений: дата 15.05.2019 00:00:00 + пришедщее текущие значение счетчика
     private String getDTCounter(String cSecond) {
-        int nt = Integer.parseInt(cSecond,16);
+        int nt = Integer.parseInt(cSecond,10);
         SimpleDateFormat dayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         Calendar dt = Calendar.getInstance();
         dt.set(1970, Calendar.JANUARY, 1,0,0,nt);
