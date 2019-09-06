@@ -100,7 +100,7 @@ FORM runCommands 'Журнал переданных команд'
     
     OBJECTS r = RunCommand 
     PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, userCreation, eCode, eMessage
-    ORDER dateTime(r)
+    ORDER dateTime(r) DESC 
     FILTERS organization(controller(r)) = o   
 ;
 /////

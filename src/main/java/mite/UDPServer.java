@@ -113,16 +113,15 @@ public class UDPServer extends MonitorServer {
                         String cp1 = receivePacket.getAddress().toString();
                         String cp2 = Integer.toString(receivePacket.getPort());
                         receivedString = new String(receivePacket.getData()).trim();
+                        print("PACKET: " + receivedString.substring(0,100));   // наверное max = 32 байта * 2
                         if(receivedString.startsWith("b'")) {
-                            print("OLD: " + receivedString + ", IP: " + cp1 + " : " + cp2);
+                            print("SAVE OLD");
                             receivedString = receivedString.substring(0,receivedString.lastIndexOf(";")+1);
                             receivedString = receivedString.substring(2);
                             if(receivedString.startsWith(";"))
                                 receivedString = receivedString.substring(1);
                             if (!parseOld(receivedString)) continue;
                         } else {
-                            receivedString = BaseEncoding.base16().encode(receiveData);
-                            print("NOT SAVE: " + receivedString.substring(0,100) + ", IP: " + cp1 + " : " + cp2);   // наверное max = 32 байта * 2
                             continue;
                         }
 

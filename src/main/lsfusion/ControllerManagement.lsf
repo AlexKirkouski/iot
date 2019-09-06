@@ -39,7 +39,9 @@ cgCount = GROUP SUM 1 BY controller(ManagerCondition g), conditionGroup(g) MATER
 isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
 isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m), conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
 isAutoTrue(ControllerManager mg) = GROUP SUM 1 IF cgCount(mg, INTEGER g) = isTrue(mg, g) MATERIALIZED;
-isTrue 'Работает сейчас' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)); // проверяет работает условие или нет 
+//isTrue 'Работает сейчас' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)); // проверяет работает условие или нет 
+isTrue 'Работает сейчас' (ControllerManager mg) = mode(mg) = ForceMode.on OR ForceMode.off; // проверяет работает условие или нет 
+
 
 CLASS TimeCondition : ManagerCondition;
 
@@ -127,9 +129,15 @@ DESIGN controller {
     }
 }
 
+
+onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
+
 WHEN CHANGED(isTrue(Controller c)) DO {
-    IF isTrue(c) THEN 
+    IF isTrue(c) THEN {
+        onPrint('ON'); 
         runOn(c);
-    ELSE 
+    } ELSE { 
+        onPrint('OFF'); 
         runOff(c);
+    }    
 }
