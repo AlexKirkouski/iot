@@ -121,7 +121,7 @@ FORM controllerTypeCommands 'Типы контроллеров и их кома�
 
 FORM controllers 'Контроллеры управления'
     OBJECTS t = ControllerType
-    PROPERTIES(t) name, NEW, DELETE
+    PROPERTIES(t) READONLY name
     OBJECTS c = Controller
     PROPERTIES (c) select, id, nameServer, topic, note, base, signMes, dateCreation, DELETE
     ORDER id(c)

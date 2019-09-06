@@ -93,7 +93,7 @@ userCreation  'Кто передал'  = DATA BPSTRING[100] (RunCommand);
 eMessage      'Текст ошибки' = DATA STRING[100]   (RunCommand);
 eCode         'Код ошибки'   = DATA INTEGER       (RunCommand);
 
-FORM runCommands 'Журнал переданных команд на контроллеры'
+FORM runCommands 'Журнал переданных команд'
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name, unn, address
     FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users')  AND organization(currentUser()) == o)
@@ -128,7 +128,7 @@ transmitControlSignal 'Передача сигнала управления' (Co
                 eMessage(r) <- cntEMessage();
             }
         }
-        APPLY ;
+        IF login THEN APPLY ;
         
         IF cntECode() > 0 AND login THEN MESSAGE cntEMessage();
     }

@@ -49,8 +49,8 @@ NAVIGATOR {
                 NEW devices;
             }
             NEW FOLDER cnt 'Контроллеры' {
+                NEW controllerTypeCommands;
                 NEW controllers;
-                NEW controllerTypeCommands AFTER controllers;
             }
             NEW clsMeasurement;
         }

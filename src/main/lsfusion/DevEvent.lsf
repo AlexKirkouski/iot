@@ -25,7 +25,7 @@ description       'Описание'          = DATA BPISTRING    (DevEvent);
 causeEvent = DATA CauseEvent (DevEvent);
 nameCauseEvent    'Причина' (DevEvent e) = staticCaption(causeEvent(e)); 
 
-FORM devEvents 'Лог событий'
+FORM devEvents 'Журнал событий'
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name, unn, address
 
