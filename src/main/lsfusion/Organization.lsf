@@ -1,6 +1,6 @@
 MODULE Organization;
 
-REQUIRE Options, SystemEvents;
+REQUIRE Options, SystemEvents, Utils;
 
 CLASS Organization 'Организации';
 TABLE organization(Organization);
@@ -32,6 +32,13 @@ userId          'ID пользователя'           = DATA INTEGER      (Org
 user            'Логин пользователя'        = DATA STRING[20]   (Organization) ;
 userPassword    'Пароль пользователя'       = DATA STRING[20]   (Organization) ;
 grName          'Название организации в Grafana'   = DATA STRING[60]   (Organization) NONULL;
+
+// запрет наличия пробелов в названии организации для Графаны
+CONSTRAINT CHANGED(grName(Organization o)) AND strpos(grName(o), ' ') > 0
+    MESSAGE 'В названии организации для Grafana должны отсутствовать пробелы !';
+// запрет наличия двойных кавычек в названии организации для Графаны
+CONSTRAINT CHANGED(grName(Organization o)) AND strpos(grName(o), '"') > 0
+    MESSAGE 'В названии организации для Grafana должны отсутствовать кавычки !';
 
 // уникальное значение имени при создании (изменении)
 organization = GROUP AGGR Organization o BY name(o);
