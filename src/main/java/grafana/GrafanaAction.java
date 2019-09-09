@@ -279,7 +279,7 @@ class GrafanaCreate {
         addKeyValue(",","sslmode",this.dsSSL,"}","");
         addKeyValue(",","secureJsonFields","","","");
         addKeyValue("{","password","true","}","*");
-        addKeyValue(",","version","1" + getUnique(1),"","*");
+        addKeyValue(",","version",getUnique(1),"","*");
         addKeyValue(",","readOnly","false","","*");
         addKeyValue(",","secureJsonData","","","");
         addKeyValue("{","password",this.dsPassword,"}}","");
@@ -392,7 +392,7 @@ class GrafanaCreate {
         String cDate;
         Date date = new Date();
         if (tip == 1) {
-            SimpleDateFormat fDate = new SimpleDateFormat("ddMMyyHHmmss");
+            SimpleDateFormat fDate = new SimpleDateFormat("yyMMddHHmmss");
             return fDate.format(date);
         }
         SimpleDateFormat fDate = new SimpleDateFormat("dd.MM.yy.HH.mmss");
