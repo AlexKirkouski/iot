@@ -59,7 +59,7 @@ FORM editOrgGrafana 'Редактирование организации'
     OBJECTS o = Organization PANEL
     PROPERTIES(o) name READONLY 
     PROPERTIES(o) READONLY orgId,dsId,dsName,adminId,userId
-    PROPERTIES(o) dsUrl,dsNameDB,dsLogin,dsPassword,dsSSL,admin,adminPassword,user,userPassword
+    PROPERTIES(o) grName,dsUrl,dsNameDB,dsLogin,dsPassword,dsSSL,admin,adminPassword,user,userPassword
     PROPERTIES(o) resetValues
 ;
 
@@ -75,6 +75,7 @@ DESIGN editOrgGrafana {
     NEW cnt FIRST {
         fill = 1;
         MOVE PROPERTY (name(o));
+        MOVE PROPERTY (grName(o));
         NEW cnt2 {
             fill = 1;
             type = COLUMNS;

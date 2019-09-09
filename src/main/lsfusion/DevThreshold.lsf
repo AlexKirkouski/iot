@@ -91,7 +91,7 @@ WHEN CHANGED (id(Measurement m, MeasurementType mt)=id(Device d)) DO {
 } 
 
 // дата-время последнено приема
-lastMeasurement '' = GROUP MAX dateTime(Measurement m) BY device(m) IF maxTimeWaiting(device(m));
+lastMeasurement '' = GROUP MAX dateTime(Measurement m) BY device(m) IF maxTimeWaiting(device(m)) MATERIALIZED;
 
 onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
 

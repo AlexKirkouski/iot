@@ -183,7 +183,7 @@ insertControllerDiapasonID 'Добавить контроллеры' (Controller
         FOR iterateLong(LONG j, start(), limit()) NEW c = Controller DO {
             id(c) <- j;
             type(c) <- t;
-            topic(c) <- prefix + ' ' + j;
+            topic(c) <- prefix + j;
             dateCreation(c) <- currentDateTime();
             userCreation(c) <- login(currentUser());
         }
