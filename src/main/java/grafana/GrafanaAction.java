@@ -42,7 +42,7 @@ public class GrafanaAction extends InternalAction {
                 // пакетное создание (обновление) организации, DataSource, пользователей (admin и пользователь)
                     ob.orgId            = (Integer) findProperty("orgId[Organization]").read(context,o1);
                         if (ob.orgId == null) ob.orgId = 0;
-                    ob.name             = (String)  findProperty("name[Organization]").read(context,o1);
+                    ob.name             = (String)  findProperty("grName[Organization]").read(context,o1);
                         ob.name = ob.nvl(ob.name);
                     ob.dsId             = (Integer) findProperty("dsId[Organization]").read(context,o1);
                         if (ob.dsId == null) ob.dsId = 0;
@@ -93,7 +93,7 @@ public class GrafanaAction extends InternalAction {
                 case 3:
                     o2 = context.getDataKeyValue(pdev);
                     ob.orgId    = (Integer) findProperty("orgId[Organization]").read(context,o1);
-                    ob.name     = (String)  findProperty("name[Organization]").read(context,o1);
+                    ob.name     = (String)  findProperty("grName[Organization]").read(context,o1);
                     ob.dbId     = (Integer) findProperty("dbId[Device]").read(context,o2);
                     ob.idDevice = (Long) findProperty("id[Device]").read(context,o2);
                     if (ob.orgId == null) ob.orgId = 0;
@@ -275,10 +275,11 @@ class GrafanaCreate {
         addKeyValue(",","withCredentials","false","","*");
         addKeyValue(",","isDefault","true","","*");
         addKeyValue(",","jsonData","","","");
-        addKeyValue("{","sslmode",this.dsSSL,"","");
-        addKeyValue(",","postgresVersion","903","}","*");
-        addKeyValue(",","secureJsonFields","","{}","");
-        addKeyValue(",","version",getUnique(1),"","*");
+        addKeyValue("{","postgresVersion","903","","*");
+        addKeyValue(",","sslmode",this.dsSSL,"}","");
+        addKeyValue(",","secureJsonFields","","","");
+        addKeyValue("{","password","true","}","*");
+        addKeyValue(",","version","1" + getUnique(1),"","*");
         addKeyValue(",","readOnly","false","","*");
         addKeyValue(",","secureJsonData","","","");
         addKeyValue("{","password",this.dsPassword,"}}","");

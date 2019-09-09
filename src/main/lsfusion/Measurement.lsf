@@ -217,7 +217,7 @@ onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) 
             }
             
             IF length(textAllPanels()) > 0 THEN {
-                textDashboard() <- replace(textDashboard(), '<<TITLE>>', name(o) + '_' + TEXT (id(d)));
+                textDashboard() <- replace(textDashboard(), '<<TITLE>>', grName(o) + '_' + TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
     
                 EXEC setParam();
