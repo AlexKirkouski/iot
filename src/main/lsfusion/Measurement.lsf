@@ -181,7 +181,7 @@ onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) 
     IF eCode() < 9 THEN APPLY ;
 }
 
-onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
+//onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
 
 // Обновление DashBoards
 dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
