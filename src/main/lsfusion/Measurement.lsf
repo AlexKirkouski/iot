@@ -181,6 +181,7 @@ onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) 
     IF eCode() < 9 THEN APPLY ;
 }
 
+onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
 
 // Обновление DashBoards
 dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
@@ -203,36 +204,39 @@ onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) 
             textAllPanels() <- '';
             
             FOR index(type(d), MeasurementType mt) ORDER index(type(d), mt) DO {
-                fileToString(filePanel(mt));
-                resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (id(mt)));
-                resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
-                resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
-                resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
+                IF filePanel(mt) THEN {
+                    fileToString(filePanel(mt));
+                    resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (id(mt)));
+                    resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
+                    resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
+                    resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
                 
-                IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
-                textAllPanels() <- textAllPanels() + resultString(); 
+                    IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
+                    textAllPanels() <- textAllPanels() + resultString();
+                }    
             }
             
-            textDashboard() <- replace(textDashboard(), '<<TITLE>>', name(o) + '_' + TEXT (id(d)));
-            textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+            IF length(textAllPanels()) > 0 THEN {
+                textDashboard() <- replace(textDashboard(), '<<TITLE>>', name(o) + '_' + TEXT (id(d)));
+                textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+    
+                EXEC setParam();
+                cmd() <- 3;
+                txtDashBoard() <- textDashboard();
+                // вызываем обработку типа INTERNAL
+                dsGrafana(o, d);
             
-            ///////// отладка
-            //stringToFile(textDashboard());
-            //WRITE resultFile() TO 'file://d:/00/Grafana/db_new'+ '_' + TEXT (id(d))+'.json';
-            /////////
-            
-            EXEC setParam();
-            cmd() <- 3;
-            txtDashBoard() <- textDashboard();
-            // вызываем обработку типа INTERNAL
-            dsGrafana(o, d);
-            
-            IF eCode() > 0 THEN {
-                ASK 'Устройство  '+ id(d) + '  Ошибка: \n' + eMessage() +'\n\n Продолжить ?' yes = YESNO DO {
-                    IF NOT yes THEN eCode() <- -1;
+                IF eCode() > 0 THEN {
+                    ASK 'Устройство  '+ id(d) + '  Ошибка: \n' + eMessage() +'\n\n Продолжить ?' yes = YESNO DO {
+                        IF NOT yes THEN eCode() <- -1;
+                    }
                 }
+                IF eCode() < 0 THEN BREAK; 
+            
+            } ELSE {
+                MESSAGE 'Не заполнены файлы шаблонов для типов измерений для устройства ' + id(d) NOWAIT ;
             }
-            IF eCode() < 0 THEN BREAK; 
+            
         }
  
     }
