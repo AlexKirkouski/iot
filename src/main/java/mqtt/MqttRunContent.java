@@ -42,59 +42,16 @@ public class MqttRunContent extends InternalAction {
             boolean lRet = true;
             DataObject o1   = context.getDataKeyValue(pSrv);
             DataObject o2   = context.getDataKeyValue(pCtrl);
+            String cnt      = (String) context.getKeyObject(pCnt);
             prnConsole      = (Integer) findProperty("mqttPrnConsole[]").read(context);
             if (prnConsole == null) prnConsole = 0;
-            String cnt      = (String) context.getKeyObject(pCnt);
             url = "tcp://" + (String) findProperty("url[MqttServer]").read(context,o1);
             topic = (String) findProperty("topic[Controller]").read(context,o2);
-            if (cnt.length() > 0) {
-                if (!runContent(cnt)) {
-                    findProperty("cntECode[]").change(1,context.getSession());
-                    findProperty("cntEMessage[]").change(eMessage, context.getSession());
-                };
-            } else {
-                Date date = new Date();
-                String[] cdt  = new SimpleDateFormat("dd-HH.mm").format(date).split("-");
-                String cDay   = "d"  + new SimpleDateFormat("u").format(date) + "[Controller]";
-                String cmdStr = (String) findProperty(cDay).read(context,o2);
-                if (cmdStr == null) cmdStr = "";
-                if (cmdStr.length() > 0) {
-                    // обработка, если задание назначено
-                    String curDay = (String) findProperty("curDay[Controller]").read(context,o2);
-                    String expCmp = (String) findProperty("expCmp[Controller]").read(context,o2);
-                    if (curDay == null)   curDay = "";
-                    if (expCmp == null)   expCmp = "";
-                    if (!cdt[0].equals(curDay))
-                        expCmp = "";                            // Обязательно надо выполнить команду, разные дни
-                    Integer curTime = getInteger(cdt[1]);       // Текущее время
-                    if (!cmdStr.endsWith(";")) cmdStr += ";";
-                    cmdStr += "99= ";                           // Добавляем несуществующее конечное время
-                    String[] fld = cmdStr.split(";");
-                    Integer time1 = getInteger("-1");     // Несуществующее начальное время
-                    String cntText = "";                        // Несуществующий начальный контент
-                    String c1 ="";
-                    for(int i = 0; i < fld.length; i++) {
-                        String[] cPart = fld[i].split("=");
-                        Integer time2 = getInteger(cPart[0]);
-                        if (time1 <= curTime && curTime < time2) {
-                            // нашли нужный диапазон, проверяем команда уже выполнялась?
-                            if (i > 0) c1 = fld[i-1];
-                            print(time1.toString() + " <= " + curTime.toString() + " < " + time2.toString());
-                            print("RunContent ВРЕМЯ" + ", expCmp: " + expCmp + ", fld[i-1]: " + c1);
-                            if (!expCmp.equals(c1)) {
-                                if (runContent(cntText)) {
-                                    findProperty("curDay[Controller]").change(cdt[0],context.getSession(),o2);
-                                    findProperty("expCmp[Controller]").change(c1,context.getSession(),o2);
-                                    context.apply();
-                                }
-                            }
-                            break;
-                        }
-                        time1   = time2;
-                        cntText = cPart[1];
-                    }
-                }
-            }
+            if (!runContent(cnt)) {
+                findProperty("cntECode[]").change(1,context.getSession());
+                findProperty("cntEMessage[]").change(eMessage, context.getSession());
+                throw Throwables.propagate(new RuntimeException(eMessage));
+            };
         } catch (Throwable e) {
             print(e.getMessage());
             context.requestUserInteraction(new MessageClientAction(e.getMessage(), "Error"));
@@ -113,12 +70,6 @@ public class MqttRunContent extends InternalAction {
             return false;
         }
         return true;
-    }
-
-    // возвращает значение Integer от символьного выражения типа Numeric
-    private Integer getInteger(String cDec) {
-        BigDecimal nRet = new BigDecimal(cDec).setScale(2,RoundingMode.HALF_UP);
-        return nRet.multiply(new BigDecimal("100")).intValue();
     }
 
     // печать строки

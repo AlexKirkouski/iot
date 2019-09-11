@@ -50,7 +50,7 @@ WHEN SET (Command c IS Command) DO {
 on = DATA Command (ControllerType);
 CONSTRAINT controllerType(on(ControllerType t)) != t CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
 off = DATA Command (ControllerType);
-CONSTRAINT controllerType(off(ControllerType t)) != t CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
+CONSTRAINT controllerType(off(ControllerType t)) != t CHECKED BY off MESSAGE 'Команда выключения должна соответствовать типу контроллера';
 nameOn 'Команда вкл.' (ControllerType t) = name(on(t));
 nameOff 'Команда выкл.' (ControllerType t) = name(off(t));
 
