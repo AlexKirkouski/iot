@@ -79,6 +79,7 @@ public class GrafanaAction extends InternalAction {
                         findProperty("userId[Organization]").change(ob.userId, context.getSession(), o1);
                         findProperty("dsName[Organization]").change(ob.dsName, context.getSession(), o1);
                         context.apply();
+                        findProperty("eCode[]").change(0,context.getSession());
                     }
                     if (!lRet) {
                         if (ob.orgId == 0) {
@@ -101,6 +102,7 @@ public class GrafanaAction extends InternalAction {
                     if (ob.orgId > 0) {
                         if (ob.importDB()) {
                             findProperty("dbId[Device]").change(ob.dbId, context.getSession(), o2);
+                            findProperty("eCode[]").change(0,context.getSession());
                         } else {
                             saveError(context, 1, ob.eMessage);
                         }
