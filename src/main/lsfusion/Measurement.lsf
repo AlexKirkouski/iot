@@ -178,7 +178,7 @@ onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) 
     // вызываем обработку типа INTERNAL
     crGrafana(o, 0) ;
     IF eCode() > 0 THEN MESSAGE eMessage() ;
-    IF eCode() < 9 THEN APPLY ;
+    IF eCode() < 9 THEN MESSAGE 'Обновление организации завершено.' NOWAIT ;
 }
 
 //onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
@@ -239,9 +239,9 @@ onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) 
             }
             
         }
- 
     }
     APPLY ;
+    MESSAGE 'Обновление DashBoards завершено.' NOWAIT ;
 }
 
 EXTEND FORM orgDevices
