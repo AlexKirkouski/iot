@@ -210,8 +210,8 @@ onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) 
                     resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
                     resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
                     resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
-                    resultString() <- replace(resultString(), '<<ID_DashBoard>>', TEXT (dbId(d)));
-                
+                    resultString() <- replace(resultString(), '<<dsName>>', TEXT (dsName(o)));
+                    
                     IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
                     textAllPanels() <- textAllPanels() + resultString();
                 }    
