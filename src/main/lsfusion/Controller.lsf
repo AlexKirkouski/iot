@@ -132,31 +132,46 @@ FORM controllers 'Контроллеры управления'
 FORM dialogDiapasonID 'Создание контроллеров по диапазону ID'
     OBJECTS diapasonID = (withID = LONG, byID = LONG ) PANEL
     PROPERTIES withIDv = VALUE(withID), byIDv = VALUE(byID)
+    
     OBJECTS prefix = STRING[30] PANEL
     PROPERTIES prefixv = VALUE(prefix)
+    
+    OBJECTS base = STRING[100] PANEL
+    PROPERTIES basev = VALUE(base)
+    
+    OBJECTS ms = MqttServer PANEL
+    PROPERTIES name(ms) SELECTOR
+    
 ;
 
 DESIGN dialogDiapasonID {
     NEW date BEFORE TOOLBARBOX {
         fill = 1;
-        type = CONTAINERH;
+        type = CONTAINERV;
         MOVE PROPERTY (withIDv) {
             fill = 1;
             caption = 'Диапазон ID c  ';
             font = 'bold 16';
-            panelCaptionAbove = TRUE;
         }
         MOVE PROPERTY (byIDv) {
             fill = 1;
             caption = 'Диапазон ID по ';
             font = 'bold 16';
-            panelCaptionAbove = TRUE;
         }
         MOVE PROPERTY (prefixv) {
             fill = 1;
             caption = 'Префикс для топика';
             font = 'bold 16';
-            panelCaptionAbove = TRUE;
+        }
+        MOVE PROPERTY (basev) {
+            fill = 1;
+            caption = 'Основание';
+            font = 'bold 16';
+        }
+        MOVE PROPERTY (name(ms)) {
+            fill = 1;
+            caption = 'Сервер';
+            font = 'bold 16';
         }
     }
 }
@@ -168,7 +183,7 @@ insertControllerDiapasonID 'Добавить контроллеры' (Controller
     LOCAL limit = LONG ();
     LOCAL start = LONG ();
     
-    DIALOG dialogDiapasonID  OBJECTS withID INPUT, byID INPUT, prefix INPUT  DO {
+    DIALOG dialogDiapasonID  OBJECTS withID INPUT, byID INPUT, prefix INPUT, base INPUT , ms INPUT  DO {
         
         IF withID > byID AND byID > 0 THEN
         {
@@ -184,6 +199,8 @@ insertControllerDiapasonID 'Добавить контроллеры' (Controller
             id(c) <- j;
             type(c) <- t;
             topic(c) <- prefix + j;
+            base(c) <- base;
+            server(c) <- ms;
             dateCreation(c) <- currentDateTime();
             userCreation(c) <- login(currentUser());
         }
