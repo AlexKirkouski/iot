@@ -82,7 +82,9 @@ onStarted() + {
 
 
 // IMPORT
-fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
+//fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
+fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt)) + ' / ' + (IF name(mt) LIKE '%Влажн%' THEN '(CASE EXCLUSIVE WHEN id(device(id))=33 THEN 0.83 WHEN id(device(id))=35 THEN 1.05 ELSE 1.0)' ELSE '1.0');
+
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
                                                 '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
                                                 '\t\t'+       'NEW m = Measurement \{\n' +
@@ -95,6 +97,7 @@ importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server serv
                                                 '\t'+  '\}\n' +
                                                 '\t'+  'APPLY;\n' +
                                                 '\}\n';
+
 
 EXTEND FORM devices
     PROPERTIES (t) importCSVScript

@@ -129,14 +129,14 @@ DESIGN controller {
 }
 
 
-onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
+// onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
 
 WHEN CHANGED(isTrue(Controller c)) DO {
     IF isTrue(c) THEN {
-        onPrint('ON --------------------------------------------------------'); 
+        // onPrint('ON ------------------------'); 
         runOn(c);
     } ELSE { 
-        onPrint('OFF ------------------------------------------------------------'); 
+        // onPrint('OFF ------------------------------'); 
         runOff(c);
     }    
 }
