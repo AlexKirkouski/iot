@@ -178,8 +178,23 @@ onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) 
     // вызываем обработку типа INTERNAL
     crGrafana(o, 0) ;
     IF eCode() > 0 THEN MESSAGE eMessage() ;
-    IF eCode() < 9 THEN MESSAGE 'Обновление организации завершено.' NOWAIT ;
+    IF eCode() < 9 THEN {
+        //EXEC sendEMailOrg() ;
+        MESSAGE 'Обновление организации завершено.' NOWAIT ;
+    }
 }
+
+////// Передача информации по организации на почту
+sendEMailOrg 'Передача информации по организации на почту' {
+    
+    
+    
+//    LOCAL file = FILE (); 
+//    PRINT printOrder OBJECTS o = o DOCX TO file;
+//    open(file()); 
+}
+/////
+
 
 //onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
 
