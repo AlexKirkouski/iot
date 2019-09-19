@@ -1,5 +1,16 @@
 MODULE Options;
 
+/// Логотип
+imageLogo 'Файл изображения логотипа '  = DATA IMAGEFILE ();
+loadImageLogo 'Загрузить изображение логотипа' ()  { INPUT =imageLogo() CHANGE; }
+openImageLogo'Просмотреть изображение логотипа' ()  { open(imageLogo()); }
+deleteImageLogo 'Удалить изображение логотипа' ()  { imageLogo() <- NULL;} IMAGE 'delete.png'; 
+
+EXTEND FORM options
+    PROPERTIES() loadImageLogo, openImageLogo, deleteImageLogo
+;
+///
+
 // Отдельные опции необходимые для настройки и работы приложения
 grafanaLogin 'Логин администратора Grafana' = DATA STRING[20]();
 grafanaPwd   'Пароль администратора Grafana' = DATA STRING[20]();
@@ -31,6 +42,12 @@ EXTEND FORM options PROPERTIES() mqttPrnConsole;
 
 DESIGN options {
     pane {
+        NEW logo {
+            caption = 'Логотип';
+            MOVE PROPERTY(loadImageLogo());
+            MOVE PROPERTY(openImageLogo());  
+            MOVE PROPERTY(deleteImageLogo());
+        }       
         NEW grafana {
             caption = 'Настройка приложения';
 //            type = COLUMNS;

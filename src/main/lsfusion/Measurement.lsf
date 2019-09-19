@@ -1,6 +1,6 @@
 MODULE Measurement;
 
-REQUIRE OrgDevice, Utils, Time, Security;
+REQUIRE OrgDevice, Utils, Time, Security, Options;
 
 CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
@@ -168,6 +168,34 @@ setParam 'Начальная установка параметров' () {
     aut() <- grafanaLogin() + ':' + grafanaPwd();
 }
 
+////// Передача информации по организации на почту
+
+FORM printEMailOrg 
+    PROPERTIES imageLogo(), grafanaUrl()
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name, contact, admin, adminPassword, user, userPassword
+;
+
+sendEMailOrg 'Передача информации по организации на почту' (Organization o) {
+    LOCAL file = FILE ();
+    PRINT printEMailOrg OBJECTS o = o PDF TO file;
+    
+    LOCAL bodyFile = FILE ();
+    PRINT printEMailOrg OBJECTS o = o HTML TO bodyFile;
+    
+//    PRINT printEMailOrg OBJECTS o = o;
+//    open(file());
+//    MESSAGE email(o);
+    
+    EMAIL 
+        SUBJECT 'Регистрационные данные для доступа к услуге MITE'
+        TO email(o) 
+        BODY bodyFile()
+        ATTACH file()
+               NAME 'Регистрационные данные для доступа к услуге MITE' ;
+}
+/////
+
 // Обновление организации
 crGrafana INTERNAL 'grafana.GrafanaAction' (Organization, INTEGER);
 
@@ -179,22 +207,10 @@ onUpdateOrg 'GRAFANA: Обновить организацию' (Organization o) 
     crGrafana(o, 0) ;
     IF eCode() > 0 THEN MESSAGE eMessage() ;
     IF eCode() < 9 THEN {
-        //EXEC sendEMailOrg() ;
         MESSAGE 'Обновление организации завершено.' NOWAIT ;
+        EXEC sendEMailOrg(o) ;
     }
 }
-
-////// Передача информации по организации на почту
-sendEMailOrg 'Передача информации по организации на почту' {
-    
-    
-    
-//    LOCAL file = FILE (); 
-//    PRINT printOrder OBJECTS o = o DOCX TO file;
-//    open(file()); 
-}
-/////
-
 
 //onPrint INTERNAL 'sclass.ConPrintAction' (STRING ); 
 
