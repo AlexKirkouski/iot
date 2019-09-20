@@ -57,10 +57,14 @@ WHEN SET (Organization o IS Organization) DO {
 organization 'Организация' = DATA Organization (CustomUser);
 nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
 
+CLASS SUtypePoint 'Тип н/пункта' {
+    p1 'город', p2 'поселок', p3 'пгт', p4 ''
+}
+
 CLASS SubUnit 'Подразделение';
 TABLE subunit(SubUnit);
 // основные
-orgId           'Организация'               = DATA Organization (SubUnit) AUTOSET; // поле связи, ключевое слово AUTOSET
+organization    'Организация'               = DATA Organization (SubUnit) AUTOSET;
 name            'Название подразделения'    = DATA STRING[60]   (SubUnit) NONULL;
 country         'Страна'                    = DATA STRING[30]   (SubUnit) NONULL;
 typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
@@ -82,13 +86,13 @@ WHEN SET (SubUnit s IS SubUnit) DO {
 CLASS Contract 'Договор';
 TABLE contract(Contract);
 // Основные
-orgId           'Организация'               = DATA Organization     (Contract) AUTOSET; // поле связи, ключевое слово AUTOSET
-number          'Номер'                     = DATA STRING[20]       (Contract) NONULL;  
-date            'Дата'                      = DATA DATE             (Contract) NONULL;
-comment         'Примечание'                = DATA STRING[100]      (Contract); 
+organization    'Организация'               = DATA Organization (Contract) AUTOSET;
+number          'Номер'                     = DATA STRING[20]   (Contract) NONULL;  
+date            'Дата'                      = DATA DATE         (Contract) NONULL;
+comment         'Примечание'                = DATA STRING[100]  (Contract); 
 // логирование
-dateCreation    'Дата создания'             = DATA DATETIME         (Contract);
-userCreation    'Кто создал'                = DATA BPSTRING[100]    (Contract);
+dateCreation    'Дата создания'             = DATA DATETIME     (Contract);
+userCreation    'Кто создал'                = DATA BPSTRING[100](Contract);
 
 WHEN SET (Contract c IS Contract) DO {
     dateCreation(c) <- currentDateTime();
@@ -103,11 +107,11 @@ FORM organization 'Организации'
     OBJECTS s = SubUnit
     PROPERTIES(s) READONLY name, contact, phone, country, streetName, house
     PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE 
-    FILTERS orgId(s) = o 
+    FILTERS organization(s) = o 
     OBJECTS c = Contract
     PROPERTIES(c) READONLY number, date, comment 
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE 
-    FILTERS orgId(c) = o  
+    FILTERS organization(c) = o  
 ;
 
 DESIGN organization {
