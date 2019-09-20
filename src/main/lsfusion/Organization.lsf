@@ -58,14 +58,14 @@ organization 'Организация' = DATA Organization (CustomUser);
 nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
 
 CLASS SUtypePoint 'Тип н/пункта' {
-    p1 'город', p2 'поселок', p3 'пгт', p4 ''
+    p1 'город', p2 'поселок', p3 'пгт', p4 'деревня'
 }
 
-CLASS SubUnit 'Подразделение';
+CLASS SubUnit 'Точки размещения';
 TABLE subunit(SubUnit);
 // основные
 organization    'Организация'               = DATA Organization (SubUnit) AUTOSET;
-name            'Название подразделения'    = DATA STRING[60]   (SubUnit) NONULL;
+name            'Название точки'            = DATA STRING[60]   (SubUnit) NONULL;
 country         'Страна'                    = DATA STRING[30]   (SubUnit) NONULL;
 typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
 pointName       'Название н/пункта'         = DATA STRING[50]   (SubUnit) NONULL;
@@ -129,7 +129,7 @@ DESIGN organization {
             NEW tab {
                 type = SPLITH ;
                 MOVE BOX(s) {
-                    caption = 'Подразделения';
+                    caption = 'Точки размещения';
                     flex = 8;
                 }
                 MOVE BOX(c) {
@@ -182,14 +182,14 @@ DESIGN editOrganization {
     }
 }
 
-FORM editSubUnit 'Редактирование подразделения'
+FORM editSubUnit 'Редактирование точки'
     OBJECTS s = SubUnit PANEL
     PROPERTIES(s) name, country, typePoint, pointName, typeStreet, streetName, house, contact, phone
     PROPERTIES(s) READONLY userCreation, dateCreation
     EDIT SubUnit OBJECT s
 ;
 
-FORM SubUnits 'Подразделения'
+FORM SubUnits 'Точки размещения'
     OBJECTS s = SubUnit
     PROPERTIES(s) READONLY name, contact, phone, country, typePoint, pointName, typeStreet, streetName, house
     LIST SubUnit OBJECT s
