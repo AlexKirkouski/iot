@@ -1,25 +1,24 @@
 MODULE ControllerManagement;
 
-REQUIRE Controller, Device, Measurement, Schedule, OrgController;
+REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger;
 
-CLASS ControllerManager;
-organization = ABSTRACT Organization (ControllerManager);
-
-EXTEND CLASS Controller : ControllerManager;
-organization(Controller c) += OrgController.organization(c); 
+CLASS ControllerManager 'Управление';
+name 'Название' = DATA STRING (ControllerManager);
+organization = DATA Organization (ControllerManager);
 
 CLASS ForceMode {
     on 'Включить принудительно',
     off 'Выключить принудительно'
 }
 mode = DATA ForceMode (ControllerManager);
-nameMode 'Ручной режим управления' (ControllerManager c) = staticCaption(mode(c)); 
+nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)); 
 
 CLASS ConditionType {
     and 'И',
     or 'ИЛИ'
 }
-CLASS ManagerCondition 'Условие работы';
+
+CLASS ABSTRACT ManagerCondition 'Условие работы';
 name 'Описание' = ABSTRACT STRING (ManagerCondition) IN id;
 type = DATA ConditionType (ManagerCondition);
 type(ManagerCondition c) <- ConditionType.and WHEN SET(c IS ManagerCondition);
@@ -39,10 +38,10 @@ cgCount = GROUP SUM 1 BY controller(ManagerCondition g), conditionGroup(g) MATER
 isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
 isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m), conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
 isAutoTrue(ControllerManager mg) = GROUP SUM 1 IF cgCount(mg, INTEGER g) = isTrue(mg, g) MATERIALIZED;
-isTrue 'Работает сейчас' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)); // проверяет работает условие или нет 
-
-
-CLASS TimeCondition : ManagerCondition;
+shouldBeOn 'Должно быть включено' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)) MATERIALIZED; // проверяет работает условие или нет
+isOn 'Включено' (ControllerManager mg) = DATA BOOLEAN (ControllerManager);
+isNotWhatShould = shouldBeOn(ControllerManager mg) AND NOT isOn(mg) OR isOn(mg) AND NOT shouldBeOn(mg);
+backgroundIsNotWhatShould = RGB(255, 0, 0) IF isNotWhatShould(ControllerManager mg);
 
 CLASS ABSTRACT ConditionValue 'Значение';
 name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50;
@@ -56,8 +55,8 @@ name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + 
 organization(MeasurementConditionValue v) += organization(device(v));
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
-value = DATA DOUBLE (FixedConditionValue);
-name = DATA STRING (FixedConditionValue); 
+value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
+name 'Название' = DATA STRING (FixedConditionValue) IN id; 
 organization = DATA Organization (FixedConditionValue) AUTOSET;
 currentValue(FixedConditionValue v) += value(v);
 name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
@@ -87,38 +86,83 @@ FORM valuesCondition 'Сравнение значений'
     OBJECTS vc = ValuesCondition PANEL
     PROPERTIES nameLeft(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE; }, 
                ''='>' IF vc, 
-               nameRight(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE; } 
+               ' > B ' = nameRight(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE; } 
 ;
 edit(ValuesCondition v) + { DIALOG valuesCondition OBJECTS vc=v; }; // чтобы не во вкладке, а в диалоге показывалось
 
-EXTEND CLASS Schedule : ManagerCondition;
-isTrue(Schedule s) += in(currentDateTimeSnapshot(), s);
-name(Schedule s) += Schedule.name(s);
+CLASS TimeCondition : ManagerCondition;
+schedule = DATA Schedule (TimeCondition);
+name(TimeCondition t) += name(schedule(t));
+isTrue(TimeCondition t) += TRUE IF in(currentDateTimeSnapshot(), schedule(t));
+newTimeCondition 'Добавить расписание' (ControllerManager m) {
+    DIALOG LIST Schedule INPUT s DO
+        NEW t = TimeCondition {
+            controller(t) <- m;
+            schedule(t) <- s;            
+        }
+}
+edit(TimeCondition t) +{
+    DIALOG LIST Schedule = schedule(t) CHANGE;
+}
 
-FORM controller 'Контроллер'
-    OBJECTS c = Controller PANEL
-    PROPERTIES (c) id, nametype, topic, nameServer, isTrue, nameMode //, nameOn, nameOff
+controllerDevice = DATA ControllerDevice (ControllerManager);
+nameControllerDevice 'Устройство' (ControllerManager cm) = name(controllerDevice(cm));
+CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
+
+organization = DATA Organization (Chat);
+nameOrganization 'Организация' (Chat c) = name(organization(c));
+EXTEND FORM messengers
+    PROPERTIES (c) nameOrganization
+;
+chat = DATA Chat (ControllerManager);
+nameChat 'Чат' (ControllerManager cm) = name(account(chat(cm)));
+CONSTRAINT organization(chat(ControllerManager cm)) != organization(cm) CHECKED BY chat[ControllerManager] MESSAGE 'Организация чата не соответсвует организации устройства';
+
+runOn(ControllerManager c) {
+    IF controllerDevice(c) THEN
+        runOn(controllerDevice(c));
+    IF chat(c) THEN 
+        sendMessage(chat(c), CONCAT ' ', name(c), 'ON');
+}
+runOff(ControllerManager c) {
+    IF controllerDevice(c) THEN
+        runOff(controllerDevice(c));
+    IF chat(c) THEN 
+        sendMessage(chat(c), CONCAT ' ', name(c), 'OFF');
+}
+
+FORM controllerManager 'Управление'
+    OBJECTS c = ControllerManager PANEL
+    PROPERTIES (c) name, nameControllerDevice, nameChat, isOn, shouldBeOn, nameMode //, nameOn, nameOff
     OBJECTS mc = ManagerCondition
-    PROPERTIES (mc) order, name READONLY, nameType, isTrue, 'Добавить расписание' = NEWEDIT[Schedule], 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
+    PROPERTIES (mc) order, name READONLY, nameType, isTrue
+    PROPERTIES (c) newTimeCondition DRAW mc TOOLBAR 
+    PROPERTIES (mc) 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
     FILTERS c = controller(mc)
     ORDER order(mc)
     
-    EDIT Controller OBJECT c;
+    EDIT ControllerManager OBJECT c;
 ;
 
-DESIGN controller {
+DESIGN controllerManager {
     GROUP (,c) {
         type = CONTAINERV;
+        fill = 1;
     }
     OBJECTS {
         NEW boxC BEFORE BOX(mc) {
             type = CONTAINERH;
-            MOVE BOX(c);
+            MOVE BOX(c) {
+                fill = 1;
+            }
             NEW params AFTER BOX(c) {
                 caption = 'Параметры работы';
-                MOVE PROPERTY (isTrue(c));
+                MOVE PROPERTY (isOn(c));
+                MOVE PROPERTY (shouldBeOn(c));
                 MOVE PROPERTY (nameMode(c));
+                fill = 1;
             }
+            alignment = STRETCH;            
 //            NEW commands AFTER params {
 //                caption = 'Команды';
 //                MOVE PROPERTY (nameOn(c));
@@ -128,15 +172,81 @@ DESIGN controller {
     }
 }
 
+checkWorking(ControllerManager c) {
+    TRY {
+        IF shouldBeOn(c) THEN {
+            IF NOT isOn(c) THEN 
+                runOn(c);
+        } ELSE { 
+            IF isOn(c) THEN 
+                runOff(c);
+        }
+        isOn(c) <- shouldBeOn(c);
+    }        
+}
 
-// onPrint INTERNAL 'sclass.ConPrintAction' (STRING);
+WHEN CHANGED(shouldBeOn(ControllerManager c)) DO {
+    checkWorking(c);
+}
 
-WHEN CHANGED(isTrue(Controller c)) DO {
-    IF isTrue(c) THEN {
-        // onPrint('ON ------------------------'); 
-        runOn(c);
-    } ELSE { 
-        // onPrint('OFF ------------------------------'); 
-        runOff(c);
-    }    
+controllerManager = GROUP AGGR ControllerManager mg BY controllerDevice(mg);
+nameControllerManager(ControllerDevice cd) = name(controllerManager(cd));
+isOn 'Включено' (ControllerDevice cd) = isOn(controllerManager(cd));
+
+setManager 'Задать' (ControllerDevice cd) {
+    NEWSESSION {
+        IF NOT controllerManager(cd) THEN {
+            NEW cm = ControllerManager {
+                name(cm) <- 'Управление ' + name(cd) + ' контр.:' + idController(cd);
+                controllerDevice(cm) <- cd;
+                organization(cm) <- organization(cd);
+            }
+        }
+        
+        edit(controllerManager(cd));
+    }
+}
+dropManager 'Сбросить' (ControllerDevice cd) {
+    NEWSESSION {
+        APPLY controllerDevice(controllerManager(cd)) <- NULL;        
+    }
+}
+
+EXTEND FORM orgControllers
+    PROPERTIES (cd) isOn BACKGROUND backgroundIsNotWhatShould(controllerManager(cd))
+    PROPERTIES (cd) PANEL setManager, dropManager
+;
+
+DESIGN orgControllers {
+    BOX (cd) {
+        NEW manager {
+            caption = 'Управление';
+            type = CONTAINERH;
+            MOVE PROPERTY (setManager(cd)) { fill = 1; }
+            MOVE PROPERTY (dropManager(cd)) { fill = 1; };
+            alignment = STRETCH;           
+        }
+    }
+}
+
+EXTEND FORM orgControllers
+    OBJECTS cm = ControllerManager
+    PROPERTIES (cm) NEWSESSION name, isOn BACKGROUND backgroundIsNotWhatShould(cm), NEW, EDIT, DELETE
+    FILTERS organization(cm) = o
+    
+    OBJECTS cv = FixedConditionValue
+    PROPERTIES (cv) NEWSESSION name, value
+    FILTERS organization(cv) = o
+;
+
+DESIGN orgControllers {
+    tab {
+        type = TABBED;
+        MOVE BOX (cm) {
+            caption = 'Управление устройствами';
+        }
+        MOVE BOX (cv) {
+            caption = 'Параметры управления';
+        }
+    }
 }

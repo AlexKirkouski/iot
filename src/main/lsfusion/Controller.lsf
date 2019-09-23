@@ -30,7 +30,7 @@ WHEN SET (ControllerType c IS ControllerType) DO {
 CLASS Command 'Команды контроллеров';
 TABLE command(Command);
 id 'ID команды' = DATA LONG (Command);
-name 'Название команды' = DATA BPISTRING[1000] (Command) CHARWIDTH 100 IN id;
+name 'Название команды' = DATA STRING (Command) IN id;
 signal 'Сигнал управления' = DATA BPISTRING[100] (Command) CHARWIDTH 30 IN id;
 
 controllerType 'Тип' = DATA ControllerType (Command);
@@ -46,13 +46,6 @@ WHEN SET (Command c IS Command) DO {
     dateCreation(c) <- currentDate();
     userCreation(c) <- currentUser();
 }
-
-on = DATA Command (ControllerType);
-CONSTRAINT controllerType(on(ControllerType t)) != t CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
-off = DATA Command (ControllerType);
-CONSTRAINT controllerType(off(ControllerType t)) != t CHECKED BY off MESSAGE 'Команда выключения должна соответствовать типу контроллера';
-nameOn 'Команда вкл.' (ControllerType t) = name(on(t));
-nameOff 'Команда выкл.' (ControllerType t) = name(off(t));
 
 //FORM editCommand 'Редактирование команды'
 //    OBJECTS c = Command PANEL
@@ -94,11 +87,6 @@ state           'Статус'            = DATA STRING[20]       (Controller); 
 dateCreation    'Дата создания'     = DATA DATETIME         (Controller);
 userCreation    'Кто создал'        = DATA BPSTRING[100]    (Controller);
 
-on = on(type(Controller c));
-off = off(type(Controller c));
-nameOn 'Команда вкл.' (Controller t) = name(on(t));
-nameOff 'Команда выкл.' (Controller t) = name(off(t));
-
 select 'Отм.' = DATA LOCAL BOOLEAN (Controller);
 countSelect = GROUP SUM 1 IF select(Controller d);
 
@@ -111,7 +99,7 @@ WHEN SET (Controller c IS Controller) DO {
 
 FORM controllerTypeCommands 'Типы контроллеров и их команды'
     OBJECTS t = ControllerType
-    PROPERTIES(t) id, name, nameOn, nameOff, NEW, DELETE
+    PROPERTIES(t) id, name, NEW, DELETE
     ORDER id(t)
     OBJECTS c = Command
     PROPERTIES (c) id, name, signal, NEW, DELETE

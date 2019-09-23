@@ -3,7 +3,7 @@ MODULE OrgController;
 REQUIRE Controller, Options, Security;
 
 organization 'Организация' = DATA Organization (Controller) AUTOSET;
-
+nameOrganization 'Организация' = name(organization(Controller c));
 
 FORM orgControllers 'Организации и их контроллеры'
     OBJECTS o = Organization
@@ -191,13 +191,7 @@ DESIGN orgControllerCommands {
         }
     }
 }
-/////
 
-runOn(Controller c) {
-//    MESSAGE 'ON';
-    transmitControlSignal(on(c), c, NULL);
-} 
-runOff(Controller c) {
-//    MESSAGE 'OFF';
-    transmitControlSignal(off(c), c, NULL);
-}
+EXTEND FORM controllers
+    PROPERTIES (c) nameOrganization;
+;

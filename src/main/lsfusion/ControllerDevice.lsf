@@ -1,0 +1,71 @@
+MODULE ControllerDevice;
+
+REQUIRE Controller, OrgController;
+
+CLASS ControllerDeviceType 'Тип устройств';
+controllerType = DATA ControllerType (ControllerDeviceType);
+name 'Название' = DATA STRING (ControllerDeviceType) IN id;
+
+on = DATA Command (ControllerDeviceType);
+CONSTRAINT controllerType(on(ControllerDeviceType t)) != controllerType(t) CHECKED BY on MESSAGE 'Команда включения должна соответствовать типу контроллера';
+off = DATA Command (ControllerDeviceType);
+CONSTRAINT controllerType(off(ControllerDeviceType t)) != controllerType(t) CHECKED BY off MESSAGE 'Команда выключения должна соответствовать типу контроллера';
+nameOn 'Команда вкл.' (ControllerDeviceType t) = name(on(t));
+nameOff 'Команда выкл.' (ControllerDeviceType t) = name(off(t));
+
+EXTEND FORM controllerTypeCommands
+    OBJECTS cdt = ControllerDeviceType
+    PROPERTIES (cdt) name, nameOn, nameOff, NEW, DELETE
+    FILTERS controllerType(cdt) = t
+;
+
+DESIGN controllerTypeCommands {
+    OBJECTS {
+        NEW tab {
+            type = TABBED;
+            MOVE BOX (c);
+            MOVE BOX (cdt) {
+                caption = 'Типы устройств';
+            }
+            fill = 3;        
+        }    
+    }
+}
+
+CLASS ControllerDevice 'Устройство';
+controllerDevice(Controller controller, ControllerDeviceType type) = AGGR ControllerDevice WHERE type(controller) = controllerType(type);
+
+name 'Название' (ControllerDevice cd) = name(type(cd)) IN id;
+idController 'ID контр.' (ControllerDevice cd) = id(controller(cd)) IN id; 
+organization(ControllerDevice cd) = organization(controller(cd)); 
+
+on = on(type(ControllerDevice c));
+off = off(type(ControllerDevice c));
+nameOn 'Команда вкл.' (ControllerDevice t) = name(on(t));
+nameOff 'Команда выкл.' (ControllerDevice t) = name(off(t));
+
+EXTEND FORM orgControllers
+    OBJECTS cd = ControllerDevice
+    PROPERTIES (cd) idController, name
+    FILTERS organization(cd) = o
+;
+
+DESIGN orgControllers {
+    tab {
+        type = TABBED;
+        MOVE BOX (cd) {
+            caption = 'Устройства';
+        }
+    }
+}
+
+/////
+
+runOn(ControllerDevice c) {
+//    MESSAGE 'ON';
+    transmitControlSignal(on(c), controller(c), NULL);
+} 
+runOff(ControllerDevice c) {
+//    MESSAGE 'OFF';
+    transmitControlSignal(off(c), controller(c), NULL);
+}
