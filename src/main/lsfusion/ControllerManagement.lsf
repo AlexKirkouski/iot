@@ -4,7 +4,7 @@ REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger;
 
 CLASS ControllerManager 'Управление';
 name 'Название' = DATA STRING (ControllerManager);
-organization = DATA Organization (ControllerManager);
+organization = DATA Organization (ControllerManager) AUTOSET;
 
 CLASS ForceMode {
     on 'Включить принудительно',
@@ -109,13 +109,13 @@ controllerDevice = DATA ControllerDevice (ControllerManager);
 nameControllerDevice 'Устройство' (ControllerManager cm) = name(controllerDevice(cm));
 CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
 
-organization = DATA Organization (Chat);
+organization = DATA Organization (Chat) AUTOSET;
 nameOrganization 'Организация' (Chat c) = name(organization(c));
 EXTEND FORM messengers
     PROPERTIES (c) nameOrganization
 ;
 chat = DATA Chat (ControllerManager);
-nameChat 'Чат' (ControllerManager cm) = name(account(chat(cm)));
+nameChat 'Чат' (ControllerManager cm) = name(chat(cm));
 CONSTRAINT organization(chat(ControllerManager cm)) != organization(cm) CHECKED BY chat[ControllerManager] MESSAGE 'Организация чата не соответсвует организации устройства';
 
 runOn(ControllerManager c) {
