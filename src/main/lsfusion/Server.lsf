@@ -45,7 +45,7 @@ NAVIGATOR {
                 NEW servers;
                 NEW mqttServers AFTER servers;
             }
-            NEW FOLDER dev 'Устройства измерения' {
+            NEW FOLDER dev 'Датчики' {
                 NEW devices;
             }
             NEW FOLDER cnt 'Контроллеры' {
@@ -56,11 +56,12 @@ NAVIGATOR {
         }
         NEW FOLDER org 'Организации' AFTER srvDevice {
             NEW organization;
-            NEW FOLDER dev2 'Устройства измерения' {
+            NEW FOLDER dev2 'Датчики' {
                 NEW orgDevices;
                 NEW orgMeasurements;
                 NEW devThreshold;
                 NEW devEvents;
+                NEW orgDevicesUsers;
             }
             NEW FOLDER cnt2 'Контроллеры' {
                 NEW orgControllers;

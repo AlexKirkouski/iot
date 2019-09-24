@@ -2,10 +2,6 @@ MODULE DevThreshold;
 
 REQUIRE Organization, Device, OrgDevice, Measurement, DevEvent, Utils;
 
-// значение для проверки выхода за диапазон
-minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
-maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
-
 FORM devThreshold 'Пороговые значения' 
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name  

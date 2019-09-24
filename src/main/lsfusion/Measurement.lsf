@@ -61,6 +61,10 @@ DESIGN devices {
 }
 /////
 
+// значение для проверки выхода за диапазон
+minValue 'Мин'          = DATA DOUBLE   (Device, MeasurementType);
+maxValue 'Макс'         = DATA DOUBLE   (Device, MeasurementType);
+
 ///// Таблица, из которой Grafana берет данные
 TABLE values (Measurement, MeasurementType);
 value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
@@ -278,5 +282,28 @@ onUpdateDB 'GRAFANA: Обновить DashBoards' (Organization o, Device dcur) 
 EXTEND FORM orgDevices
     PROPERTIES (o) onUpdateOrg
     PROPERTIES(o,d) onUpdateDB
+;
+/////
+
+measurementTypeString 'Типы измерений' (Device d) = GROUP CONCAT name(MeasurementType mt) IF number(type(d), mt), ',' ORDER index(type(d), mt) CHARWIDTH 20;
+
+///// Таблица "Датчики" для пользователя
+FORM orgDevicesUsers 'Датчики'
+    OBJECTS o = Organization
+    FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users') AND organization(currentUser()) == o)
+    
+    OBJECTS d = Device
+    PROPERTIES(d) READONLY id, nametype, measurementTypeString
+    PROPERTIES(d) maxTimeWaiting
+    PROPERTIES(d) READONLY country, typePoint, pointName, typeStreet, streetName, house
+    PROPERTIES(d) READONLY placeInstallation
+    ORDER nametype(d), id(d)
+    
+    OBJECTS m = MeasurementType
+    PROPERTIES(m) READONLY name
+    PROPERTIES(d,m) minValue, maxValue 
+    
+    FILTERS organization(d) = o
+    FILTERS index(type(d),m)
 ;
 /////
