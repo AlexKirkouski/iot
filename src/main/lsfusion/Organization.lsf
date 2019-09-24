@@ -61,24 +61,29 @@ CLASS SUtypePoint 'Тип н/пункта' {
     p1 'город', p2 'поселок', p3 'пгт', p4 'деревня'
 }
 
+CLASS SUtypeStreet 'Тип улицы' {
+    p1 'улица', p2 'проспект', p3 'площадь', p4 'бульвар', p5 'проезд',p6 'переулок'
+}
+
 CLASS SubUnit 'Точки размещения';
 TABLE subunit(SubUnit);
 // основные
-organization    'Организация'               = DATA Organization (SubUnit) AUTOSET;
-name            'Название точки'            = DATA STRING[60]   (SubUnit) NONULL;
-country         'Страна'                    = DATA STRING[30]   (SubUnit) NONULL;
+organization    'Организация'               = DATA Organization (SubUnit) AUTOSET ;
+name            'Название точки'            = DATA STRING[60]   (SubUnit) NONULL ;
+country         'Страна'                    = DATA STRING[30]   (SubUnit) ;
 //typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
 SUtypePoint = DATA SUtypePoint (SubUnit) MATERIALIZED INDEXED;
-typePoint 'Тип н/пункта' (SubUnit s) = staticCaption(SUtypePoint(s));
-pointName       'Название н/пункта'         = DATA STRING[50]   (SubUnit) NONULL;
-typeStreet      'Тип улицы'                 = DATA STRING[20]   (SubUnit) NONULL;
-streetName      'Название улицы'            = DATA STRING[50]   (SubUnit) NONULL;  
-house           'Дом'                       = DATA STRING[10]   (SubUnit) NONULL;
-contact         'Контактное лицо'           = DATA STRING[40]   (SubUnit) NONULL;
-phone           'Телефон для связи'         = DATA STRING[40]   (SubUnit) NONULL;
+typePoint 'Тип н/пункта' (SubUnit s) = staticCaption(SUtypePoint(s)) ;
+pointName       'Название н/пункта'         = DATA STRING[50]   (SubUnit) ;
+SUtypeStreet = DATA SUtypeStreet (SubUnit) MATERIALIZED INDEXED; 
+typeStreet      'Тип улицы' (SubUnit s) = staticCaption(SUtypeStreet(s)) ;
+streetName      'Название улицы'            = DATA STRING[50]   (SubUnit) ;  
+house           'Дом'                       = DATA STRING[10]   (SubUnit) ;
+contact         'Контактное лицо'           = DATA STRING[40]   (SubUnit) ;
+phone           'Телефон для связи'         = DATA STRING[40]   (SubUnit) ;
 // логирование
-dateCreation    'Дата создания'             = DATA DATETIME     (SubUnit);
-userCreation    'Кто создал'                = DATA BPSTRING[100](SubUnit);
+dateCreation    'Дата создания'             = DATA DATETIME     (SubUnit) ;
+userCreation    'Кто создал'                = DATA BPSTRING[100](SubUnit) ;
 
 WHEN SET (SubUnit s IS SubUnit) DO {
     dateCreation(s) <- currentDateTime();
