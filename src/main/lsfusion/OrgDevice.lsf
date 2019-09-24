@@ -4,7 +4,10 @@ REQUIRE Organization, Device, Options, Utils;
 
 organization 'Организация' = DATA Organization (Device) ;
 subUnit 'Точка размещения' = DATA SubUnit (Device) ;
+nameSubUnit 'Точка размещения' = name(subUnit(Device d));
 contract 'Договор' = DATA Contract (Device) ;
+numberContract 'Договор' = number(contract(Device d));
+ 
 placeInstallation 'Место установки'  = DATA BPSTRING[200] (Device);
 note 'Примечание'  = DATA BPSTRING[200] (Device);
 
@@ -15,14 +18,14 @@ typeStreet      'Тип улицы'                 = typeStreet(subUnit(Device 
 streetName      'Название улицы'            = streetName(subUnit(Device d));  
 house           'Дом'                       = house(subUnit(Device d));
 
-FORM orgDevices 'Организации и их устройства'
+FORM orgDevices 'Организации и их датчики'
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name, unn, address
     
     OBJECTS d = Device
     PROPERTIES(d) select
     PROPERTIES(d) READONLY id, dateCreation, nametype, dbId
-    PROPERTIES(d) subUnit, contract, placeInstallation, note 
+    PROPERTIES(d) nameSubUnit, numberContract, placeInstallation, note 
     PROPERTIES(d) maxTimeWaiting
     ORDER nametype(d), id(d)
     FILTERS organization(d) = o

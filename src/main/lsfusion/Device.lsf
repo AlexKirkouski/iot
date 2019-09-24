@@ -8,7 +8,7 @@ CLASS DeviceType 'Тип устройства' {
 
 TABLE deviceType(DeviceType);
 id 'ID типа устройства' = DATA LONG (DeviceType);
-name 'Название типа устройства' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 70 IN id;
+name 'Название типа устройства' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 20 IN id;
 fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) CHARWIDTH 7 IN id;
 
 dateCreation 'Дата создания' = DATA DATE (DeviceType);

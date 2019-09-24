@@ -140,7 +140,7 @@ DESIGN organization {
                     flex = 8;
                 }
                 MOVE BOX(c) {
-                    caption = 'Договора';
+                    caption = 'Договоры';
                     flex = 7;
                 }
                 fill = 2;
@@ -152,7 +152,7 @@ DESIGN organization {
 
 FORM editOrganization 'Редактирование организации'
     OBJECTS o = Organization PANEL
-    PROPERTIES(o) name,unn,address,contact,phone,site,email,partner
+    PROPERTIES(o) name, unn, address, contact, phone, site, email, partner
     PROPERTIES(o) READONLY userCreation, dateCreation
     EDIT Organization OBJECT o
 ;
@@ -197,8 +197,11 @@ FORM editSubUnit 'Редактирование точки'
 ;
 
 FORM SubUnits 'Точки размещения'
+    OBJECTS o = Organization
     OBJECTS s = SubUnit
     PROPERTIES(s) READONLY name, contact, phone, country, typePoint, pointName, typeStreet, streetName, house
+    PROPERTIES (s) NEWSESSION NEW, EDIT, DELETE
+    FILTERS organization(s) = o
     LIST SubUnit OBJECT s
 ;
 
@@ -254,3 +257,12 @@ DESIGN editContract {
         MOVE TOOLBAR ; 
     }    
 }
+
+FORM contracts 'Договоры'
+    OBJECTS o = Organization
+    OBJECTS c = Contract
+    PROPERTIES(c) READONLY number, date, comment
+    PROPERTIES (c) NEWSESSION NEW, EDIT, DELETE
+    FILTERS organization(c) = o
+    LIST Contract OBJECT c
+;
