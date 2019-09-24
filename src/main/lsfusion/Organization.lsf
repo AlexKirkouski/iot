@@ -67,7 +67,9 @@ TABLE subunit(SubUnit);
 organization    'Организация'               = DATA Organization (SubUnit) AUTOSET;
 name            'Название точки'            = DATA STRING[60]   (SubUnit) NONULL;
 country         'Страна'                    = DATA STRING[30]   (SubUnit) NONULL;
-typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
+//typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
+SUtypePoint = DATA SUtypePoint (SubUnit) MATERIALIZED INDEXED;
+typePoint 'Тип н/пункта' (SubUnit s) = staticCaption(SUtypePoint(s));
 pointName       'Название н/пункта'         = DATA STRING[50]   (SubUnit) NONULL;
 typeStreet      'Тип улицы'                 = DATA STRING[20]   (SubUnit) NONULL;
 streetName      'Название улицы'            = DATA STRING[50]   (SubUnit) NONULL;  
@@ -105,7 +107,7 @@ FORM organization 'Организации'
     PROPERTIES(o) READONLY name, unn, address
     PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
     OBJECTS s = SubUnit
-    PROPERTIES(s) READONLY name, contact, phone, country, streetName, house
+    PROPERTIES(s) READONLY name, contact, phone, country, typePoint, pointName, typeStreet, streetName, house
     PROPERTIES(s) NEWSESSION NEW, EDIT, DELETE 
     FILTERS organization(s) = o 
     OBJECTS c = Contract
