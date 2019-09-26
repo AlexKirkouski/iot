@@ -39,7 +39,7 @@ FORM servers 'Сервера UDP'
 ;
 
 NAVIGATOR {
-    NEW FOLDER measurements 'Измерения' IMAGE '/mes.png' WINDOW toolbar FIRST {
+    NEW FOLDER measurements 'Мониторинг' IMAGE '/mes.png' WINDOW toolbar FIRST {
         NEW FOLDER srvDevice 'Серверы и устройства' {
             NEW FOLDER srv 'Серверы' {
                 NEW servers;
