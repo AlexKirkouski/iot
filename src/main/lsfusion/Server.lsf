@@ -52,7 +52,7 @@ NAVIGATOR {
                 NEW controllerTypeCommands;
                 NEW controllers;
             }
-            NEW clsMeasurement;
+//            NEW clsMeasurement;
         }
         NEW FOLDER org 'Организации' AFTER srvDevice {
             NEW organization;
