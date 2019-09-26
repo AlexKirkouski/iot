@@ -59,14 +59,14 @@ NAVIGATOR {
             NEW FOLDER dev2 'Датчики' {
                 NEW orgDevices;
                 NEW orgMeasurements;
-                NEW devThreshold;
+                // NEW devThreshold;
                 NEW devEvents;
                 NEW orgDevicesUsers;
             }
             NEW FOLDER cnt2 'Контроллеры' {
                 NEW orgControllers;
                 NEW orgControllerCommands;
-                NEW runCommands;
+                // NEW runCommands;
             }
         }
     }

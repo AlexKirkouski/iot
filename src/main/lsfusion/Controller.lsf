@@ -71,7 +71,7 @@ id              'ID контроллера'    = DATA LONG             (Controll
 topic           'Топик управления'  = DATA STRING[30]       (Controller) NONULL;
 
 type            'Тип'               = DATA ControllerType   (Controller);
-nametype 'Тип' = name(type(Controller c)) CHARWIDTH 70;
+nametype 'Тип' = name(type(Controller c)) CHARWIDTH 20;
 
 // уникальное значение при создании (изменении)
 controller = GROUP AGGR Controller c BY id(c);

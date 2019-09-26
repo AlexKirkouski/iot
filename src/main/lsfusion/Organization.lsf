@@ -65,13 +65,17 @@ CLASS SUtypeStreet 'Тип улицы' {
     p1 'улица', p2 'проспект', p3 'площадь', p4 'бульвар', p5 'проезд',p6 'переулок'
 }
 
+CLASS SUcountry 'Страна' {
+    p1 'Республика Беларусь', p2 'Россия', p3 'США'
+}
+
 CLASS SubUnit 'Точки размещения';
 TABLE subunit(SubUnit);
 // основные
 organization    'Организация'               = DATA Organization (SubUnit) AUTOSET ;
 name            'Название точки'            = DATA STRING[60]   (SubUnit) NONULL ;
-country         'Страна'                    = DATA STRING[30]   (SubUnit) ;
-//typePoint       'Тип н/пункта'              = DATA STRING[30]   (SubUnit) NONULL;
+SUcountry = DATA SUcountry (SubUnit) MATERIALIZED INDEXED;
+country 'Страна' (SubUnit s) = staticCaption(SUcountry(s)) ;
 SUtypePoint = DATA SUtypePoint (SubUnit) MATERIALIZED INDEXED;
 typePoint 'Тип н/пункта' (SubUnit s) = staticCaption(SUtypePoint(s)) ;
 pointName       'Название н/пункта'         = DATA STRING[50]   (SubUnit) ;

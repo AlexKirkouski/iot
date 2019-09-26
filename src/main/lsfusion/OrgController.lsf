@@ -5,6 +5,21 @@ REQUIRE Controller, Options, Security;
 organization 'Организация' = DATA Organization (Controller) AUTOSET;
 nameOrganization 'Организация' = name(organization(Controller c));
 
+subUnit 'Точка размещения' = DATA SubUnit (Controller) ;
+nameSubUnit 'Точка размещения' = name(subUnit(Controller c));
+contract 'Договор' = DATA Contract (Controller) ;
+numberContract 'Договор' = number(contract(Controller c));
+ 
+placeInstallation 'Место установки'  = DATA BPSTRING[200] (Controller);
+note 'Примечание'  = DATA BPSTRING[200] (Controller);
+
+country         'Страна'                    = country(subUnit(Controller c)) ;
+typePoint       'Тип н/пункта'              = typePoint(subUnit(Controller c));
+pointName       'Название н/пункта'         = pointName(subUnit(Controller c));
+typeStreet      'Тип улицы'                 = typeStreet(subUnit(Controller c));
+streetName      'Название улицы'            = streetName(subUnit(Controller c));  
+house           'Дом'                       = house(subUnit(Controller c));
+
 FORM orgControllers 'Организации и их контроллеры'
     OBJECTS o = Organization
     PROPERTIES(o) READONLY name, unn, address
@@ -12,6 +27,7 @@ FORM orgControllers 'Организации и их контроллеры'
     OBJECTS c = Controller
     PROPERTIES(c) select
     PROPERTIES(c) READONLY id, dateCreation, nametype
+    PROPERTIES(c) nameSubUnit, numberContract, placeInstallation, note
     PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
     ORDER nametype(c), id(c)
     FILTERS organization(c) = o
@@ -73,7 +89,7 @@ deleteControllersOrg 'Удалить отмеченные контроллеры
 }
 
 EXTEND FORM orgControllers
-    PROPERTIES(o) insertControllersOrg, deleteControllersOrg ;
+    PROPERTIES(o) SHOWIF mainRole(currentUser()) == userRoleSID('admins') insertControllersOrg, deleteControllersOrg ;
 /////
 
 ///// Журнал переданных команд на контроллеры
@@ -104,6 +120,22 @@ FORM runCommands 'Журнал переданных команд'
     FILTERS organization(controller(r)) = o   
 ;
 /////
+
+EXTEND FORM orgControllers
+    OBJECTS r = RunCommand 
+    PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, userCreation, eCode, eMessage
+    ORDER dateTime(r) DESC
+    FILTERS organization(controller(r)) = o   
+;
+
+DESIGN orgControllers {
+    tab {
+        type = TABBED;
+        MOVE BOX (r) {
+            caption = 'Журнал команд';
+        }
+    }
+}
 
 ///// Передача сигнала управления на контроллер
 cntEMessage    'Текст ошибки'      = DATA STRING[100] ();
