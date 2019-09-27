@@ -5,9 +5,9 @@ REQUIRE Options, SystemEvents, Utils;
 CLASS Organization 'Организация';
 TABLE organization(Organization);
 // основные
-name            'Название организации'              = DATA STRING[60]   (Organization) NONULL;
-unn             'УНН'                               = DATA STRING[10]   (Organization) NONULL;
-address         'Адрес'                             = DATA STRING[100]  (Organization) NONULL;
+name            'Название организации'              = DATA STRING[100]   (Organization) NONULL;
+unn             'УНП'                               = DATA STRING[10]   (Organization) NONULL;
+address         'Адрес'                             = DATA STRING[120]  (Organization) NONULL;
 contact         'Контактное лицо'                   = DATA STRING[40]   (Organization) NONULL;
 phone           'Телефон для связи'                 = DATA STRING[40]   (Organization) NONULL;
 site            'Сайт организации'                  = DATA STRING[100]  (Organization) NONULL;
@@ -154,10 +154,28 @@ DESIGN organization {
     }
 }
 
+getUnn INTERNAL 'sclass.GetUnnAction' ();
+p_unn       'УНН'           = DATA STRING[10] ();
+p_name      'Название'      = DATA STRING[100] ();
+p_address   'Адрес'         = DATA STRING[120] ();
+p_vkods     'Статус'        = DATA STRING[50] ();
+eCode       'Код ошибки'    = DATA INTEGER ();
+eMessage    'Ошибка'        = DATA STRING[100] ();
+
+
+chkUnn 'Проверка УНП' (Organization o) {
+    p_unn() <- unn(o);
+    getUnn();
+    name(o) <- p_name();
+    address(o) <- p_address();
+    IF eCode() > 0 THEN MESSAGE eMessage(); 
+}
+
 FORM editOrganization 'Редактирование организации'
     OBJECTS o = Organization PANEL
     PROPERTIES(o) name, unn, address, contact, phone, site, email, partner
     PROPERTIES(o) READONLY userCreation, dateCreation
+    PROPERTIES(o) chkUnn
     EDIT Organization OBJECT o
 ;
 
@@ -174,8 +192,9 @@ DESIGN editOrganization {
         NEW h1 {
             type = CONTAINERV;
             caption = 'Общие сведения';
-            MOVE PROPERTY (name(o));
             MOVE PROPERTY (unn(o));
+            MOVE PROPERTY (chkUnn(o));
+            MOVE PROPERTY (name(o));
             MOVE PROPERTY (address(o));
             MOVE PROPERTY (contact(o));
             MOVE PROPERTY (phone(o));
