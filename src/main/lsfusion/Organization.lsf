@@ -155,12 +155,12 @@ DESIGN organization {
 }
 
 getUnn INTERNAL 'sclass.GetUnnAction' ();
-p_unn       'УНН'           = DATA STRING[10] ();
-p_name      'Название'      = DATA STRING[100] ();
-p_address   'Адрес'         = DATA STRING[120] ();
-p_vkods     'Статус'        = DATA STRING[50] ();
-eCode       'Код ошибки'    = DATA INTEGER ();
-eMessage    'Ошибка'        = DATA STRING[100] ();
+p_unn       'УНН'           = DATA LOCAL STRING[10] ();
+p_name      'Название'      = DATA LOCAL STRING[100] ();
+p_address   'Адрес'         = DATA LOCAL STRING[120] ();
+p_vkods     'Статус'        = DATA LOCAL STRING[50] ();
+eCode       'Код ошибки'    = DATA LOCAL INTEGER ();
+eMessage    'Ошибка'        = DATA LOCAL STRING[100] ();
 
 
 chkUnn 'Проверка УНП' (Organization o) {
