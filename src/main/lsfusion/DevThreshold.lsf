@@ -102,7 +102,7 @@ onHushDevice 'Молчание датчика' () {
         FOR lastMeasurement(Device d)  DO {
             
             minutes() <- round0(secondsBetweenDates(currentDateTime(), lastMeasurement(d)) / 60);
-             
+            
             IF minutes() > maxTimeWaiting(d) THEN {
 //                onPrint(toString(id(d),'99999') + ', ' + toDTime(lastMeasurement(d)) );
                 subject()   <-  '#' + toString(id(d),'99999999') + ', нет сигнала';

@@ -28,7 +28,6 @@ FORM orgControllers 'Организации и их контроллеры'
     PROPERTIES(c) select
     PROPERTIES(c) READONLY id, dateCreation, nametype
     PROPERTIES(c) nameSubUnit, numberContract, placeInstallation, note
-    PROPERTIES(c) NEWSESSION NEW, EDIT, DELETE
     ORDER nametype(c), id(c)
     FILTERS organization(c) = o
 ;
@@ -90,6 +89,17 @@ deleteControllersOrg 'Удалить отмеченные контроллеры
 
 EXTEND FORM orgControllers
     PROPERTIES(o) SHOWIF mainRole(currentUser()) == userRoleSID('admins') insertControllersOrg, deleteControllersOrg ;
+DESIGN orgControllers {
+    tab {
+        BOX(c) {
+            NEW h1 {
+                type = CONTAINERH;
+                MOVE PROPERTY (insertControllersOrg(o));
+                MOVE PROPERTY (deleteControllersOrg(o));
+            }
+        }
+    }
+}
 /////
 
 ///// Журнал переданных команд на контроллеры

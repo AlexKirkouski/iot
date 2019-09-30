@@ -26,7 +26,6 @@ FORM orgDevices 'Организации и их датчики'
     PROPERTIES(d) select
     PROPERTIES(d) READONLY id, dateCreation, nametype, dbId
     PROPERTIES(d) nameSubUnit, numberContract, placeInstallation, note 
-    PROPERTIES(d) maxTimeWaiting
     ORDER nametype(d), id(d)
     FILTERS organization(d) = o
 ;
