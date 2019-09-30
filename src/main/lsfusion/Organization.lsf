@@ -5,7 +5,7 @@ REQUIRE Options, SystemEvents, Utils;
 CLASS Organization 'Организация';
 TABLE organization(Organization);
 // основные
-name            'Название организации'              = DATA STRING[100]   (Organization) NONULL;
+name            'Название организации'              = DATA STRING[100]  (Organization) NONULL;
 unn             'УНП'                               = DATA STRING[10]   (Organization) NONULL;
 address         'Адрес'                             = DATA STRING[120]  (Organization) NONULL;
 contact         'Контактное лицо'                   = DATA STRING[40]   (Organization) NONULL;
