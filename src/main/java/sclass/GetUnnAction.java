@@ -38,7 +38,9 @@ public class GetUnnAction extends InternalAction {
             }
             if (oh.nStatus != 200) {
                 findProperty("eCode").change(1, context.getSession());
-                findProperty("eMessage").change("Ошибка выполнения HTTP запроса\n" + oh.cStatus, context.getSession());
+                String cmsg = "Ошибка выполнения HTTP запроса\n" + oh.cStatus;
+                if (oh.nStatus == 404) cmsg += "\n" + "УНП не найден";
+                findProperty("eMessage").change(cmsg, context.getSession());
                 return;
             }
             findProperty("p_name").change("",context.getSession());
