@@ -307,3 +307,68 @@ FORM orgDevicesUsers 'Датчики'
     FILTERS index(type(d),m)
 ;
 /////
+
+show 'Показывать в отчете' = DATA BOOLEAN (DeviceType, MeasurementType);
+show(DeviceType d, MeasurementType mt) => number(d, mt);
+EXTEND FORM devices
+    PROPERTIES (t, mt) show
+;
+
+toDateTime(DATE date, INTEGER hour) = sumMinutes(toDateTime(date), hour * 60);
+between(DATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
+value(DATE date, INTEGER hour, Device d, MeasurementType mt) = 
+                round((GROUP SUM value(Measurement m, mt) IF between(dateTime(m), date, hour) AND device(m) = d) /
+                (GROUP SUM 1 IF between(dateTime(Measurement m), date, hour) AND device(m) = d), 2); 
+
+FORM reportOrg
+    OBJECTS dFrom = DATE, dTo = DATE, d = Device
+    
+    OBJECTS (dt = DATE, h = INTEGER)
+    FILTERS iterate(dt, dFrom, dTo) AND iterate(h, 0, 23)
+    
+    OBJECTS mt = MeasurementType
+    FILTERS show(type(d), mt)
+ 
+    PROPERTIES name = toDateTime(dt, h)
+    PROPERTIES value(dt, h, d, mt) COLUMNS (mt) HEADER name(mt)
+;
+
+exportReportXls(Organization o, DATE dFrom, DATE dTo) {
+    FOR organization(Device d) = o DO { 
+        LOCAL name = STRING();
+        name() <- 'Устройство ' + id(d);
+        PRINT reportOrg OBJECTS d = d, dFrom = dFrom, dTo = dTo XLSX SHEET name TO exportExcelFile;
+        WRITE exportExcelFile() TO 'myfile' APPEND;
+    }
+    READ 'myfile.xlsx' TO exportExcelFile;
+    delete('myFile.xlsx');
+}
+
+emailReportXls(Organization o, DATE dFrom, DATE dTo) {
+    exportReportXls(o, dFrom, dTo);
+    EMAIL TO email(o) ATTACH exportExcelFile();
+}
+
+printReportXls(Organization o, DATE dFrom, DATE dTo) {
+    exportReportXls(o, dFrom, dTo);
+    open(exportExcelFile());
+}
+
+FORM dialogDates
+    OBJECTS dFrom 'Дата от' = DATE PANEL, dTo 'Дата до' = DATE PANEL
+    PROPERTIES VALUE(dFrom), VALUE(dTo)
+;
+
+emailReportXls 'Отправить измерения' (Organization o) {
+    DIALOG dialogDates OBJECTS dFrom INPUT, dTo INPUT DO
+        emailReportXls(o, dFrom, dTo);
+}
+
+printReportXls 'Распечатать измерения' (Organization o) {
+    DIALOG dialogDates OBJECTS dFrom INPUT, dTo INPUT DO
+        printReportXls(o, dFrom, dTo);
+}
+
+EXTEND FORM organization
+    PROPERTIES (o) email, emailReportXls TOOLBAR, printReportXls TOOLBAR   
+; 

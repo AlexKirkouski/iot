@@ -49,7 +49,7 @@ currentValue 'Значение' = ABSTRACT DOUBLE (ConditionValue) MATERIALIZED;
 organization 'Организация' = ABSTRACT Organization (ConditionValue);
 
 CLASS MeasurementConditionValue 'Значение измерения' : ConditionValue;
-measurementConditionValue = AGGR MeasurementConditionValue WHERE index(type(Device device), MeasurementType measurementType);
+measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(Device device), MeasurementType measurementType);
 currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
 name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 organization(MeasurementConditionValue v) += organization(device(v));
