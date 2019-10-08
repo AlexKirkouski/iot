@@ -341,7 +341,7 @@ exportReportXls(Organization o, DATE dFrom, DATE dTo) {
         WRITE exportExcelFile() TO 'myfile' APPEND;
     }
     READ 'myfile.xlsx' TO exportExcelFile;
-    delete('myFile.xlsx');
+    delete('myfile.xlsx');
 }
 
 emailReportXls(Organization o, DATE dFrom, DATE dTo) {
