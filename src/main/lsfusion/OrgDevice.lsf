@@ -42,7 +42,7 @@ DESIGN orgDevices {
             fill = 1;
         }
         NEW tab {
-            type = SPLITH ;
+            type = TABBED ;
             MOVE BOX(d) {
                 caption = 'Устройства';
                 flex = 1;

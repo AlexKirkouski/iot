@@ -314,6 +314,38 @@ EXTEND FORM devices
     PROPERTIES (t, mt) show
 ;
 
+CLASS MeasurementLimit 'Порог измерения';
+organization = DATA Organization (MeasurementLimit);
+type = DATA MeasurementType (MeasurementLimit);
+value 'Значение' = DATA DOUBLE (MeasurementLimit);
+color 'Цвет' = DATA COLOR (MeasurementLimit);
+colorLimit(Organization org, MeasurementType type, DOUBLE value) = GROUP LAST color(MeasurementLimit limit) ORDER value(limit), limit 
+                                                                                    WHERE value(limit) < value BY organization(limit), type(limit);
+EXTEND FORM orgDevices
+    OBJECTS mt = MeasurementType
+    PROPERTIES (mt) name
+    OBJECTS ml = MeasurementLimit
+    PROPERTIES (ml) value, color, NEW, DELETE
+    FILTERS organization(ml) = o, type(ml) = mt
+;
+
+DESIGN orgDevices {
+    tab {
+        NEW tabTypes {
+            type = CONTAINERV;
+            caption = 'Лимиты в отчетах';
+            MOVE BOX (mt) {
+                fill = 1;
+            }
+            MOVE BOX (ml) {
+                fill = 1;
+            }
+            
+            fill = 1;        
+        }
+    }
+}
+
 toDateTime(DATE date, INTEGER hour) = sumMinutes(toDateTime(date), hour * 60);
 between(DATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
 value(DATE date, INTEGER hour, Device d, MeasurementType mt) = 
@@ -321,7 +353,7 @@ value(DATE date, INTEGER hour, Device d, MeasurementType mt) =
                 (GROUP SUM 1 IF between(dateTime(Measurement m), date, hour) AND device(m) = d), 2); 
 
 FORM reportOrg
-    OBJECTS dFrom = DATE, dTo = DATE, d = Device
+    OBJECTS dFrom = DATE, dTo = DATE, d = Device, o = Organization
     
     OBJECTS (dt = DATE, h = INTEGER)
     FILTERS iterate(dt, dFrom, dTo) AND iterate(h, 0, 23)
@@ -330,6 +362,7 @@ FORM reportOrg
     FILTERS show(type(d), mt)
  
     PROPERTIES name = toDateTime(dt, h)
+    PROPERTIES cl = colorLimit(o, mt, value(dt, h, d, mt)) COLUMNS (mt)
     PROPERTIES value(dt, h, d, mt) COLUMNS (mt) HEADER name(mt)
 ;
 
@@ -337,7 +370,7 @@ exportReportXls(Organization o, DATE dFrom, DATE dTo) {
     FOR organization(Device d) = o DO { 
         LOCAL name = STRING();
         name() <- 'Устройство ' + id(d);
-        PRINT reportOrg OBJECTS d = d, dFrom = dFrom, dTo = dTo XLSX SHEET name TO exportExcelFile;
+        PRINT reportOrg OBJECTS d = d, dFrom = dFrom, dTo = dTo, o = o XLSX SHEET name TO exportExcelFile;
         WRITE exportExcelFile() TO 'myfile' APPEND;
     }
     READ 'myfile.xlsx' TO exportExcelFile;

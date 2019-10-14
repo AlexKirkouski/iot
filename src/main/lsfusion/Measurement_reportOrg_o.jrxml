@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.2.0.final using JasperReports Library version 6.2.0  -->
+<!-- 2019-10-13T17:00:50 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="o" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="9989e186-40e6-4a36-b6e1-0e6b9402a700">
+	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle1" mode="Opaque" backcolor="#F3F3F3" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle0" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<field name="o.object" class="java.lang.Long"/>
+	<field name="dt.object" class="java.util.Date"/>
+	<field name="h.object" class="java.lang.Integer"/>
+	<field name="name" class="java.sql.Timestamp"/>
+	<field name="cl" class="java.awt.Color"/>
+	<field name="value(dt,h,d,mt)" class="java.lang.Double"/>
+	<field name="value(dt,h,d,mt).header" class="java.lang.String"/>
+	<group name="designGroup9861">
+		<groupExpression><![CDATA[String.valueOf($F{o.object})]]></groupExpression>
+	</group>
+	<pageHeader>
+		<band height="18">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="75" height="18" uuid="929ae08a-5b0f-47ed-ae85-29cef52f6140"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["toDateTime"]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="75" y="0" width="727" height="18" uuid="becb2f87-8ce8-428f-add2-2057e0ca7252"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{value(dt,h,d,mt).header}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="18">
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="75" height="18" uuid="3e47eca1-3505-4bbc-9e40-b136eb8759c5"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" mode="Opaque" x="75" y="0" width="727" height="18" uuid="7a486ea1-305a-4325-b53a-33e5fb6edabc">
+					<propertyExpression name="net.sf.jasperreports.style.backcolor"><![CDATA["#" + net.sf.jasperreports.engine.util.JRColorUtil.getColorHexa($F{cl})]]></propertyExpression>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{value(dt,h,d,mt)}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

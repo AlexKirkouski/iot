@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="reportOrg" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="fa7b28c9-dc89-48d1-93d6-aa3ad7d16af6">
+	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle5" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle4" mode="Opaque" backcolor="#CCCCCC" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle3" mode="Opaque" backcolor="#D9D9D9" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle2" mode="Opaque" backcolor="#E6E6E6" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<parameter name="o_report" class="net.sf.jasperreports.engine.JasperReport"/>
+	<parameter name="o_source" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="o_params" class="java.util.Map"/>
+	<parameter name="mt_report" class="net.sf.jasperreports.engine.JasperReport"/>
+	<parameter name="mt_source" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="mt_params" class="java.util.Map"/>
+	<field name="dFrom.object" class="java.util.Date"/>
+	<field name="dTo.object" class="java.util.Date"/>
+	<field name="d.object" class="java.lang.Long"/>
+	<group name="designGroup9855">
+		<groupExpression><![CDATA[String.valueOf($F{dFrom.object})]]></groupExpression>
+	</group>
+	<group name="designGroup9857">
+		<groupExpression><![CDATA[String.valueOf($F{dTo.object})]]></groupExpression>
+	</group>
+	<group name="designGroup9859">
+		<groupExpression><![CDATA[String.valueOf($F{d.object})]]></groupExpression>
+	</group>
+	<detail>
+		<band>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="05b9a4cb-4059-43b4-b2b9-84d677023447"/>
+				<parametersMapExpression><![CDATA[$P{o_params}]]></parametersMapExpression>
+				<dataSourceExpression><![CDATA[$P{o_source}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{o_report}]]></subreportExpression>
+			</subreport>
+		</band>
+		<band>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="13a065ec-a8ad-4955-9a7e-7853f7d02bb5"/>
+				<parametersMapExpression><![CDATA[$P{mt_params}]]></parametersMapExpression>
+				<dataSourceExpression><![CDATA[$P{mt_source}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{mt_report}]]></subreportExpression>
+			</subreport>
+		</band>
+	</detail>
+</jasperReport>
