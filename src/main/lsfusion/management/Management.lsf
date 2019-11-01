@@ -83,7 +83,7 @@ FORM valuesCondition 'Сравнение значений'
     OBJECTS vc = ValuesCondition PANEL
     PROPERTIES nameLeft(vc) ON CHANGE { dialogChangeLeftConditionValue(vc); }, 
                ''='>' IF vc, 
-               ' > B ' = nameRight(vc) ON CHANGE { dialogChangeLeftConditionValue(vc);} 
+               ' > B ' = nameRight(vc) ON CHANGE { dialogChangeRightConditionValue(vc);} 
 ;
 edit(ValuesCondition v) + { DIALOG valuesCondition OBJECTS vc=v; }; // чтобы не во вкладке, а в диалоге показывалось
 
