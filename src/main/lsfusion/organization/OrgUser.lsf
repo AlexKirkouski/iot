@@ -47,22 +47,6 @@ onStarted() + {
         }
 }
 
-FORM organizationUsers 'Пользователи'
-    OBJECTS o = Organization PANEL
-    PROPERTIES name(o) SELECTOR
-    
-    OBJECTS c = CustomUser
-    PROPERTIES (c) firstName, lastName, login, sha256Password ON CHANGE changeSHA256Password(c), name, NEW, DELETE
-    FILTERS organization(c) = o
-    FILTERS mainRole(c) = orgUserRole()
-;
-
-NAVIGATOR {
-    data {
-        NEW organizationUsers AFTER organizations;
-    }
-}
-
 META addOrganization(form, object)
     EXTEND FORM form
         OBJECTS o = Organization PANEL BEFORE object
@@ -82,3 +66,32 @@ META addOrganization(form, object)
         } 
     } 
 END
+
+FORM organizationUsers 'Пользователи'
+    OBJECTS c = CustomUser
+    PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, NEW, DELETE
+    FILTERS mainRole(c) = orgUserRole()
+;
+DESIGN organizationUsers {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW top {
+                MOVE BOX (c);
+                fill = 1;
+            }
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+} 
+
+@addOrganization(organizationUsers, c);
+
+NAVIGATOR {
+    data {
+        NEW organizationUsers AFTER organizations;
+    }
+}

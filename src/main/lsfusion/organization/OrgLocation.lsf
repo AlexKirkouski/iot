@@ -9,7 +9,7 @@ organization 'Организация' = DATA Organization (Location) AUTOSET ;
 @addOrganization(locations, l);
 
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Location) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
-FORM selectLocations
+FORM selectLocations 'Выбор точек размещения'
     OBJECTS o = Organization
     OBJECTS l = Location
     PROPERTIES (l) selected, name READONLY
