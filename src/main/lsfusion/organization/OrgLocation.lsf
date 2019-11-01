@@ -1,0 +1,34 @@
+MODULE OrgLocation;
+
+REQUIRE Location, Organization, OrgUser;
+
+NAMESPACE Location;
+
+organization 'Организация' = DATA Organization (Location) AUTOSET ;
+
+@addOrganization(locations, l);
+
+selected 'Выбр.' = DATA LOCAL BOOLEAN (Location) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
+FORM selectLocations
+    OBJECTS o = Organization
+    OBJECTS l = Location
+    PROPERTIES (l) selected, name READONLY
+    FILTERS organization(l) = o
+;
+selectedLocations 'Точки размещения' = GROUP CONCAT name(Location l) IF selected(l),',' ORDER l;
+hasSelected = GROUP MAX selected(Location l);
+
+META addLocation(form, object)
+    EXTEND FORM form
+        PROPERTIES selectedLocations() ON CHANGE { DIALOG selectLocations OBJECTS o = o; }
+        FILTERS NOT hasSelected() OR selected(location(object))
+    ;
+    DESIGN form {
+        paramBox {
+            NEW filters {
+                caption = 'Фильтры';
+                MOVE PROPERTY (selectedLocations());                
+            } 
+        }
+    }
+END

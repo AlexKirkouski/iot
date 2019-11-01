@@ -1,0 +1,35 @@
+MODULE Organization;
+
+REQUIRE Base, Options, SystemEvents, Utils;
+
+CLASS Organization 'Организация';
+TABLE organization(Organization);
+name 'Название' = DATA STRING[100] (Organization) NONULL IN id;
+organization = GROUP AGGR Organization o BY name(o);
+
+unn 'УНП' = DATA STRING[10] (Organization) NONULL IN id;
+address 'Адрес' = DATA STRING[120] (Organization) NONULL;
+contact 'Контактное лицо' = DATA STRING[40] (Organization) NONULL;
+phone 'Телефон' = DATA STRING[40] (Organization) NONULL;
+site 'Сайт' = DATA STRING[100] (Organization) NONULL;
+email 'Электронный адрес' = DATA STRING (Organization) NONULL;
+
+FORM organizations 'Организации'
+    OBJECTS o = Organization
+    PROPERTIES(o) READONLY name, unn, address
+    PROPERTIES(o) NEWSESSION NEW, EDIT, DELETE
+;
+
+NAVIGATOR {
+    data {
+        NEW organizations FIRST;
+    }
+}
+
+FORM organization 'Организация'
+    OBJECTS o = Organization PANEL
+    PROPERTIES(o) name, unn, address, contact, phone, site, email
+    EDIT Organization OBJECT o
+;
+
+//

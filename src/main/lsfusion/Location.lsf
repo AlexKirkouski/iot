@@ -1,0 +1,40 @@
+MODULE Location;
+
+REQUIRE Controller, Device;
+
+CLASS Location 'Точка размещения';
+name 'Название' = DATA STRING[60] (Location) NONULL IN id;
+address 'Название н/пункта' = DATA STRING[50] (Location) IN id;
+
+FORM locations 'Точки размещения'
+    OBJECTS l = Location
+    PROPERTIES(l) name, address, NEW, DELETE;
+;
+
+DESIGN locations {
+    OBJECTS {
+        NEW top {
+            type = CONTAINERV;
+            MOVE BOX(l);
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    data {
+        NEW locations BEFORE equipment;
+    }
+}
+
+location = DATA Location (Controller);
+nameLocation 'Точка размещения' = name(location(Controller c));
+EXTEND FORM controllers
+    PROPERTIES (c) nameLocation
+;
+
+location = DATA Location (Device);
+nameLocation 'Точка размещения' = name(location(Device d));
+EXTEND FORM devices
+    PROPERTIES (d) nameLocation
+;

@@ -1,0 +1,12 @@
+MODULE Base;
+
+NAVIGATOR {
+    NEW FOLDER monitoring 'Мониторинг' WINDOW toolbar FIRST {
+        NEW FOLDER types 'Типы оборудования';
+        NEW FOLDER data 'Данные' {
+            NEW FOLDER equipment 'Оборудование';
+        }
+        NEW FOLDER servers 'Сервера';
+    }
+    
+}

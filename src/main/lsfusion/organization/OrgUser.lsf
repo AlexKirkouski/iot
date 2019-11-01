@@ -1,0 +1,84 @@
+MODULE OrgUser;
+
+REQUIRE Organization, Security, Location;
+
+NAMESPACE Organization;
+
+organization = DATA Organization (CustomUser);
+nameOrganization 'Организация' (CustomUser u) = name(organization(u)) CHARWIDTH 30;
+
+EXTEND FORM customUser
+    PROPERTIES(u) nameOrganization
+;
+
+EXTEND FORM customUsers
+    PROPERTIES(u) READONLY nameOrganization BEFORE login(u)
+;
+
+fillDefaultAccess(UserRole r) {
+    defaultForms(r) <- DefaultForms.default;
+    forbidAllForms(r) <- TRUE; 
+    defaultNumber(r, navigatorElementCanonicalName('Location.locations')) <- 1;
+    defaultNumber(r, navigatorElementCanonicalName('Device.devices')) <- 2;
+    defaultNumber(r, navigatorElementCanonicalName('Controller.controllers')) <- 3;
+    defaultNumber(r, navigatorElementCanonicalName('ControllerManagement.controllerManagers')) <- 4;
+}
+
+orgAdminRole = userRoleSID('orgadmin');
+orgUserRole = userRoleSID('orguser');
+isOrg(UserRole r) = (r = orgAdminRole()) OR (r = orgUserRole());
+isOrg(CustomUser user) = isOrg(mainRole(user));
+CONSTRAINT (organization(CustomUser u) AND NOT isOrg(u)) OR (isOrg(u) AND NOT organization(u)) MESSAGE 'Для этой роли пользователя должна быть задана организация'; 
+
+onStarted() + {
+    IF NOT userRoleSID('orgadmin') THEN 
+        NEW r = UserRole {
+            sid(r) <- 'orgadmin';
+            name(r) <- 'Администратор организации';
+            fillDefaultAccess(r);
+            defaultNumber(r, navigatorElementCanonicalName('Organization.organizationUsers')) <- 5;
+        }
+            
+    IF NOT userRoleSID('orguser') THEN 
+        NEW r = UserRole {
+            sid(r) <- 'orguser';
+            name(r) <- 'Пользователь организации';
+            fillDefaultAccess(r);
+        }
+}
+
+FORM organizationUsers 'Пользователи'
+    OBJECTS o = Organization PANEL
+    PROPERTIES name(o) SELECTOR
+    
+    OBJECTS c = CustomUser
+    PROPERTIES (c) firstName, lastName, login, sha256Password ON CHANGE changeSHA256Password(c), name, NEW, DELETE
+    FILTERS organization(c) = o
+    FILTERS mainRole(c) = orgUserRole()
+;
+
+NAVIGATOR {
+    data {
+        NEW organizationUsers AFTER organizations;
+    }
+}
+
+META addOrganization(form, object)
+    EXTEND FORM form
+        OBJECTS o = Organization PANEL BEFORE object
+        PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
+        FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
+        
+        FILTERS organization(object) = o
+    ;
+    
+    DESIGN form {
+        top {
+            NEW paramBox BEFORE BOX(object) {
+                type = CONTAINERH;
+                MOVE BOX(o);
+                fill = 0;
+            }
+        } 
+    } 
+END

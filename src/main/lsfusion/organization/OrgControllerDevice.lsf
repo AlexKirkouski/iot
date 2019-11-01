@@ -1,0 +1,7 @@
+MODULE OrgControllerDevice;
+
+REQUIRE ControllerDevice, OrgController;
+
+NAMESPACE ControllerDevice;
+
+organization(ControllerDevice cd) = organization(controller(cd));

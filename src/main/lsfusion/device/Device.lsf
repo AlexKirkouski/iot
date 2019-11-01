@@ -1,0 +1,90 @@
+MODULE Device;
+
+REQUIRE Base, Time, Security; 
+
+CLASS DeviceType 'Тип датчика' {
+    unknown 'Неизвестный датчик'
+}
+
+TABLE deviceType(DeviceType);
+id 'ID' = DATA LONG (DeviceType);
+name 'Название' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 20 IN id;
+
+FORM deviceTypes 'Типы датчиков'
+    OBJECTS t = DeviceType
+    PROPERTIES(t) name, NEW, DELETE
+;
+
+DESIGN deviceTypes {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            MOVE BOX (t);
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    types {
+        NEW deviceTypes;
+    }
+}
+
+CLASS Device 'Датчик';
+id 'ID' = DATA LONG (Device) CHARWIDTH 8;
+
+type = DATA DeviceType (Device);
+nameType 'Тип' = name(type(Device d));
+device = GROUP AGGR Device d BY id(d);
+
+type (LONG l) = type(device(l));
+
+dropUDPServerCaches INTERNAL 'mite.DropUDPServerCachesAction' ();
+WHEN GROUP SUM 1 IF CHANGED(type(Device dt)) DO
+    dropUDPServerCaches();
+
+EXTEND FORM deviceTypes
+    OBJECTS d = Device
+    PROPERTIES (d) id, NEW, DELETE
+    FILTERS type(d) = t
+;
+
+DESIGN deviceTypes {
+    tab {
+        MOVE BOX (d) {
+            caption = 'Датчики';
+        }
+    }
+}
+
+FORM devices 'Датчики'
+    OBJECTS d = Device
+    PROPERTIES (d) id, nameType
+;
+
+DESIGN devices {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW top {
+                MOVE BOX (d);
+                fill = 1;
+            }
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    equipment {
+        NEW devices;
+    }
+}
+

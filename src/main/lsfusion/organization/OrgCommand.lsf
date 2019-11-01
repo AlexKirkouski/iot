@@ -1,0 +1,8 @@
+MODULE OrgCommand;
+
+REQUIRE OrgController, Command;
+
+NAMESPACE Command; 
+
+organization(RunCommand rc) = organization(controller(rc));
+

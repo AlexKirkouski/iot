@@ -1,10 +1,11 @@
-MODULE ControllerManagement;
+MODULE Management;
 
 REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger;
 
+NAMESPACE ControllerManagement;
+
 CLASS ControllerManager 'Управление';
 name 'Название' = DATA STRING (ControllerManager);
-organization = DATA Organization (ControllerManager) AUTOSET;
 
 CLASS ForceMode {
     on 'Включить принудительно',
@@ -46,47 +47,43 @@ backgroundIsNotWhatShould = RGB(255, 0, 0) IF isNotWhatShould(ControllerManager 
 CLASS ABSTRACT ConditionValue 'Значение';
 name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50;
 currentValue 'Значение' = ABSTRACT DOUBLE (ConditionValue) MATERIALIZED;
-organization 'Организация' = ABSTRACT Organization (ConditionValue);
 
 CLASS MeasurementConditionValue 'Значение измерения' : ConditionValue;
 measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(Device device), MeasurementType measurementType);
 currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
 name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
-organization(MeasurementConditionValue v) += organization(device(v));
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
 value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
 name 'Название' = DATA STRING (FixedConditionValue) IN id; 
-organization = DATA Organization (FixedConditionValue) AUTOSET;
 currentValue(FixedConditionValue v) += value(v);
 name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
-organization(FixedConditionValue v) += organization(v);
 
 FORM conditionValues 'Значения'
-    OBJECTS o = Organization
     OBJECTS v = ConditionValue
     PROPERTIES (v) objectClassName READONLY, name ON CHANGE {
         FOR FixedConditionValue fv = v AS FixedConditionValue DO
             INPUT n = name(fv) CHANGE;
     }, currentValue, 'Добавить фиксированное значение'=NEW[FixedConditionValue]
-    FILTERS organization(v) = o
 ;
 
 CLASS ValuesCondition 'Значение A больше или равно B' : ManagerCondition; // пока >=
 left = DATA ConditionValue (ValuesCondition) NONULL;
 right = DATA ConditionValue (ValuesCondition) NONULL;
-CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT index(type(device(v)), measurementType(v)) CHECKED BY measurementType, device MESSAGE 'Тип измерения должен соответствовать типу устройства';
+CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType, device MESSAGE 'Тип измерения должен соответствовать типу устройства';
  
 nameLeft 'A ' (ValuesCondition c) = name(left(c));
 nameRight 'B ' (ValuesCondition c) = name(right(c));
 name(ValuesCondition v) += nameLeft(v) + ' >= ' + nameRight(v);
-isTrue(ValuesCondition v) += currentValue(left(v)) >= currentValue(right(v)); 
+isTrue(ValuesCondition v) += currentValue(left(v)) >= currentValue(right(v));
 
+dialogChangeLeftConditionValue ABSTRACT (ValuesCondition);
+dialogChangeRightConditionValue ABSTRACT (ValuesCondition);
 FORM valuesCondition 'Сравнение значений'
     OBJECTS vc = ValuesCondition PANEL
-    PROPERTIES nameLeft(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE; }, 
+    PROPERTIES nameLeft(vc) ON CHANGE { dialogChangeLeftConditionValue(vc); }, 
                ''='>' IF vc, 
-               ' > B ' = nameRight(vc) ON CHANGE { DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE; } 
+               ' > B ' = nameRight(vc) ON CHANGE { dialogChangeLeftConditionValue(vc);} 
 ;
 edit(ValuesCondition v) + { DIALOG valuesCondition OBJECTS vc=v; }; // чтобы не во вкладке, а в диалоге показывалось
 
@@ -107,16 +104,9 @@ edit(TimeCondition t) +{
 
 controllerDevice = DATA ControllerDevice (ControllerManager);
 nameControllerDevice 'Устройство' (ControllerManager cm) = name(controllerDevice(cm));
-CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
 
-organization = DATA Organization (Chat) AUTOSET;
-nameOrganization 'Организация' (Chat c) = name(organization(c));
-EXTEND FORM messengers
-    PROPERTIES (c) nameOrganization
-;
 chat = DATA Chat (ControllerManager);
 nameChat 'Чат' (ControllerManager cm) = name(chat(cm));
-CONSTRAINT organization(chat(ControllerManager cm)) != organization(cm) CHECKED BY chat[ControllerManager] MESSAGE 'Организация чата не соответсвует организации устройства';
 
 runOn(ControllerManager c) {
     IF controllerDevice(c) THEN
@@ -193,13 +183,14 @@ controllerManager = GROUP AGGR ControllerManager mg BY controllerDevice(mg);
 nameControllerManager(ControllerDevice cd) = name(controllerManager(cd));
 isOn 'Включено' (ControllerDevice cd) = isOn(controllerManager(cd));
 
+overNew ABSTRACT (ControllerManager, ControllerDevice);
 setManager 'Задать' (ControllerDevice cd) {
     NEWSESSION {
         IF NOT controllerManager(cd) THEN {
             NEW cm = ControllerManager {
                 name(cm) <- 'Управление ' + name(cd) + ' контр.:' + idController(cd);
                 controllerDevice(cm) <- cd;
-                organization(cm) <- organization(cd);
+                overNew(cm, cd);
             }
         }
         
@@ -212,12 +203,12 @@ dropManager 'Сбросить' (ControllerDevice cd) {
     }
 }
 
-EXTEND FORM orgControllers
+EXTEND FORM controllers
     PROPERTIES (cd) isOn BACKGROUND backgroundIsNotWhatShould(controllerManager(cd))
     PROPERTIES (cd) PANEL setManager, dropManager
 ;
 
-DESIGN orgControllers {
+DESIGN controllers {
     BOX (cd) {
         NEW manager {
             caption = 'Управление';
@@ -229,22 +220,41 @@ DESIGN orgControllers {
     }
 }
 
-EXTEND FORM orgControllers
+FORM controllerManagers 'Управления'
     OBJECTS cm = ControllerManager
     PROPERTIES (cm) NEWSESSION name, isOn BACKGROUND backgroundIsNotWhatShould(cm), NEW, EDIT, DELETE
-    FILTERS organization(cm) = o
-    
-    OBJECTS cv = FixedConditionValue
-    PROPERTIES (cv) NEWSESSION name, value
-    FILTERS organization(cv) = o
 ;
 
-DESIGN orgControllers {
+NAVIGATOR {
+    equipment {
+        NEW controllerManagers;
+    }
+}
+
+DESIGN controllerManagers {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW top {
+                MOVE BOX (cm);
+                fill = 1;
+            }
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+}
+
+EXTEND FORM controllerManagers
+    OBJECTS cv = FixedConditionValue
+    PROPERTIES (cv) READONLY name, value
+;
+
+DESIGN controllerManagers {
     tab {
         type = TABBED;
-        MOVE BOX (cm) {
-            caption = 'Управление устройствами';
-        }
         MOVE BOX (cv) {
             caption = 'Параметры управления';
         }

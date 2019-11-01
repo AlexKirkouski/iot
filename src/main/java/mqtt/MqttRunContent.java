@@ -10,13 +10,9 @@ import lsfusion.server.logics.classes.ValueClass;
 import lsfusion.server.logics.property.classes.ClassPropertyInterface;
 import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
-import sclass.ConPrint;
+import mite.UDPServer;
 
 public class MqttRunContent extends InternalAction {
 
@@ -75,8 +71,7 @@ public class MqttRunContent extends InternalAction {
     // печать строки
     private void print(String cMsg) {
         if (prnConsole > 0) {
-            ConPrint ob = new ConPrint();
-            ob.print("UDP", cMsg);
+            UDPServer.print("UDP", cMsg);
         }
     }
 

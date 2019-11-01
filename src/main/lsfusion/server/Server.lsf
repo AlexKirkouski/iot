@@ -1,7 +1,7 @@
 MODULE Server;
 
 REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice, 
-        MqttServer, Controller, OrgController, DevThreshold, DevEvent;
+        MqttServer, Controller, OrgController;
 
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
@@ -39,39 +39,11 @@ FORM servers 'Сервера UDP'
 ;
 
 NAVIGATOR {
-    NEW FOLDER measurements 'Мониторинг' IMAGE '/mes.png' WINDOW toolbar FIRST {
-        NEW FOLDER srvDevice 'Серверы и устройства' {
-            NEW FOLDER srv 'Серверы' {
-                NEW servers;
-                NEW mqttServers AFTER servers;
-            }
-            NEW FOLDER dev 'Датчики' {
-                NEW devices;
-            }
-            NEW FOLDER cnt 'Контроллеры' {
-                NEW controllerTypeCommands;
-                NEW controllers;
-            }
-//            NEW clsMeasurement;
-        }
-        NEW FOLDER org 'Организации' AFTER srvDevice {
-            NEW organization;
-            NEW FOLDER dev2 'Датчики' {
-                NEW orgDevices;
-                NEW orgMeasurements;
-                // NEW devThreshold;
-                NEW devEvents;
-                NEW orgDevicesUsers;
-            }
-            NEW FOLDER cnt2 'Контроллеры' {
-                NEW orgControllers;
-                NEW orgControllerCommands;
-                // NEW runCommands;
-            }
-        }
+    servers {
+        NEW servers;
+        NEW mqttServers;
     }
 }
-
 
 // Автоматический старт обработчиков серверов UDP
 onStarted() + {
@@ -79,8 +51,6 @@ onStarted() + {
         startUDPServer(s, port(s), 'importCSV');
     }
 }
-
-
 
 // IMPORT
 fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
@@ -97,10 +67,10 @@ importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server serv
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
                                                 '\t'+  'APPLY;\n' +
-                                                '\}\n';
+                                                '\}\n' CHARWIDTH 5;
 
 
-EXTEND FORM devices
+EXTEND FORM deviceTypes
     PROPERTIES (t) importCSVScript
 ;                                                 
 
@@ -114,7 +84,7 @@ importCSVTest(DeviceType dt) {
         EXEC importCSV(dt, NULL, f) ;
     }
 }
-EXTEND FORM devices
+EXTEND FORM deviceTypes
     PROPERTIES importCSVTest(t) TOOLBAR;
     
     

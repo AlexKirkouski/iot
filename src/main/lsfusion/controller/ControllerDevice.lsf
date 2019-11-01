@@ -1,6 +1,8 @@
 MODULE ControllerDevice;
 
-REQUIRE Controller, OrgController;
+REQUIRE Controller, Command;
+
+///// TYPES /////
 
 CLASS ControllerDeviceType 'Тип устройств';
 controllerType = DATA ControllerType (ControllerDeviceType);
@@ -13,59 +15,51 @@ CONSTRAINT controllerType(off(ControllerDeviceType t)) != controllerType(t) CHEC
 nameOn 'Команда вкл.' (ControllerDeviceType t) = name(on(t));
 nameOff 'Команда выкл.' (ControllerDeviceType t) = name(off(t));
 
-EXTEND FORM controllerTypeCommands
+EXTEND FORM controllerTypes
     OBJECTS cdt = ControllerDeviceType
     PROPERTIES (cdt) name, nameOn, nameOff, NEW, DELETE
     FILTERS controllerType(cdt) = t
 ;
 
-DESIGN controllerTypeCommands {
-    OBJECTS {
-        NEW tab {
-            type = TABBED;
-            MOVE BOX (c);
-            MOVE BOX (cdt) {
-                caption = 'Типы устройств';
-            }
-            fill = 3;        
-        }    
-    }
+DESIGN controllerTypes {
+    tab {
+        MOVE BOX (cdt) {
+            caption = 'Типы устройств';
+        }
+    }    
 }
+
+///// INSTANCES /////
 
 CLASS ControllerDevice 'Устройство';
 controllerDevice(Controller controller, ControllerDeviceType type) = AGGR ControllerDevice WHERE type(controller) = controllerType(type);
 
 name 'Название' (ControllerDevice cd) = name(type(cd)) IN id;
 idController 'ID контр.' (ControllerDevice cd) = id(controller(cd)) IN id; 
-organization(ControllerDevice cd) = organization(controller(cd)); 
 
 on = on(type(ControllerDevice c));
 off = off(type(ControllerDevice c));
 nameOn 'Команда вкл.' (ControllerDevice t) = name(on(t));
 nameOff 'Команда выкл.' (ControllerDevice t) = name(off(t));
 
-EXTEND FORM orgControllers
+runOn(ControllerDevice c) {
+    transmitControlSignal(on(c), controller(c));
+} 
+runOff(ControllerDevice c) {
+    transmitControlSignal(off(c), controller(c));
+}
+
+EXTEND FORM controllers
     OBJECTS cd = ControllerDevice
     PROPERTIES (cd) idController, name
-    FILTERS organization(cd) = o
+    FILTERS controller(cd) = c
 ;
 
-DESIGN orgControllers {
+DESIGN controllers {
     tab {
         type = TABBED;
         MOVE BOX (cd) {
             caption = 'Устройства';
         }
     }
-}
-
-/////
-
-runOn(ControllerDevice c) {
-//    MESSAGE 'ON';
-    transmitControlSignal(on(c), controller(c), NULL);
-} 
-runOff(ControllerDevice c) {
-//    MESSAGE 'OFF';
-    transmitControlSignal(off(c), controller(c), NULL);
 }

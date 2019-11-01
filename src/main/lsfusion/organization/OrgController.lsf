@@ -1,0 +1,15 @@
+MODULE OrgController;
+
+REQUIRE Organization, Controller, Options, Security, Location, OrgLocation;
+
+organization = DATA Organization (Controller) AUTOSET;
+nameOrganization 'Организация' = name(organization(Controller c));
+
+CONSTRAINT organization(location(Controller c)) != organization(c) CHECKED BY location[Controller] MESSAGE 'Точка размещения не принадлежит организации контроллера';
+
+EXTEND FORM controllerTypes
+    PROPERTIES (c) nameOrganization
+;
+
+@addOrganization(controllers, c);
+@addLocation(controllers, c);

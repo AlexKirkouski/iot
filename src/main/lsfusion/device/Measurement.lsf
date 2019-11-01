@@ -1,0 +1,65 @@
+MODULE Measurement;
+
+REQUIRE Device, Utils, Time, Security, Options;
+
+///// TYPES /////
+
+CLASS MeasurementType 'Тип измерения';
+TABLE measurementType (MeasurementType);
+
+id 'ID панели' = DATA LONG (MeasurementType);
+name 'Название' = DATA STRING[100] (MeasurementType) CHARWIDTH 70 IN id;
+
+number 'Номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
+
+// уникальность и обязательность заполнения
+measurementType = GROUP AGGR MeasurementType mt BY id(mt);
+CONSTRAINT MeasurementType mt IS MeasurementType AND NOT id(mt) MESSAGE 'Не заполнен ID панели для типа измерения !';
+
+EXTEND FORM deviceTypes
+    OBJECTS mt = MeasurementType
+    PROPERTIES (mt) id, name
+    PROPERTIES(t, mt) number
+    PROPERTIES (mt) NEW, DELETE
+;
+
+DESIGN deviceTypes {
+    tab {
+        MOVE BOX(mt) {
+            caption = 'Типы измерений';
+        }
+    }
+}
+
+///// INSTANCES /////
+
+CLASS Measurement 'Измерение';
+device = DATA Device (Measurement);
+deviceId 'ИД устройства' (Measurement m) = id(device(m)) MATERIALIZED;
+nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(m)));
+dateTime 'Время измерения' = DATA DATETIME (Measurement);
+idImport 'ИД импортируемое' = DATA LONG (Measurement);
+
+value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
+INDEX dateTime(Measurement m), m;
+lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
+lastValue (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
+
+EXTEND FORM devices 
+    OBJECTS cmt = MeasurementType
+    FILTERS number(type(d),cmt)
+    
+    OBJECTS m = Measurement
+    PROPERTIES(m) READONLY dateTime  
+    PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
+    FILTERS number(type(device(m)),cmt), device(m)=d
+    ORDER dateTime(m) DESC
+;
+
+DESIGN devices {
+    tab {
+        MOVE BOX (m) {
+            caption = 'Измерения';
+        }
+    }
+}

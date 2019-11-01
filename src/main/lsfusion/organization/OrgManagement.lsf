@@ -1,0 +1,44 @@
+MODULE OrgManagement;
+
+REQUIRE OrgDevice, Management, OrgControllerDevice, OrgLocation;
+
+NAMESPACE ControllerManagement;
+
+organization = DATA Organization (ControllerManager) AUTOSET;
+
+@addOrganization(controllerManagers, cm);
+
+organization 'Организация' = ABSTRACT Organization (ConditionValue);
+
+organization = DATA Organization (FixedConditionValue) AUTOSET;
+organization(MeasurementConditionValue v) += organization(device(v));
+organization(FixedConditionValue v) += organization(v);
+
+EXTEND FORM conditionValues
+    OBJECTS o = Organization BEFORE v
+    FILTERS organization(v) = o
+;
+
+EXTEND FORM controllerManagers
+    FILTERS organization(cv) = o
+;
+
+dialogChangeLeftConditionValue(ValuesCondition vc) + {
+    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE;
+}
+dialogChangeRightConditionValue(ValuesCondition vc) + {
+    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE;
+} 
+
+organization = DATA Organization (Chat) AUTOSET;
+nameOrganization 'Организация' (Chat c) = name(organization(c));
+EXTEND FORM messengers
+    PROPERTIES (c) nameOrganization
+;
+
+CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
+CONSTRAINT organization(chat(ControllerManager cm)) != organization(cm) CHECKED BY chat[ControllerManager] MESSAGE 'Организация чата не соответсвует организации устройства';
+
+overNew(ControllerManager cm, ControllerDevice cd) + {
+    organization(cm) <- organization(cd);
+}

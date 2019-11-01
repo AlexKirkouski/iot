@@ -1,0 +1,17 @@
+MODULE OrgDevice;
+
+REQUIRE Organization, Device, Options, Utils, Location, OrgLocation;
+
+organization = DATA Organization (Device);
+nameOrganization 'Название' (Device d) = name(organization(d));
+
+CONSTRAINT organization(location(Device d)) != organization(d) CHECKED BY location[Device] MESSAGE 'Точка размещения не принадлежит организации датчика';
+
+EXTEND FORM deviceTypes
+    PROPERTIES (d) nameOrganization 
+;
+
+@addOrganization(devices, d);
+@addLocation(devices, d);
+//    FILTERS mainRole(currentUser()) == userRoleSID('admins') OR (mainRole(currentUser()) == userRoleSID('users') AND organization(currentUser()) == o)
+    

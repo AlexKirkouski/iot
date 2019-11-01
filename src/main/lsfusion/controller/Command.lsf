@@ -1,0 +1,90 @@
+MODULE Command;
+
+REQUIRE Controller;
+
+NAMESPACE Controller;
+
+///// TYPES /////
+
+CLASS Command 'Команды';
+TABLE command (Command);
+
+id 'ID' = DATA LONG (Command);
+name 'Название' = DATA STRING (Command) IN id;
+signal 'Сигнал управления' = DATA BPISTRING[100] (Command) CHARWIDTH 30 IN id;
+
+controllerType 'Тип' = DATA ControllerType (Command);
+nametype 'Тип' = name(controllerType(Command c));
+
+command = GROUP AGGR Command c BY id(c);
+
+EXTEND FORM controllerTypes
+    OBJECTS cm = Command
+    PROPERTIES (cm) id, name, signal, NEW, DELETE
+    ORDER id(cm)
+    FILTERS controllerType(cm) = t
+;
+
+DESIGN controllerTypes {
+    tab {
+        MOVE BOX (cm);
+    }    
+}
+
+///// INSTANCES /////
+
+CLASS RunCommand 'Выполненная команда';
+
+controller = DATA Controller (RunCommand);
+controllerId 'ИД устройства' (RunCommand r) = id(controller(r));
+command = DATA Command (RunCommand);
+commandId 'ИД команды' (RunCommand r) = id(command(r));
+commandName 'Название команды' (RunCommand r) = name(command(r));
+commandSignal 'Сигнал управления' (RunCommand r) = signal(command(r));
+
+dateTime 'Время' = DATA DATETIME (RunCommand);
+user 'Пользователь' = DATA User (RunCommand);
+
+eMessage 'Текст ошибки' = DATA STRING[100] (RunCommand);
+eCode 'Код ошибки' = DATA INTEGER (RunCommand);
+
+cntEMessage  = DATA LOCAL STRING[100] ();
+cntECode = DATA LOCAL INTEGER ();
+mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer, Controller, STRING ); 
+
+transmitControlSignal 'Передача сигнала управления' (Command cm, Controller c) {
+    NEWSESSION {    
+        cntEMessage() <- '';
+        cntECode() <- 0;
+        mqttRunContent(server(c), c, signal(cm));
+        
+        NEW r = RunCommand {
+            controller(r) <- c;
+            command(r) <- cm;
+            dateTime(r) <- currentDateTime();
+            user(r) <- currentUser();
+            IF cntECode() > 0 THEN {
+                eCode(r) <- cntECode();
+                eMessage(r) <- cntEMessage();
+            }
+        }
+        IF cntECode() > 0 THEN 
+            MESSAGE cntEMessage();
+    }
+}
+
+EXTEND FORM controllers
+    OBJECTS r = RunCommand 
+    PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, user, eCode, eMessage
+    ORDER dateTime(r) DESC
+    FILTERS controller(r) = c;
+;
+
+DESIGN controllers {
+    tab {
+        type = TABBED;
+        MOVE BOX (r) {
+            caption = 'Лог выполнения';
+        }
+    }
+}

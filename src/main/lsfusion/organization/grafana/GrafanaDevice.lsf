@@ -1,0 +1,76 @@
+MODULE GrafanaDevice;
+
+REQUIRE Grafana, Device, OrgDevice, GrafanaMeasurement;
+
+NAMESPACE Device;
+
+// Заполняется при передаче дашбоарда в Графану
+dbId 'ID DashBoard' = DATA INTEGER (Device) CHARWIDTH 7;
+
+fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) CHARWIDTH 7 IN id;
+
+dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
+updateDashBoards 'Обновить дэшборды' (Device d) {
+    
+    FOR Organization o = organization(d) DO {
+        
+        IF NOT fileDashboard(type(d)) THEN {
+            MESSAGE 'Отсутствует файл шаблона для устройства ' + id(d) NOWAIT ;
+        }
+        ELSE {                
+            LOCAL textDashboard = TEXT ();
+            LOCAL textAllPanels = TEXT ();
+            
+            fileToString(fileDashboard(type(d))) ;
+            textDashboard() <- resultString();
+            textAllPanels() <- '';
+            
+            FOR index(type(d), MeasurementType mt) ORDER index(type(d), mt) DO {
+                IF filePanel(mt) THEN {
+                    fileToString(filePanel(mt));
+                    resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (id(mt)));
+                    resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
+                    resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
+                    resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
+                    resultString() <- replace(resultString(), '<<dsName>>', TEXT (dsName(o)));
+                    
+                    IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
+                    textAllPanels() <- textAllPanels() + resultString();
+                }    
+            }
+            
+            IF length(textAllPanels()) > 0 THEN {
+                textDashboard() <- replace(textDashboard(), '<<TITLE>>', grName(o) + '_' + TEXT (id(d)));
+                textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+    
+                EXEC setParam();
+                cmd() <- 3;
+                txtDashBoard() <- textDashboard();
+                // вызываем обработку типа INTERNAL
+                dsGrafana(o, d);
+            
+                IF eCode() > 0 THEN {
+                    ASK 'Устройство  '+ id(d) + '  Ошибка: \n' + eMessage() +'\n\n Продолжить ?' yes = YESNO DO {
+                        IF NOT yes THEN eCode() <- -1;
+                    }
+                }
+                IF eCode() < 0 THEN BREAK; 
+            
+            } ELSE {
+                MESSAGE 'Не заполнены файлы шаблонов для типов измерений для устройства ' + id(d) NOWAIT ;
+            }
+            
+        }
+    }
+    APPLY ;
+    MESSAGE 'Обновление DashBoards завершено.' NOWAIT;
+}
+
+EXTEND FORM deviceTypes
+    PROPERTIES (t) fileDashboard
+;
+
+EXTEND FORM devices
+    PROPERTIES (d) GRID updateDashBoards
+    PROPERTIES (d) dbId
+; 

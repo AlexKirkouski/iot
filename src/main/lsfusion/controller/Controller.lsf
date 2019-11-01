@@ -1,0 +1,102 @@
+MODULE Controller;
+
+REQUIRE Base, MqttServer, Options, Utils;
+
+///// TYPES /////
+
+CLASS ControllerType 'Тип контроллера' {
+    unknown 'Неизвестное устройство'
+}
+
+TABLE controllerType(ControllerType);
+id 'ID' = DATA LONG (ControllerType);
+name 'Название' = DATA BPISTRING[1000] (ControllerType) CHARWIDTH 20 IN id;
+
+controllerType = GROUP AGGR ControllerType c BY id(c);
+
+FORM controllerTypesList 'Типы контроллеров'
+    OBJECTS c = ControllerType
+    PROPERTIES(c) READONLY id, name
+    LIST ControllerType OBJECT c
+;
+
+FORM controllerTypes 'Типы контроллеров'
+    OBJECTS t = ControllerType
+    PROPERTIES(t) id, name, NEW, DELETE
+;
+
+DESIGN controllerTypes {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            MOVE BOX (t);
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    types {
+        NEW controllerTypes;
+    }
+}
+
+///// INSTANCES /////
+
+CLASS Controller 'Контроллер';
+TABLE controller(Controller);
+type = DATA ControllerType   (Controller);
+nameType 'Тип' = name(type(Controller c)) CHARWIDTH 20 IN id;
+
+id 'ID' = DATA LONG (Controller) NONULL IN id;
+controller = GROUP AGGR Controller c BY id(c);
+typeController (LONG l) = type(controller(l));
+
+server = DATA MqttServer (Controller) NONULL ;
+nameServer 'Сервер' = name(server(Controller c)); 
+topic 'Топик управления' = DATA STRING[30] (Controller) NONULL;
+note 'Примечание' = DATA STRING[100] (Controller);
+
+EXTEND FORM controllerTypes
+    OBJECTS c = Controller
+    PROPERTIES(c) id, nameType, NEW, DELETE
+    FILTERS type(c) = t
+;
+
+DESIGN controllerTypes {
+    tab {
+        MOVE BOX(c) {
+            caption = 'Контроллеры';
+        }
+    }
+}
+
+FORM controllers 'Контроллеры'
+    OBJECTS c = Controller
+    PROPERTIES (c) id, nameType
+;
+
+DESIGN controllers {
+    OBJECTS {
+        NEW split {
+            type = SPLITV;
+            NEW top {
+                MOVE BOX (c);
+                fill = 1;
+            }
+            NEW tab {
+                type = TABBED;
+            }
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    equipment {
+        NEW controllers;
+    }
+}

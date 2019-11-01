@@ -1,7 +1,6 @@
 package mite;
 
 import com.google.common.base.Throwables;
-import com.google.common.io.BaseEncoding;
 import lsfusion.base.ExceptionUtils;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
@@ -22,12 +21,12 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
-import sclass.ConPrint;
 
 
 public class UDPServer extends MonitorServer {
@@ -50,6 +49,16 @@ public class UDPServer extends MonitorServer {
     private Integer nQps;               // Текущий счетчик пакетов
     private Boolean lRead;              // Флаг цикла потока чтения UDP
     public  Integer prnConsole = 0;     // печать отладочной информации в консоль
+
+    public static void print(String cPref,String cMsg) {
+        Date date = new Date();
+        SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        if (cMsg.length() > 0) {
+            System.out.println(fDate.format(date) + ", " + cPref + ", " + cMsg);
+        } else {
+            System.out.println(fDate.format(date) + ", " + cPref);
+        }
+    }
 
     public String getEventName() {
         return "udp-server-daemon";
@@ -203,8 +212,7 @@ public class UDPServer extends MonitorServer {
     // для отладки, выводит в консоль с признаком UDP дата время текст
     private void print(String cMsg) {
         if (prnConsole > 0) {
-            ConPrint ob = new ConPrint();
-            ob.print("UDP", cMsg);
+            print("UDP", cMsg);
         }
     }
 
