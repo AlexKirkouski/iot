@@ -52,7 +52,7 @@ cntEMessage  = DATA LOCAL STRING[100] ();
 cntECode = DATA LOCAL INTEGER ();
 mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer, Controller, STRING ); 
 
-transmitControlSignal 'Передача сигнала управления' (Command cm, Controller c) {
+transmitControlSignal 'Выполнить' (Command cm, Controller c) {
     NEWSESSION {    
         cntEMessage() <- '';
         cntECode() <- 0;
@@ -74,6 +74,11 @@ transmitControlSignal 'Передача сигнала управления' (Co
 }
 
 EXTEND FORM controllers
+    OBJECTS cm = Command
+    PROPERTIES (cm) id, name, signal
+    PROPERTIES transmitControlSignal(cm, c) 
+    FILTERS type(c) = controllerType(cm)
+
     OBJECTS r = RunCommand 
     PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, user, eCode, eMessage
     ORDER dateTime(r) DESC
@@ -83,8 +88,11 @@ EXTEND FORM controllers
 DESIGN controllers {
     tab {
         type = TABBED;
-        MOVE BOX (r) {
+        MOVE BOX (cm) {
             caption = 'Лог выполнения';
+        }
+        MOVE BOX (r) {
+            caption = 'Команды';
         }
     }
 }
