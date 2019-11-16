@@ -76,7 +76,7 @@ transmitControlSignal 'Выполнить' (Command cm, Controller c) {
 EXTEND FORM controllers
     OBJECTS cm = Command
     PROPERTIES (cm) id, name, signal
-    PROPERTIES transmitControlSignal(cm, c) 
+    PROPERTIES transmitControlSignal(cm, c) GRID
     FILTERS type(c) = controllerType(cm)
 
     OBJECTS r = RunCommand 
@@ -89,10 +89,10 @@ DESIGN controllers {
     tab {
         type = TABBED;
         MOVE BOX (cm) {
-            caption = 'Лог выполнения';
+            caption = 'Команды';
         }
         MOVE BOX (r) {
-            caption = 'Команды';
+            caption = 'Лог выполнения';
         }
     }
 }
