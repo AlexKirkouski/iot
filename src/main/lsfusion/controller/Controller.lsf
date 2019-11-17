@@ -62,7 +62,7 @@ note 'Примечание' = DATA STRING[100] (Controller);
 
 EXTEND FORM controllerTypes
     OBJECTS c = Controller
-    PROPERTIES(c) id, nameType, NEW, DELETE
+    PROPERTIES(c) id, nameType, nameServer, topic, note, NEW, DELETE
     FILTERS type(c) = t
 ;
 
