@@ -3,6 +3,7 @@ package grafana;
 import java.io.FileReader;
 import java.util.Iterator;
 
+import lsfusion.server.physics.admin.log.ServerLoggers;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -288,7 +289,7 @@ public class JsonReadProcess {
 
     //  для отладки
     void print(String cMsg) {
-        System.out.println(": " + cMsg);
+        ServerLoggers.systemLogger.info(": " + cMsg);
     }
 
     // Обработка ошибок

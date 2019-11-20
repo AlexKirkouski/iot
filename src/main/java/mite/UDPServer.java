@@ -15,6 +15,7 @@ import lsfusion.server.logics.LogicsInstance;
 import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.DateTimeClass;
+import lsfusion.server.physics.admin.log.ServerLoggers;
 
 import java.net.*;
 import java.sql.SQLException;
@@ -54,9 +55,9 @@ public class UDPServer extends MonitorServer {
         Date date = new Date();
         SimpleDateFormat fDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         if (cMsg.length() > 0) {
-            System.out.println(fDate.format(date) + ", " + cPref + ", " + cMsg);
+            ServerLoggers.systemLogger.info(fDate.format(date) + ", " + cPref + ", " + cMsg);
         } else {
-            System.out.println(fDate.format(date) + ", " + cPref);
+            ServerLoggers.systemLogger.info(fDate.format(date) + ", " + cPref);
         }
     }
 

@@ -8,6 +8,7 @@ import lsfusion.server.language.ScriptingLogicsModule;
 import lsfusion.server.logics.action.controller.context.ExecutionContext;
 import lsfusion.server.logics.classes.ValueClass;
 import lsfusion.server.logics.property.classes.ClassPropertyInterface;
+import lsfusion.server.physics.admin.log.ServerLoggers;
 import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 
 import java.sql.SQLException;
@@ -51,6 +52,6 @@ public class MqttServerAction extends InternalAction {
     }
 
     private void print(String msg) {
-        System.out.println(msg);
+        ServerLoggers.systemLogger.info(msg);
     }
 }

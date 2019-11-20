@@ -71,7 +71,7 @@ public class MqttRunContent extends InternalAction {
     // печать строки
     private void print(String cMsg) {
         if (prnConsole > 0) {
-            UDPServer.print("UDP", cMsg);
+            UDPServer.print("TCP", cMsg);
         }
     }
 

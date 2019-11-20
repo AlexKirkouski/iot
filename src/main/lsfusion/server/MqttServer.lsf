@@ -8,7 +8,7 @@ isRun   'Ст'                = DATA BOOLEAN      (MqttServer);  // поле п�
 name    'Название сервера'  = DATA STRING[100]  (MqttServer) NONULL CHARWIDTH 50;
 topic   'Название топика'   = DATA STRING[50]   (MqttServer) NONULL;
 url     'Адрес сервера'     = DATA STRING[100]  (MqttServer) NONULL;
-port    'UDP порт'          = DATA INTEGER      (MqttServer) NONULL;
+port    'TCP/IP порт'          = DATA INTEGER      (MqttServer) NONULL;
 
 // Внешний модуль приема сообщений от MQTT сервера
 startMqttServer INTERNAL 'mqtt.MqttServerAction' (MqttServer,INTEGER);
