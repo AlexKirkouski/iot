@@ -73,10 +73,15 @@ transmitControlSignal 'Выполнить' (Command cm, Controller c) {
     }
 }
 
+sendCommand 'Выполнить' (Command cm, Controller c) {
+    transmitControlSignal(cm, c);
+    MESSAGE 'Команда успешно выполнена';
+}
+
 EXTEND FORM controllers
     OBJECTS cm = Command
     PROPERTIES (cm) id, name, signal
-    PROPERTIES transmitControlSignal(cm, c) GRID
+    PROPERTIES sendCommand(cm, c) GRID
     FILTERS type(c) = controllerType(cm)
 
     OBJECTS r = RunCommand 
