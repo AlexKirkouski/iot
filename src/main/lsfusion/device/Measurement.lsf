@@ -44,6 +44,7 @@ value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
 INDEX dateTime(Measurement m), m;
 lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
 lastValue (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
+background = ABSTRACT COLOR (Device, MeasurementType);
 
 EXTEND FORM devices 
     OBJECTS cmt = MeasurementType
@@ -54,12 +55,19 @@ EXTEND FORM devices
     PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
     FILTERS number(type(device(m)),cmt), device(m)=d
     ORDER dateTime(m) DESC
+    
+    PROPERTIES lastValue(d, cmt) BACKGROUND background(d, cmt) DRAW d COLUMNS (cmt) HEADER name(cmt) PANEL
 ;
 
 DESIGN devices {
     tab {
         MOVE BOX (m) {
             caption = 'Измерения';
+        }
+    }
+    GRID (d) {
+        NEW dPanel {
+            MOVE PROPERTY(lastValue(d, cmt));
         }
     }
 }

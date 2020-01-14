@@ -50,6 +50,7 @@ DESIGN deviceTypes {
 // MAP
 
 iconLimit 'Иконка на карте' (Device d) = GROUP LAST IMAGEFILE i ORDER INTEGER n WHERE i = iconLimit(organization(d), MeasurementType type, lastValue(d, type)) AND n = number(type(d), type);
+background (Device d, MeasurementType type) += colorLimit(organization(d), type, lastValue(d, type));
 EXTEND FORM devices
     PROPERTIES (d) icon = iconLimit
 ;
