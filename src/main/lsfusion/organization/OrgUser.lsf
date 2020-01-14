@@ -16,7 +16,6 @@ EXTEND FORM customUsers
 ;
 
 fillDefaultAccess(UserRole r) {
-    defaultForms(r) <- DefaultForms.default;
     forbidAllForms(r) <- TRUE; 
     defaultNumber(r, navigatorElementCanonicalName('Location.locations')) <- 1;
     defaultNumber(r, navigatorElementCanonicalName('Device.devices')) <- 2;
