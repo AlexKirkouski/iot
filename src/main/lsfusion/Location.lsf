@@ -1,14 +1,20 @@
 MODULE Location;
 
-REQUIRE Controller, Device;
+REQUIRE Controller, Device, Geo;
 
-CLASS Location 'Точка размещения';
+CLASS Location 'Точка размещения' : POI;
 name 'Название' = DATA STRING[60] (Location) NONULL IN id;
-address 'Название н/пункта' = DATA STRING[50] (Location) IN id;
+address 'Адрес' = DATA STRING[50] (Location) IN id;
+latitude 'Широта' = DATA NUMERIC[11,6] (Location) IN id;
+longitude 'Долгота' = DATA NUMERIC[11,6] (Location) IN id;
+
+mainAddress(Location l) += address(l);
+latitude(Location l) += latitude(l);
+longitude(Location l) += longitude(l);
 
 FORM locations 'Точки размещения'
     OBJECTS l = Location
-    PROPERTIES(l) name, address, NEW, DELETE;
+    PROPERTIES(l) name, address, latitude, longitude, calculateCoordinates GRID, NEW, DELETE;
 ;
 
 DESIGN locations {
@@ -35,6 +41,8 @@ EXTEND FORM controllers
 
 location = DATA Location (Device);
 nameLocation 'Точка размещения' = name(location(Device d));
+latitude 'Широта' (Device d) = latitude(location(d));
+longitude 'Долгота' (Device d) = longitude(location(d));
 EXTEND FORM devices
-    PROPERTIES (d) nameLocation
+    PROPERTIES (d) nameLocation, latitude = latitude, longitude = longitude
 ;

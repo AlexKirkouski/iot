@@ -10,9 +10,13 @@ CLASS MeasurementLimit 'Порог измерения';
 organization = DATA Organization (MeasurementLimit);
 type = DATA MeasurementType (MeasurementLimit);
 value 'Значение' = DATA DOUBLE (MeasurementLimit);
-color 'Цвет' = DATA COLOR (MeasurementLimit);
-colorLimit(Organization org, MeasurementType type, DOUBLE value) = GROUP LAST color(MeasurementLimit limit) ORDER value(limit), limit 
+color 'Цвет в отчетах' = DATA COLOR (MeasurementLimit);
+icon 'Иконка на карте' = DATA IMAGEFILE (MeasurementLimit);
+limit(Organization org, MeasurementType type, DOUBLE value) = GROUP LAST MeasurementLimit limit ORDER value(limit), limit 
                                                                                     WHERE value(limit) < value BY organization(limit), type(limit);
+colorLimit(Organization org, MeasurementType type, DOUBLE value) = color(limit(org, type, value));
+iconLimit(Organization org, MeasurementType type, DOUBLE value) = icon(limit(org, type, value));
+
 EXTEND FORM deviceTypes
     OBJECTS ol = Organization PANEL
     PROPERTIES (ol) name SELECTOR 
@@ -20,7 +24,7 @@ EXTEND FORM deviceTypes
     PROPERTIES (mct) name SELECTOR 
 
     OBJECTS ml = MeasurementLimit
-    PROPERTIES (ml) value, color, NEW, DELETE
+    PROPERTIES (ml) value, color, icon, NEW, DELETE
     FILTERS organization(ml) = ol, type(ml) = mct
 ;
 
@@ -28,7 +32,7 @@ DESIGN deviceTypes {
     tab {
         NEW limit {
             type = CONTAINERV;
-            caption = 'Лимиты в отчетах';
+            caption = 'Лимиты';
             NEW panel {
                 type = CONTAINERH;
                 MOVE BOX (ol);
@@ -42,6 +46,15 @@ DESIGN deviceTypes {
         }
     }
 }
+
+// MAP
+
+iconLimit 'Иконка на карте' (Device d) = GROUP LAST IMAGEFILE i ORDER INTEGER n WHERE i = iconLimit(organization(d), MeasurementType type, lastValue(d, type)) AND n = number(type(d), type);
+EXTEND FORM devices
+    PROPERTIES (d) icon = iconLimit
+;
+
+// REPORTS
 
 toDateTime(DATE date, INTEGER hour) = sumMinutes(toDateTime(date), hour * 60);
 between(DATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
