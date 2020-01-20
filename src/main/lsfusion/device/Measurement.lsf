@@ -16,10 +16,31 @@ number 'Номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementTyp
 measurementType = GROUP AGGR MeasurementType mt BY id(mt);
 CONSTRAINT MeasurementType mt IS MeasurementType AND NOT id(mt) MESSAGE 'Не заполнен ID панели для типа измерения !';
 
+CLASS DisplayMeasurement 'Текст измерения';
+type = DATA MeasurementType (DisplayMeasurement);
+caption 'Текст' = DATA STRING (DisplayMeasurement);
+value 'Значение' = DATA INTEGER (DisplayMeasurement);
+
+displayValues 'Тексты измерений' = GROUP CONCAT value(DisplayMeasurement dm) + ' - ' + caption(dm), ',' BY type(dm); 
+displayMeasurement = GROUP AGGR DisplayMeasurement m BY type(m), value(m) MATERIALIZED;
+hasDisplay = GROUP SUM 1 BY type(DisplayMeasurement dm); 
+
+displayInt 'Значение' (MeasurementType mt, INTEGER i) = caption(displayMeasurement(mt, i));
+display (MeasurementType mt, DOUBLE d) = OVERRIDE displayInt(mt, round(d, 0)), STRING(NUMERIC[30,2](d)) IF mt IS MeasurementType;
+
+FORM displayMeasurements 'Тексты измерений'
+    OBJECTS mt = MeasurementType PANEL
+    OBJECTS dm = DisplayMeasurement
+    
+    PROPERTIES (dm) value, caption, NEW, DELETE
+    FILTERS type(dm) = mt
+;
+
 EXTEND FORM deviceTypes
     OBJECTS mt = MeasurementType
     PROPERTIES (mt) id, name
     PROPERTIES(t, mt) number
+    PROPERTIES displayValues(mt) ON CHANGE { SHOW displayMeasurements OBJECTS mt=mt WAIT NEWSESSION; }
     PROPERTIES (mt) NEW, DELETE
 ;
 
@@ -40,11 +61,15 @@ nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(
 dateTime 'Время измерения' = DATA DATETIME (Measurement);
 idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
-value 'Значение' = DATA DOUBLE (Measurement, MeasurementType);
+value 'Значение (raw)' = DATA DOUBLE (Measurement, MeasurementType);
+
 INDEX dateTime(Measurement m), m;
 lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
-lastValue (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
+lastValue 'Тек. значение (raw)' (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
 background = ABSTRACT COLOR (Device, MeasurementType);
+
+displayValue 'Значение' (Measurement m, MeasurementType mt) = display(mt, value(m, mt));
+lastDisplayValue 'Тек. значение' (Device d, MeasurementType m) = display(m, lastValue(d, m));
 
 EXTEND FORM devices 
     OBJECTS cmt = MeasurementType
@@ -52,11 +77,11 @@ EXTEND FORM devices
     
     OBJECTS m = Measurement
     PROPERTIES(m) READONLY dateTime  
-    PROPERTIES value(m, cmt) COLUMNS (cmt) HEADER name(cmt) READONLY 
+    PROPERTIES COLUMNS (cmt) READONLY displayValue(m, cmt) HEADER name(cmt), value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt) 
     FILTERS number(type(device(m)),cmt), device(m)=d
     ORDER dateTime(m) DESC
     
-    PROPERTIES lastValue(d, cmt) BACKGROUND background(d, cmt) DRAW d COLUMNS (cmt) HEADER name(cmt) PANEL
+    PROPERTIES BACKGROUND background(d, cmt) DRAW d COLUMNS (cmt) PANEL lastDisplayValue(d, cmt) HEADER name(cmt) // , lastValue(d, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt)
 ;
 
 DESIGN devices {
@@ -67,7 +92,8 @@ DESIGN devices {
     }
     GRID (d) {
         NEW dPanel {
-            MOVE PROPERTY(lastValue(d, cmt));
+//            MOVE PROPERTY(lastValue(d, cmt));
+            MOVE PROPERTY(lastDisplayValue(d, cmt));
         }
     }
 }
