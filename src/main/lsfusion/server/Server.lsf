@@ -54,7 +54,7 @@ onStarted() + {
 
 // IMPORT
 fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
-fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt)); // + ' / ' + (IF name(mt) LIKE '%Влажн%' THEN '(CASE EXCLUSIVE WHEN id(device(id))=35 THEN 1.05 WHEN id(device(id))=37 THEN 0.85 ELSE 1.0)' ELSE '1.0');
+fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt)) + ' - ' + (IF name(mt) LIKE '%Влажн%' THEN '(CASE EXCLUSIVE WHEN id(device(id))=1010 THEN 1.0 ELSE 0.0)' ELSE '0.0');
 
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
                                                 '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS DATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
