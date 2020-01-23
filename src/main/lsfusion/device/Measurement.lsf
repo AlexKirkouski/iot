@@ -77,7 +77,7 @@ EXTEND FORM devices
     
     OBJECTS m = Measurement
     PROPERTIES(m) READONLY dateTime  
-    PROPERTIES COLUMNS (cmt) READONLY displayValue(m, cmt) HEADER name(cmt), value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt) 
+    PROPERTIES COLUMNS (cmt) displayValue(m, cmt) HEADER name(cmt), value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt) // READONLY 
     FILTERS number(type(device(m)),cmt), device(m)=d
     ORDER dateTime(m) DESC
     
