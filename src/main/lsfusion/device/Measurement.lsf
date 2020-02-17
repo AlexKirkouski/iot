@@ -93,7 +93,9 @@ DESIGN devices {
     GRID (d) {
         NEW dPanel {
 //            MOVE PROPERTY(lastValue(d, cmt));
-            MOVE PROPERTY(lastDisplayValue(d, cmt));
+            MOVE PROPERTY(lastDisplayValue(d, cmt)) {
+                columnKeysVertical = TRUE;
+            }
         }
     }
 }
