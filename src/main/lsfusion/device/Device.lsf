@@ -61,7 +61,7 @@ DESIGN deviceTypes {
     }
 }
 
-FORM devices 'Датчики'
+FORM devices 'Датчики' AUTOREFRESH 5
     OBJECTS d = Device
     PROPERTIES (d) id, nameType
 ;
