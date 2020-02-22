@@ -52,7 +52,7 @@ dialogChangeChats(ControllerManager cm) + {
 }
 
 CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
-CONSTRAINT organization(Chat ch) != organization(ControllerManager cm) AND in(ch, cm) MESSAGE 'Организация чата не соответсвует организации устройства';
+CONSTRAINT organization(ManagerTo ch) != organization(ControllerManager cm) AND in(ch, cm) MESSAGE 'Организация чата не соответсвует организации устройства';
 
 overNew(ControllerManager cm, ControllerDevice cd) + {
     organization(cm) <- organization(cd);
