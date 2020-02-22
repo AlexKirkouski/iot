@@ -52,6 +52,7 @@ CLASS MeasurementConditionValue 'Значение измерения' : Conditio
 measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(Device device), MeasurementType measurementType);
 currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
 name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType, device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
 value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
@@ -75,7 +76,6 @@ FORM conditionValues 'Значения'
 CLASS ValuesCondition 'Значение A больше или равно B' : ManagerCondition; // пока >=
 left = DATA ConditionValue (ValuesCondition) NONULL;
 right = DATA ConditionValue (ValuesCondition) NONULL;
-CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType, device MESSAGE 'Тип измерения должен соответствовать типу устройства';
  
 nameLeft 'A ' (ValuesCondition c) = name(left(c));
 nameRight 'B ' (ValuesCondition c) = name(right(c));
