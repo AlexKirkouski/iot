@@ -31,14 +31,28 @@ dialogChangeRightConditionValue(ValuesCondition vc) + {
     DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE;
 } 
 
-organization = DATA Organization (Chat) AUTOSET;
+organization = DATA Organization (ManagerTo) AUTOSET;
 nameOrganization 'Организация' (Chat c) = name(organization(c));
 EXTEND FORM messengers
     PROPERTIES (c) nameOrganization
 ;
 
+// temp
+organization = DATA Organization (Chat);
+onStarted() + {
+    organization[ManagerTo](Chat c) <- organization(c) WHERE organization(c) AND NOT organization[ManagerTo](c);     
+}
+
+//EXTEND FORM changeChats
+//    OBJECTS o = Organization BEFORE cm
+//    FILTERS organization(ch) = o
+//;
+dialogChangeChats(ControllerManager cm) + {
+    DIALOG changeChats OBJECTS cm = cm FILTERS organization(ch) = organization(cm);
+}
+
 CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
-CONSTRAINT organization(chat(ControllerManager cm)) != organization(cm) CHECKED BY chat[ControllerManager] MESSAGE 'Организация чата не соответсвует организации устройства';
+CONSTRAINT organization(Chat ch) != organization(ControllerManager cm) AND in(ch, cm) MESSAGE 'Организация чата не соответсвует организации устройства';
 
 overNew(ControllerManager cm, ControllerDevice cd) + {
     organization(cm) <- organization(cd);

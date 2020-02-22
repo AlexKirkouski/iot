@@ -12,7 +12,7 @@ CLASS ForceMode {
     off 'Выключить принудительно'
 }
 mode = DATA ForceMode (ControllerManager);
-nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)); 
+nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)) CHARWIDTH 10; 
 
 CLASS ConditionType {
     and 'И',
@@ -110,29 +110,61 @@ edit(TimeCondition t) +{
 controllerDevice = DATA ControllerDevice (ControllerManager);
 nameControllerDevice 'Устройство' (ControllerManager cm) = name(controllerDevice(cm));
 
+CLASS ABSTRACT ManagerTo 'Кому';
+name 'Имя' = ABSTRACT STRING (ManagerTo);
+sendMessage ABSTRACT (ManagerTo, STRING);
+
+EXTEND CLASS Chat : ManagerTo;
+name(Chat ch) += Messenger.name(ch);
+sendMessage(Chat ch, STRING text) + { Messenger.sendMessage(ch, text); }
+
+CLASS EmailContact 'Email' : ManagerTo;
+email = DATA STRING (EmailContact) IN id;
+name(EmailContact ch) += email(ch);
+sendMessage(EmailContact ch, STRING text) + {
+    EMAIL SUBJECT text TO email(ch) BODY text;
+}
+
+in 'Вкл.' = DATA BOOLEAN (ManagerTo, ControllerManager);
+nameChats 'Кому' (ControllerManager cm) = GROUP CONCAT name(Chat ch) IF in(ch, cm),',' ORDER ch;
+FORM changeChats 'Выбор уведомлений'
+    OBJECTS cm = ControllerManager PANEL
+    OBJECTS ch = ManagerTo
+    PROPERTIES in(ch, cm), objectClassName(ch) READONLY, name(ch) READONLYIF ch IS Chat
+    PROPERTIES 'Добавить Email' = NEW[EmailContact](ch), DELETE(ch) SHOWIF ch IS EmailContact
+;
+dialogChangeChats ABSTRACT (ControllerManager);
+
+// temp
 chat = DATA Chat (ControllerManager);
-nameChat 'Чат' (ControllerManager cm) = name(chat(cm));
+onStarted() + {
+    in(Chat c, ControllerManager m) <- TRUE WHERE chat(m) = c;
+}
+
+onMessage 'Сообщение вкл.' = DATA STRING (ControllerManager);
+offMessage 'Сообщение выкл.' = DATA STRING (ControllerManager);
 
 runOn(ControllerManager c) {
     IF controllerDevice(c) THEN
         runOn(controllerDevice(c));
-    IF chat(c) THEN 
-        sendMessage(chat(c), CONCAT ' ', name(c), 'ON');
+    FOR in(ManagerTo ch, c) DO  
+        sendMessage(ch, OVERRIDE onMessage(c), (CONCAT ' ', name(c), 'ON'));
 }
 runOff(ControllerManager c) {
     IF controllerDevice(c) THEN
         runOff(controllerDevice(c));
-    IF chat(c) THEN 
-        sendMessage(chat(c), CONCAT ' ', name(c), 'OFF');
+    FOR in(ManagerTo ch, c) DO  
+        sendMessage(ch, OVERRIDE offMessage(c), (CONCAT ' ', name(c), 'OFF'));
 }
 
 FORM controllerManager 'Управление'
     OBJECTS c = ControllerManager PANEL
-    PROPERTIES (c) name, nameControllerDevice, nameChat, isOn, shouldBeOn, nameMode //, nameOn, nameOff
+    PROPERTIES (c) name, nameControllerDevice, nameChats ON CHANGE dialogChangeChats(c), isOn, shouldBeOn, nameMode //, nameOn, nameOff
     OBJECTS mc = ManagerCondition
     PROPERTIES (mc) order, name READONLY, nameType, isTrue
     PROPERTIES (c) newTimeCondition DRAW mc TOOLBAR 
     PROPERTIES (mc) 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
+    PROPERTIES (c) onMessage, offMessage
     FILTERS c = controller(mc)
     ORDER order(mc)
     
@@ -150,7 +182,14 @@ DESIGN controllerManager {
             MOVE BOX(c) {
                 fill = 1;
             }
-            NEW params AFTER BOX(c) {
+            NEW notifications {
+                caption = 'Уведомления';
+                MOVE PROPERTY (nameChats(c));
+                MOVE PROPERTY (onMessage(c));
+                MOVE PROPERTY (offMessage(c));
+                fill = 3;
+            }
+            NEW params {
                 caption = 'Параметры работы';
                 MOVE PROPERTY (isOn(c));
                 MOVE PROPERTY (shouldBeOn(c));
