@@ -59,10 +59,10 @@ name 'Название' = DATA STRING (FixedConditionValue) IN id;
 currentValue(FixedConditionValue v) += value(v);
 name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
 
-//EXTEND CLASS Device : ConditionValue;
-//measurementDelay(Device d) = subtractSeconds(dateTime(lastMeasurement(d)), currentDateTimeSnapshot());
-//currentValue(Device v) += measurementDelay(v);
-//name(Device v) += 'Секунд с последнего измерения: ' + id(v) + ' (тек. зн.: ' + (OVERRIDE measurementDelay(v)+'', 'отсутствует') + ' )';
+CLASS DelayConditionValue 'Секунд с последнего измерения' : ConditionValue;
+delayConditionValue = AGGR DelayConditionValue WHERE Device device IS Device;
+currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentDateTimeSnapshot());
+name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 FORM conditionValues 'Значения'
     OBJECTS v = ConditionValue
