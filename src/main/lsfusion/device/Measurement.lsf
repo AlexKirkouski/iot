@@ -10,6 +10,11 @@ TABLE measurementType (MeasurementType);
 id 'ID панели' = DATA LONG (MeasurementType);
 name 'Название' = DATA STRING[100] (MeasurementType) CHARWIDTH 70 IN id;
 
+FORM measurementTypes
+    OBJECTS m = MeasurementType
+    PROPERTIES (m) name
+;
+
 number 'Номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);
 
 // уникальность и обязательность заполнения
@@ -64,8 +69,25 @@ idImport 'ИД импортируемое' = DATA LONG (Measurement);
 value 'Значение (raw)' = DATA DOUBLE (Measurement, MeasurementType);
 
 INDEX dateTime(Measurement m), m;
+INDEX device(Measurement m), dateTime(m), m;
 lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
+measurement(Device d, DATETIME dt) = GROUP LAST Measurement m IF dateTime(m) <= dt ORDER dateTime(m), m BY device(m);
 lastValue 'Тек. значение (raw)' (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
+value 'Значение (raw)' (Device d, MeasurementType m, DATETIME dt) = value(measurement(d, dt), m);
+
+// подсчет среднего
+// дольше стартует но быстрее на добавление работает, с изменениями все равно смотрит для всех записей
+//prevMeasurement (Device d, DATETIME dt, Measurement m) = GROUP LAST Measurement mt IF device(mt) = d AND (dateTime(mt) < dt OR (dateTime(mt) = dt AND mt < m)) ORDER dateTime(mt), mt;
+//prevMeasurement (Measurement m) = prevMeasurement(device(m), dateTime(m), m) MATERIALIZED;
+// быстро стартует, но обновляется плохо
+//prevMeasurement (Measurement m) = PARTITION PREV m ORDER dateTime(m), m BY device(m) MATERIALIZED;
+//changeValue(Measurement m, MeasurementType mt) = value(m, mt) (-) value(prevMeasurement(m), mt) MATERIALIZED;
+//value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = value(d, mt, dateFrom) (+) 
+//                                                                    ((GROUP SUM changeValue(Measurement m, mt) * subtractSeconds(dateTime(m), dateTo) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo) / subtractSeconds(dateFrom, dateTo));
+// не точно при непостоянных измерениях, но зато быстро
+value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = value(d, mt, dateFrom) (+) 
+                                                                    ((GROUP SUM value(Measurement m, mt) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo) / (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo));
+  
 background = ABSTRACT COLOR (Device, MeasurementType);
 
 displayValue 'Значение' (Measurement m, MeasurementType mt) = display(mt, value(m, mt));

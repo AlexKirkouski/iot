@@ -54,6 +54,15 @@ currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementTyp
 name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType, device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
 
+CLASS AverageMeasurementConditionValue 'Среднее значение за интервал' : ConditionValue;
+device = DATA Device (AverageMeasurementConditionValue) NONULL PREREAD;
+measurementType = DATA MeasurementType (AverageMeasurementConditionValue) NONULL;
+nameDevice 'Устройство' (AverageMeasurementConditionValue v) = id(device(v)) IN id;
+nameMeasurementType 'Тип измерения' (AverageMeasurementConditionValue v) = name(measurementType(v)) IN id;
+range 'Интервал' = DATA LONG (AverageMeasurementConditionValue) IN id;
+currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentDateTimeSnapshot(), range(v)), currentDateTimeSnapshot());
+name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
 value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
 name 'Название' = DATA STRING (FixedConditionValue) IN id; 
@@ -65,12 +74,23 @@ delayConditionValue = AGGR DelayConditionValue WHERE Device device IS Device;
 currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentDateTimeSnapshot());
 name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
+changeDevice ABSTRACT (AverageMeasurementConditionValue);
+FORM averageConditionValue
+    OBJECTS v = AverageMeasurementConditionValue PANEL
+    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameMeasurementType ON CHANGE {
+        DIALOG measurementTypes OBJECTS m = measurementType(v) CHANGE FILTERS number(type(device(v)),m);
+    }, range
+; 
+
+change ABSTRACT (ConditionValue);
+change(FixedConditionValue fv) + {
+    INPUT n = name(fv) CHANGE;
+} 
 FORM conditionValues 'Значения'
     OBJECTS v = ConditionValue
-    PROPERTIES (v) objectClassName READONLY, name ON CHANGE {
-        FOR FixedConditionValue fv = v AS FixedConditionValue DO
-            INPUT n = name(fv) CHANGE;
-    }, currentValue, 'Добавить фиксированное значение'=NEW[FixedConditionValue]
+    PROPERTIES (v) objectClassName READONLY, name ON CHANGE change(v), currentValue, 
+                'Добавить фиксированное значение'=NEW[FixedConditionValue], 
+                'Добавить среднее за интервал'=NEW[AverageMeasurementConditionValue] 
 ;
 
 CLASS ValuesCondition 'Значение A больше или равно B' : ManagerCondition; // пока >=
@@ -202,7 +222,12 @@ DESIGN controllerManager {
 //                MOVE PROPERTY (nameOn(c));
 //                MOVE PROPERTY (nameOff(c));
 //            }
-        }        
+        }
+        NEW tab {
+            type = TABBED;
+            fill = 1;
+            MOVE BOX(mc);
+        }       
     }
 }
 
@@ -218,6 +243,41 @@ checkWorking(ControllerManager c) {
         isOn(c) <- shouldBeOn(c);
     }        
 }
+
+CLASS ManagerLog 'Лог управления';
+manager = DATA ControllerManager (ManagerLog);
+dateTime 'Время' = DATA DATETIME (ManagerLog);
+isOn 'Вкл.' = DATA BOOLEAN (ManagerLog);
+INDEX manager(ManagerLog l), dateTime(l), l;
+lastLog = GROUP LAST ManagerLog l ORDER dateTime(l), l BY manager(l) MATERIALIZED;
+
+WHEN CHANGED(isOn(ControllerManager c)) DO NEW l=ManagerLog {
+    manager(l) <- c;
+    dateTime(l) <- currentDateTimeSnapshot();
+    isOn(l) <- isOn(c);
+}
+
+EXTEND FORM controllerManager
+    OBJECTS l=ManagerLog
+    PROPERTIES (l) dateTime, isOn
+    FILTERS manager(l) = c
+;
+
+DESIGN controllerManager {
+    tab {
+        MOVE BOX (l);  
+    }
+}
+
+CLASS LastChangeConditionValue 'Секунд с последнего изменения' : ConditionValue;
+lastChangeConditionValue = AGGR LastChangeConditionValue WHERE ControllerManager manager IS ControllerManager;
+currentValue(LastChangeConditionValue v) += subtractSeconds(dateTime(lastLog(manager(v))), currentDateTimeSnapshot());
+name(LastChangeConditionValue v) += 'Секунд с последнего изменения: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+
+CLASS StateConditionValue 'Включен' : ConditionValue;
+stateConditionValue = AGGR StateConditionValue WHERE ControllerManager manager IS ControllerManager;
+currentValue(StateConditionValue v) += 1 IF isOn(manager(v));
+name(StateConditionValue v) += 'Включен: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'выкл.') + ' )';
 
 WHEN CHANGED(shouldBeOn(ControllerManager c)) DO {
     checkWorking(c);

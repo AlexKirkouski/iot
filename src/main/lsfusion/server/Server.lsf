@@ -57,6 +57,7 @@ onStarted() + {
 importAdjustmentValue 'Значение корр.' = DATA DOUBLE (Device, MeasurementType);
 importAdjustmentValue 'Значение корр.' (Device d, LONG id) = importAdjustmentValue(d, measurementType(id));
 importAdjustmentOperand 'Операнд корр.' = DATA STRING[1] (DeviceType, MeasurementType);  
+adjustment (DeviceType type) = GROUP SUM 1 IF importAdjustmentOperand(type, MeasurementType mt);
 defaultImportAdjustmentValue 'Значение корр. (по умолч.)' (DeviceType dt, MeasurementType mt) = IF importAdjustmentOperand(dt, mt) = '/' OR importAdjustmentOperand(dt, mt) = '*' THEN '1.0' ELSE '0.0';  
 
 fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
@@ -83,7 +84,8 @@ EXTEND FORM deviceTypes
 ;
 
 EXTEND FORM devices
-    PROPERTIES COLUMNS (cmt) importAdjustmentValue(d, cmt) HEADER 'Корр. : ' + name(cmt) SHOWIF importAdjustmentOperand(type(d), cmt), adjv = value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF importAdjustmentOperand(type(d), cmt) AND NOT hasDisplay(cmt) 
+    PROPERTIES COLUMNS (cmt) importAdjustmentValue(d, cmt) HEADER 'Корр. : ' + name(cmt) SHOWIF importAdjustmentOperand(type(d), cmt), adjv = value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF importAdjustmentOperand(type(d), cmt) AND NOT hasDisplay(cmt)
+    PROPERTIES (m) SHOWIF adjustment(type(d)) NEW, DELETE GRID
 ;
 
 importCSV(DeviceType dt, Server server, CSVFILE file) {

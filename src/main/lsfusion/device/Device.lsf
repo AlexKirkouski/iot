@@ -35,7 +35,7 @@ NAVIGATOR {
 }
 
 CLASS Device 'Датчик';
-id 'ID' = DATA LONG (Device) CHARWIDTH 8;
+id 'ID' = DATA LONG (Device) CHARWIDTH 8 IN id;
 
 type = DATA DeviceType (Device);
 nameType 'Тип' = name(type(Device d));

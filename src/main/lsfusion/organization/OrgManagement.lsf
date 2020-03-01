@@ -10,10 +10,26 @@ organization = DATA Organization (ControllerManager) AUTOSET;
 
 organization 'Организация' = ABSTRACT Organization (ConditionValue);
 
-organization = DATA Organization (FixedConditionValue) AUTOSET;
 organization(MeasurementConditionValue v) += organization(device(v));
+organization = DATA Organization (FixedConditionValue) AUTOSET;
 organization(FixedConditionValue v) += organization(v);
 organization(DelayConditionValue v) += organization(device(v));
+
+organization = DATA Organization (AverageMeasurementConditionValue) AUTOSET;
+organization(AverageMeasurementConditionValue v) += organization(v);
+organization(LastChangeConditionValue v) += organization(manager(v));
+organization(StateConditionValue v) += organization(manager(v));
+
+changeDevice(AverageMeasurementConditionValue av) +{
+    DIALOG devices OBJECTS o=organization(av), d=device(av) CHANGE;
+}
+EXTEND FORM averageConditionValue
+    OBJECTS o = Organization BEFORE v
+;
+
+change(AverageMeasurementConditionValue av) +{
+    DIALOG averageConditionValue OBJECTS o=organization(av), v=av;
+} 
 
 EXTEND FORM conditionValues
     OBJECTS o = Organization BEFORE v
