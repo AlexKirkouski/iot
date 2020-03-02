@@ -196,7 +196,7 @@ public class UDPServer extends MonitorServer {
             for (int i=0; i < cSplit.length - 1; i++) {
                 cMeasuring += cSplit[i] + ";";
             }
-            cDt = DateTimeClass.instance.formatString(new Timestamp(new Date((long) Long.parseLong(cSplit[cSplit.length - 1])).getTime()));
+            cDt = DateTimeClass.instance.formatString(new Timestamp(new Date(Long.parseLong(cSplit[cSplit.length - 1]) * 1000).getTime()));
         }
         return true;
     }
