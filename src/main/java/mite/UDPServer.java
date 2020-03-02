@@ -196,18 +196,9 @@ public class UDPServer extends MonitorServer {
             for (int i=0; i < cSplit.length - 1; i++) {
                 cMeasuring += cSplit[i] + ";";
             }
-           cDt = getDTCounter(cSplit[cSplit.length - 1]);
+            cDt = DateTimeClass.instance.formatString(new Timestamp(new Date((long) Integer.parseInt(cSplit[cSplit.length - 1], 10)).getTime()));
         }
         return true;
-    }
-
-    // Получаем дату-время снятия измерений: дата 15.05.2019 00:00:00 + пришедщее текущие значение счетчика
-    private String getDTCounter(String cSecond) {
-        int nt = Integer.parseInt(cSecond,10);
-        SimpleDateFormat dayFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        Calendar dt = Calendar.getInstance();
-        dt.set(1970, Calendar.JANUARY, 1,0,0,nt);
-        return dayFormat.format(dt.getTime());
     }
 
     // для отладки, выводит в консоль с признаком UDP дата время текст
