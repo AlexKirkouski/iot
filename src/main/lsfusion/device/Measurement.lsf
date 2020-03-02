@@ -85,8 +85,7 @@ value 'Значение (raw)' (Device d, MeasurementType m, DATETIME dt) = valu
 //value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = value(d, mt, dateFrom) (+) 
 //                                                                    ((GROUP SUM changeValue(Measurement m, mt) * subtractSeconds(dateTime(m), dateTo) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo) / subtractSeconds(dateFrom, dateTo));
 // не точно при непостоянных измерениях, но зато быстро
-value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = value(d, mt, dateFrom) (+) 
-                                                                    ((GROUP SUM value(Measurement m, mt) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo) / (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo));
+value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = ((value(d, mt, dateFrom) (+) (GROUP SUM value(Measurement m, mt) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)) / (1 (+) (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)));
   
 background = ABSTRACT COLOR (Device, MeasurementType);
 
