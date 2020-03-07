@@ -28,8 +28,10 @@ DESIGN locations {
 }
 
 NAVIGATOR {
-    data {
-        NEW locations BEFORE equipment;
+    equipment {
+        NEW FOLDER location 'Расположение' {
+            NEW locations;
+        }
     }
 }
 

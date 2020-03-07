@@ -2,7 +2,7 @@ MODULE OrgDevice;
 
 REQUIRE Organization, Device, Options, Utils, Location, OrgLocation;
 
-organization = DATA Organization (Device);
+organization = DATA Organization (Device) INDEXED;
 nameOrganization 'Название' (Device d) = name(organization(d));
 
 CONSTRAINT organization(location(Device d)) != organization(d) CHECKED BY location[Device] MESSAGE 'Точка размещения не принадлежит организации датчика';

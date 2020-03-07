@@ -6,6 +6,8 @@ NAMESPACE Measurement;
 
 measurementTypeString 'Типы измерений' (Device d) = GROUP CONCAT name(MeasurementType mt) IF number(type(d), mt), ',' ORDER number(type(d), mt) CHARWIDTH 20;
 
+organization(Measurement m) = organization(device(m));
+
 CLASS MeasurementLimit 'Порог измерения';
 organization = DATA Organization (MeasurementLimit);
 type = DATA MeasurementType (MeasurementLimit);
@@ -120,3 +122,80 @@ printReportXls 'Распечатать измерения' (Organization o) {
 EXTEND FORM organizations
     PROPERTIES (o) email, emailReportXls TOOLBAR, printReportXls TOOLBAR   
 ; 
+
+// DEVICE MOVEMENT
+
+latitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Широта';
+longitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Долгота';
+
+intToColor = FORMULA '(256*256*($1)+256*($2)+($3))::integer';
+rgb(INTEGER r, INTEGER g, INTEGER b) = COLOR(intToColor(r, g, b));
+
+FORM deviceMovement 'Перемещение датчиков'
+    OBJECTS m = Measurement
+    PROPERTIES dateTime(m), latitude 'Широта' = value(m, latitudeType()), longitude 'Долгота' = value(m, longitudeType()), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255) 
+    ORDER dateTime(m)
+;
+
+// filters
+//INDEX organization(Measurement m), dateTime(m);
+
+EXTEND FORM deviceMovement
+    OBJECTS o = Organization PANEL BEFORE m
+    
+    PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
+    FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
+    
+    FILTERS organization(m) = o
+;
+
+DESIGN deviceMovement {
+    OBJECTS {
+        NEW paramBox BEFORE BOX(m) {
+            type = CONTAINERH;
+            MOVE BOX(o);
+            fill = 0;
+        }
+    }
+} 
+
+hasCoord (Device d) = number(type(d), latitudeType()) AND number(type(d), longitudeType()) MATERIALIZED;
+selected 'Выбр.' = DATA LOCAL BOOLEAN (Device) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
+FORM selectDevices 'Выбор датчиков'
+    OBJECTS d = Device
+    PROPERTIES (d) selected, id, nameLocation, nameType READONLY
+    FILTERS hasCoord(d)
+;
+selectedDevices 'Датчики' = GROUP CONCAT ''+id(Device d) IF selected(d),',' ORDER d;
+hasSelectedDevices = GROUP MAX selected(Device d) PREREAD;
+dateFrom 'Время от' = DATA LOCAL DATETIME ();
+dateTo 'Время до' = DATA LOCAL DATETIME ();
+
+EXTEND FORM deviceMovement
+    EVENTS ON INIT {
+        dateFrom() <- currentDateTime();
+        dateTo() <- currentDateTime();            
+    }
+    PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(d) = o; }, dateFrom(), dateTo()
+    FILTERS (NOT hasSelectedDevices() AND hasCoord(device(m))) OR selected(device(m)),
+            NOT dateFrom() OR dateTime(m) >= dateFrom(),
+            NOT dateTo() OR dateTime(m) <= dateTo()
+;
+
+DESIGN deviceMovement {
+    paramBox {
+        NEW filters {
+            type = CONTAINERH;
+            caption = 'Фильтры';
+            MOVE PROPERTY (selectedDevices());                
+            MOVE PROPERTY (dateFrom());                
+            MOVE PROPERTY (dateTo());                
+        } 
+    }
+}
+
+NAVIGATOR {
+    location {
+        NEW deviceMovement;
+    }
+}

@@ -10,18 +10,16 @@ organization 'Организация' = DATA Organization (Location) AUTOSET ;
 
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Location) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
 FORM selectLocations 'Выбор точек размещения'
-    OBJECTS o = Organization
     OBJECTS l = Location
     PROPERTIES (l) selected, name READONLY
-    FILTERS organization(l) = o
 ;
 selectedLocations 'Точки размещения' = GROUP CONCAT name(Location l) IF selected(l),',' ORDER l;
-hasSelected = GROUP MAX selected(Location l);
+hasSelectedLocations = GROUP MAX selected(Location l);
 
 META addLocation(form, object)
     EXTEND FORM form
-        PROPERTIES selectedLocations() ON CHANGE { DIALOG selectLocations OBJECTS o = o; }
-        FILTERS NOT hasSelected() OR selected(location(object))
+        PROPERTIES selectedLocations() ON CHANGE { DIALOG selectLocations FILTERS organization(l) = o; }
+        FILTERS NOT hasSelectedLocations() OR selected(location(object))
     ;
     DESIGN form {
         paramBox {
