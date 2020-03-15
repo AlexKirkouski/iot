@@ -133,7 +133,7 @@ rgb(INTEGER r, INTEGER g, INTEGER b) = COLOR(intToColor(r, g, b));
 
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement
-    PROPERTIES dateTime(m), latitude 'Широта' = value(m, latitudeType()), longitude 'Долгота' = value(m, longitudeType()), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255) 
+    PROPERTIES dateTime(m), latitude 'Широта' = value(m, latitudeType()), longitude 'Долгота' = value(m, longitudeType()), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), groupEquals 'Гр' = TRUE DRAW m  
     ORDER dateTime(m)
 ;
 
