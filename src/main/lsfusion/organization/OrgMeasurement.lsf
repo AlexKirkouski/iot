@@ -127,13 +127,24 @@ EXTEND FORM organizations
 
 latitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Широта';
 longitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Долгота';
+locationType = GROUP AGGR MeasurementType type WHERE name(type) = 'Точка размещения';
 
 intToColor = FORMULA '(256*256*($1)+256*($2)+($3))::integer';
 rgb(INTEGER r, INTEGER g, INTEGER b) = COLOR(intToColor(r, g, b));
 
+value 'Значение измерения' = DATA LONG (Location);
+EXTEND FORM locations
+    PROPERTIES (l) value
+;
+location = GROUP AGGR Location l BY organization(l), value(l) MATERIALIZED;
+location (Measurement m) = location(organization(m), LONG(value(m, locationType())));
+
+latitude 'Широта' (Measurement m) = OVERRIDE value(m, latitudeType()), latitude(location(m));
+longitude 'Долгота' (Measurement m) = OVERRIDE value(m, longitudeType()), longitude(location(m));
+
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement
-    PROPERTIES dateTime(m), latitude 'Широта' = value(m, latitudeType()), longitude 'Долгота' = value(m, longitudeType()), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), groupEquals 'Гр' = TRUE DRAW m  
+    PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), groupEquals 'Гр' = TRUE DRAW m  
     ORDER dateTime(m)
 ;
 
@@ -159,12 +170,12 @@ DESIGN deviceMovement {
     }
 } 
 
-hasCoord (Device d) = number(type(d), latitudeType()) AND number(type(d), longitudeType()) MATERIALIZED;
+hasCoords (Device d) = (number(type(d), latitudeType()) AND number(type(d), longitudeType())) OR number(type(d), locationType()) MATERIALIZED;
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Device) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
 FORM selectDevices 'Выбор датчиков'
     OBJECTS d = Device
     PROPERTIES (d) selected, id, nameLocation, nameType READONLY
-    FILTERS hasCoord(d)
+    FILTERS hasCoords(d)
 ;
 selectedDevices 'Датчики' = GROUP CONCAT ''+id(Device d) IF selected(d),',' ORDER d;
 hasSelectedDevices = GROUP MAX selected(Device d) PREREAD;
@@ -177,7 +188,7 @@ EXTEND FORM deviceMovement
         dateTo() <- currentDateTime();            
     }
     PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(d) = o; }, dateFrom(), dateTo()
-    FILTERS (NOT hasSelectedDevices() AND hasCoord(device(m))) OR selected(device(m)),
+    FILTERS (NOT hasSelectedDevices() AND hasCoords(device(m))) OR selected(device(m)),
             NOT dateFrom() OR dateTime(m) >= dateFrom(),
             NOT dateTo() OR dateTime(m) <= dateTo()
 ;

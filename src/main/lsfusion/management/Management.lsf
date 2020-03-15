@@ -135,7 +135,11 @@ name 'Имя' = ABSTRACT STRING (ManagerTo);
 sendMessage ABSTRACT (ManagerTo, STRING);
 
 EXTEND CLASS Chat : ManagerTo;
-name(Chat ch) += Messenger.name(ch);
+showName 'Отобр. имя' = DATA STRING (Chat);
+EXTEND FORM messengers
+    PROPERTIES showName(c)
+;
+name(Chat ch) += OVERRIDE showName(ch), Messenger.name(ch);
 sendMessage(Chat ch, STRING text) + { Messenger.sendMessage(ch, text); }
 
 CLASS EmailContact 'Email' : ManagerTo;
