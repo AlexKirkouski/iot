@@ -137,7 +137,7 @@ EXTEND FORM locations
     PROPERTIES (l) value
 ;
 location = GROUP AGGR Location l BY organization(l), value(l) MATERIALIZED;
-location (Measurement m) = location(organization(m), LONG(value(m, locationType())));
+location (Measurement m) = location(organization(m), LONG(round0(value(m, locationType()))));
 
 latitude 'Широта' (Measurement m) = OVERRIDE value(m, latitudeType()), latitude(location(m));
 longitude 'Долгота' (Measurement m) = OVERRIDE value(m, longitudeType()), longitude(location(m));
