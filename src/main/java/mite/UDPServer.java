@@ -21,6 +21,10 @@ import java.net.*;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -188,7 +192,7 @@ public class UDPServer extends MonitorServer {
     private boolean parsePacket(String cPacket, int nb) {
         deviceId = Long.parseLong(cPacket.substring(0,cPacket.indexOf(';')));
         if (nb == 2) {
-            cDt = DateTimeClass.instance.formatString(new Timestamp(Calendar.getInstance().getTime().getTime()));
+            cDt = DateTimeClass.instance.formatString(LocalDateTime.now());
             cMeasuring = cPacket;
         } else {
             String [] cSplit = cPacket.split(";");
@@ -196,7 +200,7 @@ public class UDPServer extends MonitorServer {
             for (int i=0; i < cSplit.length - 1; i++) {
                 cMeasuring += cSplit[i] + ";";
             }
-            cDt = DateTimeClass.instance.formatString(new Timestamp(new Date(Long.parseLong(cSplit[cSplit.length - 1]) * 1000).getTime()));
+            cDt = DateTimeClass.instance.formatString(LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(cSplit[cSplit.length - 1]) * 1000), ZoneId.systemDefault()));
         }
         return true;
     }
