@@ -200,7 +200,10 @@ public class UDPServer extends MonitorServer {
             for (int i=0; i < cSplit.length - 1; i++) {
                 cMeasuring += cSplit[i] + ";";
             }
-            cDt = DateTimeClass.instance.formatString(LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(cSplit[cSplit.length - 1])), ZoneId.systemDefault()));
+            long epochSecond = Long.parseLong(cSplit[cSplit.length - 1]);
+            LocalDateTime dt = LocalDateTime.ofInstant(Instant.ofEpochSecond(epochSecond), ZoneId.systemDefault());
+            cDt = DateTimeClass.instance.formatString(dt);
+            System.out.println("PARSED : " + dt + " EPOCH " + " STRING " + cDt);
         }
         return true;
     }
