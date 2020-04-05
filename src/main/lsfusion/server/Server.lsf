@@ -78,9 +78,21 @@ importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server serv
                                                 '\}\n' CHARWIDTH 5;
 
 
+copyMeasurementsFrom 'Копия датчика' = DATA Device (Device);
+idCopyMeasurementsFrom 'Копия датчика' (Device d) = id(copyMeasurementsFrom(d));
+WHEN SETCHANGED (device(Measurement m)) AND Device cp = copyMeasurementsFrom(device(m)) DO 
+    NEW cm = Measurement {
+        dateTime(cm) <- dateTime(m);
+        device(cm) <- cp;
+        idImport(cm) <- idImport(m);
+        server(cm) <- server(m);
+        value(cm, MeasurementType mt) <- value(m, mt);       
+    }
+
 EXTEND FORM deviceTypes
     PROPERTIES (t) importCSVScript
     PROPERTIES (t, mt) importAdjustmentOperand
+    PROPERTIES (d) idCopyMeasurementsFrom
 ;
 
 EXTEND FORM devices
