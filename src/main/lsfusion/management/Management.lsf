@@ -83,7 +83,7 @@ currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(
 name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 changeDevice ABSTRACT (AverageMeasurementConditionValue);
-FORM averageConditionValue
+FORM averageConditionValue 'Среднее значение за интервал'
     OBJECTS v = AverageMeasurementConditionValue PANEL
     PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameMeasurementType ON CHANGE {
         DIALOG measurementTypes OBJECTS m = measurementType(v) CHANGE FILTERS number(type(device(v)),m);
@@ -91,7 +91,7 @@ FORM averageConditionValue
 ; 
 
 changeDevice ABSTRACT (InAreaConditionValue);
-FORM inAreaConditionValue
+FORM inAreaConditionValue 'Находится в области'
     OBJECTS v = InAreaConditionValue PANEL
     PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameArea;
 ; 
