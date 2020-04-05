@@ -17,18 +17,31 @@ organization(DelayConditionValue v) += organization(device(v));
 
 organization = DATA Organization (AverageMeasurementConditionValue) AUTOSET;
 organization(AverageMeasurementConditionValue v) += organization(v);
+organization = DATA Organization (InAreaConditionValue) AUTOSET;
+organization(InAreaConditionValue v) += organization(v);
 organization(LastChangeConditionValue v) += organization(manager(v));
 organization(StateConditionValue v) += organization(manager(v));
 
 changeDevice(AverageMeasurementConditionValue av) +{
     DIALOG devices OBJECTS o=organization(av), d=device(av) CHANGE;
 }
+changeDevice(InAreaConditionValue av) +{
+    DIALOG devices OBJECTS o=organization(av), d=device(av) CHANGE;
+}
+CONSTRAINT organization(area(InAreaConditionValue av)) != organization(av) CHECKED BY area[InAreaConditionValue] MESSAGE 'Область условия не принадлежит организации условия';
+
 EXTEND FORM averageConditionValue
+    OBJECTS o = Organization BEFORE v
+;
+EXTEND FORM inAreaConditionValue
     OBJECTS o = Organization BEFORE v
 ;
 
 change(AverageMeasurementConditionValue av) +{
     DIALOG averageConditionValue OBJECTS o=organization(av), v=av;
+} 
+change(InAreaConditionValue av) +{
+    DIALOG inAreaConditionValue OBJECTS o=organization(av), v=av;
 } 
 
 EXTEND FORM conditionValues

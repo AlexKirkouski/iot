@@ -125,10 +125,6 @@ EXTEND FORM organizations
 
 // DEVICE MOVEMENT
 
-latitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Широта';
-longitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Долгота';
-locationType = GROUP AGGR MeasurementType type WHERE name(type) = 'Точка размещения';
-
 intToColor = FORMULA '(256*256*($1)+256*($2)+($3))::integer';
 rgb(INTEGER r, INTEGER g, INTEGER b) = COLOR(intToColor(r, g, b));
 
@@ -136,11 +132,9 @@ value 'Значение измерения' = DATA LONG (Location);
 EXTEND FORM locations
     PROPERTIES (l) value
 ;
-location = GROUP AGGR Location l BY organization(l), value(l) MATERIALIZED;
-location (Measurement m) = location(organization(m), LONG(round0(value(m, locationType()))));
 
-latitude 'Широта' (Measurement m) = OVERRIDE value(m, latitudeType()), latitude(location(m));
-longitude 'Долгота' (Measurement m) = OVERRIDE value(m, longitudeType()), longitude(location(m));
+location = GROUP AGGR Location l BY organization(l), value(l) MATERIALIZED;
+location (Measurement m) += location(organization(m), LONG(round0(value(m, locationType()))));
 
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement

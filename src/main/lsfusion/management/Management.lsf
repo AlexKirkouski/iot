@@ -1,6 +1,6 @@
 MODULE Management;
 
-REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger;
+REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger, Location;
 
 NAMESPACE ControllerManagement;
 
@@ -61,7 +61,15 @@ nameDevice 'Устройство' (AverageMeasurementConditionValue v) = id(devi
 nameMeasurementType 'Тип измерения' (AverageMeasurementConditionValue v) = name(measurementType(v)) IN id;
 range 'Интервал' = DATA LONG (AverageMeasurementConditionValue) IN id;
 currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentZDateTimeSnapshot(), range(v)), currentZDateTimeSnapshot());
-name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + nameMeasurementType(v) + ' за ' + range(v) + 'с. на ' + nameDevice(v) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+
+CLASS InAreaConditionValue 'Находится в области' : ConditionValue;
+device = DATA Device (InAreaConditionValue) NONULL PREREAD;
+area = DATA Area (InAreaConditionValue) NONULL;
+nameDevice 'Устройство' (InAreaConditionValue v) = id(device(v)) IN id;
+nameArea 'Область' (InAreaConditionValue v) = name(area(v)) IN id;
+currentValue(InAreaConditionValue v) += 1 IF isIn(device(v), area(v));
+name(InAreaConditionValue v) += 'Находится в области: ' + nameDevice(v) + ' в ' + nameArea(v) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
 value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
@@ -82,6 +90,12 @@ FORM averageConditionValue
     }, range
 ; 
 
+changeDevice ABSTRACT (InAreaConditionValue);
+FORM inAreaConditionValue
+    OBJECTS v = InAreaConditionValue PANEL
+    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameArea;
+; 
+
 change ABSTRACT (ConditionValue);
 change(FixedConditionValue fv) + {
     INPUT n = name(fv) CHANGE;
@@ -89,9 +103,22 @@ change(FixedConditionValue fv) + {
 FORM conditionValues 'Значения'
     OBJECTS v = ConditionValue
     PROPERTIES (v) objectClassName READONLY, name ON CHANGE change(v), currentValue, 
-                'Добавить фиксированное значение'=NEW[FixedConditionValue], 
-                'Добавить среднее за интервал'=NEW[AverageMeasurementConditionValue] 
+                fixed 'Фиксированное значение'=NEW[FixedConditionValue], 
+                average 'Среднее за интервал'=NEW[AverageMeasurementConditionValue],
+                in 'Проверка области'=NEW[InAreaConditionValue]                 
 ;
+DESIGN conditionValues {
+    OBJECTS {
+        NEW add {
+            caption = 'Добавить';
+            type = CONTAINERH;
+            MOVE PROPERTY (fixed);
+            MOVE PROPERTY (average);
+            MOVE PROPERTY (in);            
+        }
+    }
+}
+
 
 CLASS ValuesCondition 'Значение A больше или равно B' : ManagerCondition; // пока >=
 left = DATA ConditionValue (ValuesCondition) NONULL;
@@ -107,7 +134,7 @@ dialogChangeRightConditionValue ABSTRACT (ValuesCondition);
 FORM valuesCondition 'Сравнение значений'
     OBJECTS vc = ValuesCondition PANEL
     PROPERTIES nameLeft(vc) ON CHANGE { dialogChangeLeftConditionValue(vc); }, 
-               ''='>' IF vc, 
+               ''='>=' IF vc, 
                ' > B ' = nameRight(vc) ON CHANGE { dialogChangeRightConditionValue(vc);} 
 ;
 edit(ValuesCondition v) + { DIALOG valuesCondition OBJECTS vc=v; }; // чтобы не во вкладке, а в диалоге показывалось

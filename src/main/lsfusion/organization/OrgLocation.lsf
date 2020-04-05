@@ -5,8 +5,13 @@ REQUIRE Location, Organization, OrgUser;
 NAMESPACE Location;
 
 organization 'Организация' = DATA Organization (Location) AUTOSET ;
+organization 'Организация' = DATA Organization (Area) AUTOSET ;
 
 @addOrganization(locations, l);
+
+EXTEND FORM locations
+    FILTERS organization(a) = o
+;
 
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Location) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
 FORM selectLocations 'Выбор точек размещения'

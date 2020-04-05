@@ -57,7 +57,7 @@ META addOrganization(form, object)
     
     DESIGN form {
         top {
-            NEW paramBox BEFORE BOX(object) {
+            NEW paramBox FIRST {
                 type = CONTAINERH;
                 MOVE BOX(o);
                 fill = 0;

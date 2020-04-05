@@ -1,6 +1,6 @@
 MODULE Location;
 
-REQUIRE Controller, Device, Geo;
+REQUIRE Controller, Device, Geo, Measurement;
 
 CLASS Location 'Точка размещения' : POI;
 name 'Название' = DATA STRING[60] (Location) NONULL IN id;
@@ -14,14 +14,23 @@ longitude(Location l) += longitude(l);
 
 FORM locations 'Точки размещения'
     OBJECTS l = Location
-    PROPERTIES(l) name, address, latitude, longitude, calculateCoordinates GRID, NEW, DELETE;
+    PROPERTIES(l) name, address, latitude = latitude, longitude = longitude, popupName = name PANEL, calculateCoordinates GRID, NEW, DELETE;
 ;
 
 DESIGN locations {
+    GRID(l) {
+        NEW popup {
+            MOVE PROPERTY (popupName);
+        }
+    }
     OBJECTS {
         NEW top {
             type = CONTAINERV;
-            MOVE BOX(l);
+            NEW tab {
+                type = TABBED;
+                MOVE BOX(l);
+                fill = 1;
+            }
             fill = 1;
         }
     }
@@ -41,10 +50,57 @@ EXTEND FORM controllers
     PROPERTIES (c) nameLocation
 ;
 
+latitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Широта';
+longitudeType = GROUP AGGR MeasurementType type WHERE name(type) = 'Долгота';
+locationType = GROUP AGGR MeasurementType type WHERE name(type) = 'Точка размещения';
+
+location = ABSTRACT Location (Measurement);
 location = DATA Location (Device);
-nameLocation 'Точка размещения' = name(location(Device d));
-latitude 'Широта' (Device d) = latitude(location(d));
-longitude 'Долгота' (Device d) = longitude(location(d));
+
+latitude 'Широта' (Measurement m) = OVERRIDE value(m, latitudeType()), latitude(location(m));
+longitude 'Долгота' (Measurement m) = OVERRIDE value(m, longitudeType()), longitude(location(m));
+
+latitude 'Широта' (Device d) = OVERRIDE latitude(lastMeasurement(d)), latitude(location(d)) MATERIALIZED;
+longitude 'Долгота' (Device d) = OVERRIDE longitude(lastMeasurement(d)), longitude(location(d)) MATERIALIZED;
+nameLocation 'Точка размещения (по умолч.)' = name(location(Device d));
+
 EXTEND FORM devices
     PROPERTIES (d) nameLocation, latitude = latitude, longitude = longitude
 ;
+
+CLASS Area 'Область размещения';
+name 'Имя' = DATA STRING (Area) IN id;
+
+CLASS AreaPolygon 'Полигон';
+area = DATA Area (AreaPolygon);
+coordinates 'Координаты' = DATA STRING (AreaPolygon);
+coordinates(AreaPolygon a) <- '53.84684032429679 27.561952658741678,53.92699222038149 27.641596092859622,53.91728609378836 27.4658280611572' WHEN SET (a IS AreaPolygon); // minsk
+
+isIn(DOUBLE latitude, DOUBLE longitude, Area area) = GROUP SUM 1 IF isPointInPolygon(latitude, longitude, coordinates(AreaPolygon ap)) BY area(ap);
+isIn(Device d, Area area) = isIn(latitude(d), longitude(d), area);
+
+EXTEND FORM locations
+    OBJECTS a = Area
+    PROPERTIES(a) name, NEW, DELETE
+    
+    OBJECTS av = AreaPolygon
+    PROPERTIES (av) polygon = coordinates, NEW, DELETE
+    FILTERS area(av) = a
+;
+
+DESIGN locations {
+    tab {
+        NEW areas {
+            type = SPLITV;
+            caption = 'Области размещения';
+            
+            MOVE BOX(a) {
+                fill = 1;
+            }
+            MOVE BOX(av) {
+                fill = 2;
+            }        
+        }
+    }
+}
+
