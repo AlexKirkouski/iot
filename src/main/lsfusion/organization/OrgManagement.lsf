@@ -63,8 +63,8 @@ onStarted() + {
 //    OBJECTS o = Organization BEFORE cm
 //    FILTERS organization(ch) = o
 //;
-dialogChangeChats(ControllerManager cm) + {
-    DIALOG changeChats OBJECTS cm = cm FILTERS organization(ch) = organization(cm);
+dialogChangeChats(ControllerManager cmm) + {
+    DIALOG changeChats OBJECTS cm = cmm FILTERS organization(ch) = organization(cmm);
 }
 
 CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';

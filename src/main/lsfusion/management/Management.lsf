@@ -60,7 +60,7 @@ measurementType = DATA MeasurementType (AverageMeasurementConditionValue) NONULL
 nameDevice 'Устройство' (AverageMeasurementConditionValue v) = id(device(v)) IN id;
 nameMeasurementType 'Тип измерения' (AverageMeasurementConditionValue v) = name(measurementType(v)) IN id;
 range 'Интервал' = DATA LONG (AverageMeasurementConditionValue) IN id;
-currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentDateTimeSnapshot(), range(v)), currentDateTimeSnapshot());
+currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentZDateTimeSnapshot(), range(v)), currentZDateTimeSnapshot());
 name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
@@ -71,7 +71,7 @@ name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
 
 CLASS DelayConditionValue 'Секунд с последнего измерения' : ConditionValue;
 delayConditionValue = AGGR DelayConditionValue WHERE Device device IS Device;
-currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentDateTimeSnapshot());
+currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentZDateTimeSnapshot());
 name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 changeDevice ABSTRACT (AverageMeasurementConditionValue);
@@ -250,14 +250,14 @@ checkWorking(ControllerManager c) {
 
 CLASS ManagerLog 'Лог управления';
 manager = DATA ControllerManager (ManagerLog);
-dateTime 'Время' = DATA DATETIME (ManagerLog);
+dateTime 'Время' = DATA ZDATETIME (ManagerLog);
 isOn 'Вкл.' = DATA BOOLEAN (ManagerLog);
 INDEX manager(ManagerLog l), dateTime(l), l;
 lastLog = GROUP LAST ManagerLog l ORDER dateTime(l), l BY manager(l) MATERIALIZED;
 
 WHEN CHANGED(isOn(ControllerManager c)) DO NEW l=ManagerLog {
     manager(l) <- c;
-    dateTime(l) <- currentDateTimeSnapshot();
+    dateTime(l) <- currentZDateTimeSnapshot();
     isOn(l) <- isOn(c);
 }
 
@@ -275,7 +275,7 @@ DESIGN controllerManager {
 
 CLASS LastChangeConditionValue 'Секунд с последнего изменения' : ConditionValue;
 lastChangeConditionValue = AGGR LastChangeConditionValue WHERE ControllerManager manager IS ControllerManager;
-currentValue(LastChangeConditionValue v) += subtractSeconds(dateTime(lastLog(manager(v))), currentDateTimeSnapshot());
+currentValue(LastChangeConditionValue v) += subtractSeconds(dateTime(lastLog(manager(v))), currentZDateTimeSnapshot());
 name(LastChangeConditionValue v) += 'Секунд с последнего изменения: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 
 CLASS StateConditionValue 'Включен' : ConditionValue;

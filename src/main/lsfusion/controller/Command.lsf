@@ -42,7 +42,7 @@ commandId 'ИД команды' (RunCommand r) = id(command(r));
 commandName 'Название команды' (RunCommand r) = name(command(r));
 commandSignal 'Сигнал управления' (RunCommand r) = signal(command(r));
 
-dateTime 'Время' = DATA DATETIME (RunCommand);
+dateTime 'Время' = DATA ZDATETIME (RunCommand);
 user 'Пользователь' = DATA User (RunCommand);
 
 eMessage 'Текст ошибки' = DATA STRING[100] (RunCommand);
@@ -61,7 +61,7 @@ transmitControlSignal 'Выполнить' (Command cm, Controller c) {
         NEW r = RunCommand {
             controller(r) <- c;
             command(r) <- cm;
-            dateTime(r) <- currentDateTime();
+            dateTime(r) <- currentZDateTime();
             user(r) <- currentUser();
             IF cntECode() > 0 THEN {
                 eCode(r) <- cntECode();

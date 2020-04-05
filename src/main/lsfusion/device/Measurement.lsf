@@ -63,7 +63,7 @@ CLASS Measurement 'Измерение';
 device = DATA Device (Measurement);
 deviceId 'ИД устройства' (Measurement m) = id(device(m)) MATERIALIZED;
 nameDeviceType 'Тип устройства' (Measurement m) = name(type(device(m)));
-dateTime 'Время измерения' = DATA DATETIME (Measurement);
+dateTime 'Время измерения' = DATA ZDATETIME (Measurement);
 idImport 'ИД импортируемое' = DATA LONG (Measurement);
 
 value 'Значение (raw)' = DATA DOUBLE (Measurement, MeasurementType);
@@ -71,21 +71,21 @@ value 'Значение (raw)' = DATA DOUBLE (Measurement, MeasurementType);
 INDEX dateTime(Measurement m), m;
 INDEX device(Measurement m), dateTime(m), m;
 lastMeasurement = GROUP LAST Measurement m ORDER dateTime(m), m BY device(m) MATERIALIZED;
-measurement(Device d, DATETIME dt) = GROUP LAST Measurement m IF dateTime(m) <= dt ORDER dateTime(m), m BY device(m);
+measurement(Device d, ZDATETIME dt) = GROUP LAST Measurement m IF dateTime(m) <= dt ORDER dateTime(m), m BY device(m);
 lastValue 'Тек. значение (raw)' (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
-value 'Значение (raw)' (Device d, MeasurementType m, DATETIME dt) = value(measurement(d, dt), m);
+value 'Значение (raw)' (Device d, MeasurementType m, ZDATETIME dt) = value(measurement(d, dt), m);
 
 // подсчет среднего
 // дольше стартует но быстрее на добавление работает, с изменениями все равно смотрит для всех записей
-//prevMeasurement (Device d, DATETIME dt, Measurement m) = GROUP LAST Measurement mt IF device(mt) = d AND (dateTime(mt) < dt OR (dateTime(mt) = dt AND mt < m)) ORDER dateTime(mt), mt;
+//prevMeasurement (Device d, ZDATETIME dt, Measurement m) = GROUP LAST Measurement mt IF device(mt) = d AND (dateTime(mt) < dt OR (dateTime(mt) = dt AND mt < m)) ORDER dateTime(mt), mt;
 //prevMeasurement (Measurement m) = prevMeasurement(device(m), dateTime(m), m) MATERIALIZED;
 // быстро стартует, но обновляется плохо
 //prevMeasurement (Measurement m) = PARTITION PREV m ORDER dateTime(m), m BY device(m) MATERIALIZED;
 //changeValue(Measurement m, MeasurementType mt) = value(m, mt) (-) value(prevMeasurement(m), mt) MATERIALIZED;
-//value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = value(d, mt, dateFrom) (+) 
+//value(Device d, MeasurementType mt, ZDATETIME dateFrom, ZDATETIME dateTo) = value(d, mt, dateFrom) (+) 
 //                                                                    ((GROUP SUM changeValue(Measurement m, mt) * subtractSeconds(dateTime(m), dateTo) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo) / subtractSeconds(dateFrom, dateTo));
 // не точно при непостоянных измерениях, но зато быстро
-value(Device d, MeasurementType mt, DATETIME dateFrom, DATETIME dateTo) = ((value(d, mt, dateFrom) (+) (GROUP SUM value(Measurement m, mt) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)) / (1 (+) (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)));
+value(Device d, MeasurementType mt, ZDATETIME dateFrom, ZDATETIME dateTo) = ((value(d, mt, dateFrom) (+) (GROUP SUM value(Measurement m, mt) IF device(m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)) / (1 (+) (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) > dateFrom AND dateTime(m) <= dateTo)));
   
 background = ABSTRACT COLOR (Device, MeasurementType);
 

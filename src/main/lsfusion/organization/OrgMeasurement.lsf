@@ -59,8 +59,8 @@ EXTEND FORM devices
 
 // REPORTS
 
-toDateTime(DATE date, INTEGER hour) = sumMinutes(toDateTime(date), hour * 60);
-between(DATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
+toDateTime(DATE date, INTEGER hour) = sumMinutes(ZDATETIME (date), hour * 60);
+between(ZDATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
 value(DATE date, INTEGER hour, Device d, MeasurementType mt) = 
                 round((GROUP SUM value(Measurement m, mt) IF between(dateTime(m), date, hour) AND device(m) = d) /
                 (GROUP SUM 1 IF between(dateTime(Measurement m), date, hour) AND device(m) = d), 2); 
@@ -179,13 +179,13 @@ FORM selectDevices 'Выбор датчиков'
 ;
 selectedDevices 'Датчики' = GROUP CONCAT ''+id(Device d) IF selected(d),',' ORDER d;
 hasSelectedDevices = GROUP MAX selected(Device d) PREREAD;
-dateFrom 'Время от' = DATA LOCAL DATETIME ();
-dateTo 'Время до' = DATA LOCAL DATETIME ();
+dateFrom 'Время от' = DATA LOCAL ZDATETIME ();
+dateTo 'Время до' = DATA LOCAL ZDATETIME ();
 
 EXTEND FORM deviceMovement
     EVENTS ON INIT {
-        dateFrom() <- currentDateTime();
-        dateTo() <- currentDateTime();            
+        dateFrom() <- currentZDateTime();
+        dateTo() <- currentZDateTime();            
     }
     PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(d) = o; }, dateFrom(), dateTo()
     FILTERS (NOT hasSelectedDevices() AND hasCoords(device(m))) OR selected(device(m)),
