@@ -79,8 +79,10 @@ FORM reportOrg
     
     OBJECTS mt = MeasurementType
     FILTERS show(type(d), mt)
+
+    PROPERTIES VALUE(dFrom), VALUE(dTo), VALUE(d), VALUE(o), VALUE(mt) 
  
-    PROPERTIES name = toDateTime(dt, h)
+    PROPERTIES name 'Время' = DATETIME(toDateTime(dt, h))
     PROPERTIES cl = colorLimit(o, mt, value(dt, h, d, mt)) COLUMNS (mt)
     PROPERTIES value(dt, h, d, mt) COLUMNS (mt) HEADER name(mt)
 ;
