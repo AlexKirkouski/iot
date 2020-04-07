@@ -72,7 +72,7 @@ EXTEND FORM deviceTypes
 ;
 
 FORM reportOrg
-    OBJECTS dFrom = DATE, dTo = DATE, d = Device, o = Organization
+    OBJECTS dFrom = DATE, dTo = DATE, d = Device, o = Organization SUBREPORT
     
     OBJECTS (dt = DATE, h = INTEGER)
     FILTERS iterate(dt, dFrom, dTo) AND iterate(h, 0, 23)
@@ -80,8 +80,6 @@ FORM reportOrg
     OBJECTS mt = MeasurementType
     FILTERS show(type(d), mt)
 
-    PROPERTIES VALUE(dFrom), VALUE(dTo), VALUE(d), VALUE(o), VALUE(mt) 
- 
     PROPERTIES name 'Время' = DATETIME(toDateTime(dt, h))
     PROPERTIES cl = colorLimit(o, mt, value(dt, h, d, mt)) COLUMNS (mt)
     PROPERTIES value(dt, h, d, mt) COLUMNS (mt) HEADER name(mt)

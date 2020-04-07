@@ -59,13 +59,13 @@
 				<subreportExpression><![CDATA[$P{o_report}]]></subreportExpression>
 			</subreport>
 		</band>
-		<band>
-			<subreport>
-				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="13a065ec-a8ad-4955-9a7e-7853f7d02bb5"/>
-				<parametersMapExpression><![CDATA[$P{mt_params}]]></parametersMapExpression>
-				<dataSourceExpression><![CDATA[$P{mt_source}]]></dataSourceExpression>
-				<subreportExpression><![CDATA[$P{mt_report}]]></subreportExpression>
-			</subreport>
-		</band>
+<!--		<band>-->
+<!--			<subreport>-->
+<!--				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="13a065ec-a8ad-4955-9a7e-7853f7d02bb5"/>-->
+<!--				<parametersMapExpression><![CDATA[$P{mt_params}]]></parametersMapExpression>-->
+<!--				<dataSourceExpression><![CDATA[$P{mt_source}]]></dataSourceExpression>-->
+<!--				<subreportExpression><![CDATA[$P{mt_report}]]></subreportExpression>-->
+<!--			</subreport>-->
+<!--		</band>-->
 	</detail>
 </jasperReport>
