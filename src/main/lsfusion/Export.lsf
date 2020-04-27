@@ -1,0 +1,64 @@
+MODULE Export;
+
+REQUIRE Device, OrgMeasurement;
+
+NAMESPACE Export;
+
+exportName 'Имя экспорта' = DATA STRING (DeviceType, MeasurementType);
+
+url 'URL экспорта' = DATA STRING (Organization);
+authToken 'Токен аутентификации' = DATA STRING (Organization);
+
+exportDateFrom 'Время с которого экспортировать' = DATA ZDATETIME (Organization);
+exported 'Экспортирован' = DATA BOOLEAN (Measurement);
+toExport 'Ожидает экспорта' (Measurement m) = dateTime(m) >= exportDateFrom(organization(m)) AND NOT exported(m) MATERIALIZED INDEXED;
+
+exportMeasurements 'Экспортировать измерения' (Organization o) {
+    IF NOT exportDateFrom(o) THEN {
+        MESSAGE 'Для организации ' + name(o) + ' не задана время с которого надо экспортировать данные';
+        RETURN;
+    }
+    headers('Authorization') <- 'Bearer: ' + authToken(o);
+    APPLY NESTED (exportFile) {
+        EXPORT JSON FROM sensorNumber = deviceId(Measurement m), date = dateTime(m), value = value(m, MeasurementType mt), valueType = exportName WHERE toExport(m) AND organization(m) = o AND exportName = exportName(type(device(m)), mt);
+        LOCAL result = JSONFILE ();     
+        EXTERNAL HTTP url(o) HEADERS headers PARAMS exportFile() TO result;
+        IF NOT failedHttp() THEN
+            exported(Measurement m) <- TRUE WHERE toExport(m);
+        ELSE 
+            MESSAGE 'Ошибка. Код ошибки: ' + statusHttp() + '\nОтвет:' + result() NOWAIT; 
+    }
+}
+
+EXTEND FORM organization
+    PROPERTIES (o) url, authToken, exportDateFrom
+;
+
+DESIGN organization {
+    BOX (o) {
+        NEW export {
+            caption = 'Экспорт';
+            type = CONTAINERH;
+            MOVE PROPERTY (url(o));
+            MOVE PROPERTY (authToken(o));
+            MOVE PROPERTY (exportDateFrom(o));
+        }
+    }
+}
+
+EXTEND FORM devices
+    PROPERTIES (m) SHOWIF exportDateFrom(organization(m)) exported, toExport
+;
+
+EXTEND FORM deviceTypes
+    PROPERTIES (t, mt) exportName 
+;
+
+EXTEND FORM organizations
+    PROPERTIES (o) exportMeasurements TOOLBAR;
+;
+
+exportAllMeasurements() {
+    FOR exportDateFrom(Organization o) DO
+        exportMeasurements(o);
+}
