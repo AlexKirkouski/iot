@@ -18,10 +18,10 @@ exportMeasurements 'Экспортировать измерения' (Organizati
         MESSAGE 'Для организации ' + name(o) + ' не задана время с которого надо экспортировать данные';
         RETURN;
     }
-    headers('Authorization') <- 'Bearer: ' + authToken(o);
     APPLY NESTED (exportFile) {
         EXPORT JSON FROM sensorNumber = deviceId(Measurement m), date = dateTime(m), value = value(m, MeasurementType mt), valueType = exportName WHERE toExport(m) AND organization(m) = o AND exportName = exportName(type(device(m)), mt);
         LOCAL result = JSONFILE ();     
+        headers('Authorization') <- 'Bearer: ' + authToken(o);
         EXTERNAL HTTP url(o) HEADERS headers PARAMS exportFile() TO result;
         IF NOT failedHttp() THEN
             exported(Measurement m) <- TRUE WHERE toExport(m);
