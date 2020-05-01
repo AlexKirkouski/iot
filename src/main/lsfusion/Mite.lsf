@@ -5,3 +5,13 @@ REQUIRE Options, Organization,
         OrgController, OrgControllerDevice,
         OrgManagement,
         MqttServer, Server;
+
+simID 'Sim ID' = DATA STRING (Device);
+EXTEND FORM deviceTypes
+    PROPERTIES (d) simID
+;
+
+simID 'Sim ID' = DATA STRING (Controller);
+EXTEND FORM controllerTypes
+    PROPERTIES (c) simID
+;
