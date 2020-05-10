@@ -62,7 +62,7 @@ EXTEND FORM devices
 toDateTime(DATE date, INTEGER hour) = sumMinutes(ZDATETIME (date), hour * 60);
 between(ZDATETIME dateTime, DATE date, INTEGER hour) = dateTime >= toDateTime(date, hour) AND dateTime < toDateTime(date, hour + 1);  
 value(DATE date, INTEGER hour, Device d, MeasurementType mt) = 
-                round((GROUP SUM value(Measurement m, mt) IF between(dateTime(m), date, hour) AND device(m) = d) /
+                round((GROUP SUM value(Measurement m, mt) IF between(dateTime(m, mt), date, hour) AND device(m, mt) = d) /
                 (GROUP SUM 1 IF between(dateTime(Measurement m), date, hour) AND device(m) = d), 2); 
 
 show 'Показывать в отчете' = DATA BOOLEAN (DeviceType, MeasurementType);
@@ -134,11 +134,13 @@ EXTEND FORM locations
 ;
 
 location = GROUP AGGR Location l BY organization(l), value(l) MATERIALIZED;
-location (Measurement m) += location(organization(m), LONG(round0(value(m, locationType()))));
+locationValue 'Знач. точки разм.' (Measurement m) = LONG(round0(value(m, locationType())));
+
+location (Measurement m) += location(organization(m), locationValue(m));
 
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement
-    PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), groupEquals 'Гр' = TRUE DRAW m  
+    PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), locationValue(m), groupEquals 'Гр' = TRUE DRAW m  
     ORDER dateTime(m)
 ;
 

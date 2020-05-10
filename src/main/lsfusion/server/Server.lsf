@@ -71,7 +71,7 @@ importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server serv
                                                 '\t\t\t'+            'device(m) <- device(id);\n' +
                                                 '\t\t\t'+            'idImport(m) <- id;\n' +
                                                 '\t\t\t'+            'server(m) <- server;\n' +
-                                      (OVERRIDE('\t\t\t'+            'value(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImportValue(n, dt, mt),'' ORDER n) + ';\n'),'') + 
+                                      (OVERRIDE('\t\t\t'+            'unAdjustedValue(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImportValue(n, dt, mt),'' ORDER n) + ';\n'),'') + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
                                                 '\t'+  'APPLY;\n' +

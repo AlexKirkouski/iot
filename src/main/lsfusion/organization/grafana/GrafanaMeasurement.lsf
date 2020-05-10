@@ -6,7 +6,6 @@ NAMESPACE Measurement;
 
 ///// Таблица, из которой Grafana берет данные
 TABLE values (Measurement, MeasurementType);
-dateTime (Measurement m, MeasurementType mt) = dateTime(m) IF value(m, mt) MATERIALIZED ;
 id (Measurement m, MeasurementType mt) = id(device(m)) IF value(m, mt) MATERIALIZED ;
 id_MeasurementType (Measurement m, MeasurementType mt) = id(mt) IF value(m, mt) MATERIALIZED INDEXED;
 INDEX id(Measurement m, MeasurementType mt), id_MeasurementType(m, mt), dateTime(m, mt);
