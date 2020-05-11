@@ -68,6 +68,7 @@ transmitControlSignal 'Выполнить' (Command cm, Controller c) {
                 eMessage(r) <- cntEMessage();
             }
         }
+        APPLY;
         IF cntECode() > 0 THEN 
             MESSAGE cntEMessage();
     }
