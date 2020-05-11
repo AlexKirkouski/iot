@@ -53,30 +53,31 @@ cntECode = DATA LOCAL INTEGER ();
 mqttRunContent INTERNAL 'mqtt.MqttRunContent' (MqttServer, Controller, STRING ); 
 
 transmitControlSignal 'Выполнить' (Command cm, Controller c) {
-    NEWSESSION {    
-        cntEMessage() <- '';
-        cntECode() <- 0;
-        mqttRunContent(server(c), c, signal(cm));
-        
-        NEW r = RunCommand {
-            controller(r) <- c;
-            command(r) <- cm;
-            dateTime(r) <- currentZDateTime();
-            user(r) <- currentUser();
-            IF cntECode() > 0 THEN {
-                eCode(r) <- cntECode();
-                eMessage(r) <- cntEMessage();
-            }
+    cntEMessage() <- '';
+    cntECode() <- 0;
+    mqttRunContent(server(c), c, signal(cm));
+    
+    NEW r = RunCommand {
+        controller(r) <- c;
+        command(r) <- cm;
+        dateTime(r) <- currentZDateTime();
+        user(r) <- currentUser();
+        IF cntECode() > 0 THEN {
+            eCode(r) <- cntECode();
+            eMessage(r) <- cntEMessage();
         }
-        APPLY;
-        IF cntECode() > 0 THEN 
-            MESSAGE cntEMessage();
     }
+    IF cntECode() > 0 THEN 
+        MESSAGE cntEMessage();
 }
 
 sendCommand 'Выполнить' (Command cm, Controller c) {
-    transmitControlSignal(cm, c);
-    MESSAGE 'Команда успешно выполнена';
+    NEWSESSION {    
+        transmitControlSignal(cm, c);
+        APPLY;
+
+        MESSAGE 'Команда успешно выполнена';
+    }
 }
 
 EXTEND FORM controllers
