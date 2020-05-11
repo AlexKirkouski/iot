@@ -86,7 +86,7 @@ WHEN SETCHANGED (device(Measurement m)) AND Device cp = copyMeasurementsFrom(dev
         device(cm) <- cp;
         idImport(cm) <- idImport(m);
         server(cm) <- server(m);
-        value(cm, MeasurementType mt) <- value(m, mt);       
+        unAdjustedValue(cm, MeasurementType mt) <- unAdjustedValue(m, mt);       
     }
 
 EXTEND FORM deviceTypes
