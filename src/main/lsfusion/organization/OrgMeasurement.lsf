@@ -143,6 +143,10 @@ FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement
     PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), locationValue(m), groupEquals 'Гр' = TRUE DRAW m  
     ORDERS dateTime(m)
+    
+    OBJECTS cmt = MeasurementType
+    FILTERS value(m,cmt)
+    PROPERTIES DRAW m COLUMNS (cmt) PANEL displayValue(m, cmt) HEADER name(cmt) // , lastValue(d, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt)
 ;
 
 // filters
@@ -163,6 +167,13 @@ DESIGN deviceMovement {
             type = CONTAINERH;
             MOVE BOX(o);
             fill = 0;
+        }
+    }
+    GRID (m) {
+        NEW dPanel {
+            MOVE PROPERTY(displayValue(m, cmt)) {
+                columnKeysVertical = TRUE;
+            }
         }
     }
 } 
