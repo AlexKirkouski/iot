@@ -105,7 +105,7 @@ EXTEND FORM devices
     PROPERTIES(m) READONLY dateTime  
     PROPERTIES COLUMNS (cmt) displayValue(m, cmt) HEADER name(cmt), value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt) // READONLY 
     FILTERS number(type(device(m)),cmt), device(m)=d
-    ORDER dateTime(m) DESC
+    ORDERS dateTime(m) DESC
     
     PROPERTIES BACKGROUND background(d, cmt) DRAW d COLUMNS (cmt) PANEL lastDisplayValue(d, cmt) HEADER name(cmt) // , lastValue(d, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt)
 ;

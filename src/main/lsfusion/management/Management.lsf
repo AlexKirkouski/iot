@@ -217,7 +217,7 @@ FORM controllerManager 'Управление'
     PROPERTIES (mc) 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
     PROPERTIES (c) onMessage, offMessage
     FILTERS c = controller(mc)
-    ORDER order(mc)
+    ORDERS order(mc)
     
     EDIT ControllerManager OBJECT c;
 ;

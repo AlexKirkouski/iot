@@ -34,7 +34,7 @@ FORM servers 'Сервера UDP'
     PROPERTIES (m) dateTime READONLY 
     PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)') READONLY
     PROPERTIES value(m, mt) READONLY 
-    ORDER dateTime(m) DESC
+    ORDERS dateTime(m) DESC
     FILTERS server(m) = s  
 ;
 

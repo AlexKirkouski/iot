@@ -86,6 +86,7 @@ FORM reportOrg
 ;
 
 exportReportXls(Organization o, DATE dFrom, DATE dTo) {
+    TRY delete('myfile.xlsx'); // if it wasn't deleted before
     FOR organization(Device d) = o DO { 
         PRINT reportOrg OBJECTS d = d, dFrom = dFrom, dTo = dTo, o = o XLSX SHEET 'Устройство ' + id(d) TO exportExcelFile;
         WRITE exportExcelFile() TO 'myfile' APPEND;
@@ -141,7 +142,7 @@ location (Measurement m) += location(organization(m), locationValue(m));
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS m = Measurement
     PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), locationValue(m), groupEquals 'Гр' = TRUE DRAW m  
-    ORDER dateTime(m)
+    ORDERS dateTime(m)
 ;
 
 // filters

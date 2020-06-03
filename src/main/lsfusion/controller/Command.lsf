@@ -21,7 +21,7 @@ command = GROUP AGGR Command c BY id(c);
 EXTEND FORM controllerTypes
     OBJECTS cm = Command
     PROPERTIES (cm) id, name, signal, NEW, DELETE
-    ORDER id(cm)
+    ORDERS id(cm)
     FILTERS controllerType(cm) = t
 ;
 
@@ -88,7 +88,7 @@ EXTEND FORM controllers
 
     OBJECTS r = RunCommand 
     PROPERTIES(r) READONLY dateTime, controllerId, commandId, commandName, commandSignal, user, eCode, eMessage
-    ORDER dateTime(r) DESC
+    ORDERS dateTime(r) DESC
     FILTERS controller(r) = c;
 ;
 
