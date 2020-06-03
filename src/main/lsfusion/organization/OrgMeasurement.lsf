@@ -140,7 +140,7 @@ locationValue 'Знач. точки разм.' (Measurement m) = LONG(round0(val
 location (Measurement m) += location(organization(m), locationValue(m));
 
 FORM deviceMovement 'Перемещение датчиков'
-    OBJECTS m = Measurement
+    OBJECTS m = Measurement MAP
     PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), locationValue(m), groupEquals 'Гр' = TRUE DRAW m  
     ORDERS dateTime(m)
     
