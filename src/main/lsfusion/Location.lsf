@@ -5,12 +5,12 @@ REQUIRE Controller, Device, Geo, Measurement;
 CLASS Location 'Точка размещения' : POI;
 name 'Название' = DATA STRING[60] (Location) NONULL IN id;
 address 'Адрес' = DATA STRING[50] (Location) IN id;
-latitude 'Широта' = DATA NUMERIC[11,6] (Location) IN id;
-longitude 'Долгота' = DATA NUMERIC[11,6] (Location) IN id;
+latitude 'Широта' = DATA NUMERIC[13,8] (Location) IN id;
+longitude 'Долгота' = DATA NUMERIC[13,8] (Location) IN id;
 
 mainAddress(Location l) += address(l);
-latitude(Location l) += latitude(l);
-longitude(Location l) += longitude(l);
+latitude(Location l) += NUMERIC[11,6](latitude(l));
+longitude(Location l) += NUMERIC[11,6](longitude(l));
 
 FORM locations 'Точки размещения'
     OBJECTS l = Location
