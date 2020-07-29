@@ -79,8 +79,8 @@ END
 
 FORM organizationUsers 'Пользователи'
     OBJECTS c = CustomUser
-    PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, NEW, DELETE
-    FILTERS isOrg(c)
+    PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, nameMainRole 
+//    FILTERS isOrg(c)
 ;
 DESIGN organizationUsers {
     OBJECTS {
@@ -99,6 +99,11 @@ DESIGN organizationUsers {
 } 
 
 @addOrganization(organizationUsers, c);
+
+EXTEND FORM organizationUsers
+    PROPERTIES 'Добавить' = { NEW u = CustomUser { mainRole[User](u) <- userRoleSID('orguser'); organization(u) <- o; } } 
+    PROPERTIES (c) DELETE
+;
 
 NAVIGATOR {
     data {
