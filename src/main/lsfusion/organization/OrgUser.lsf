@@ -16,24 +16,30 @@ EXTEND FORM customUsers
 ;
 
 fillDefaultAccess(UserRole r) {
-    forbidAllForms(r) <- TRUE; 
+    dataPermission(r, navigatorElementCanonicalName('System.root')) <- Permission.forbid;
     defaultNumber(r, navigatorElementCanonicalName('Location.locations')) <- 1;
     defaultNumber(r, navigatorElementCanonicalName('Device.devices')) <- 2;
     defaultNumber(r, navigatorElementCanonicalName('Controller.controllers')) <- 3;
     defaultNumber(r, navigatorElementCanonicalName('ControllerManagement.controllerManagers')) <- 4;
 }
 
-orgAdminRole = userRoleSID('orgadmin');
-orgUserRole = userRoleSID('orguser');
-isOrg(UserRole r) = (r = orgAdminRole()) OR (r = orgUserRole());
+isOrg 'Роль организации' (UserRole r) = DATA BOOLEAN (UserRole);
 isOrg(CustomUser user) = isOrg(mainRole(user));
 CONSTRAINT (organization(CustomUser u) AND NOT isOrg(u)) OR (isOrg(u) AND NOT organization(u)) MESSAGE 'Для этой роли пользователя должна быть задана организация'; 
+
+copy(UserRole to, UserRole fr) + {
+    isOrg(to) <- isOrg(fr);
+}
+EXTEND FORM securityPolicy
+    PROPERTIES (ur) isOrg
+;
 
 onStarted() + {
     IF NOT userRoleSID('orgadmin') THEN 
         NEW r = UserRole {
             sid(r) <- 'orgadmin';
             name(r) <- 'Администратор организации';
+            isOrg(r) <- TRUE;
             fillDefaultAccess(r);
             defaultNumber(r, navigatorElementCanonicalName('Organization.organizationUsers')) <- 5;
         }
@@ -42,8 +48,13 @@ onStarted() + {
         NEW r = UserRole {
             sid(r) <- 'orguser';
             name(r) <- 'Пользователь организации';
+            isOrg(r) <- TRUE;
             fillDefaultAccess(r);
         }
+        
+    // временно для миграции
+    isOrg(userRoleSID('orgadmin')) <- TRUE;  
+    isOrg(userRoleSID('orguser')) <- TRUE;
 }
 
 META addOrganization(form, object)
@@ -69,7 +80,7 @@ END
 FORM organizationUsers 'Пользователи'
     OBJECTS c = CustomUser
     PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, NEW, DELETE
-    FILTERS mainRole(c) = orgUserRole()
+    FILTERS isOrg(c)
 ;
 DESIGN organizationUsers {
     OBJECTS {
