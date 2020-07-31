@@ -101,7 +101,7 @@ DESIGN organizationUsers {
 @addOrganization(organizationUsers, c);
 
 EXTEND FORM organizationUsers
-    PROPERTIES 'Добавить' = { NEW u = CustomUser { mainRole[User](u) <- userRoleSID('orguser'); organization(u) <- o; } } 
+    PROPERTIES 'Добавить' = { NEW u = CustomUser { mainRole[User](u) <- userRoleSID('orguser'); organization(u) <- o; } } DRAW c TOOLBAR
     PROPERTIES (c) DELETE
 ;
 
