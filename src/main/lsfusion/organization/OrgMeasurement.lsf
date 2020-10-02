@@ -139,40 +139,43 @@ locationValue 'Знач. точки разм.' (Measurement m) = LONG(round0(val
 
 location (Measurement m) += location(organization(m), locationValue(m));
 
+measurement = GROUP LAST Measurement m ORDER dateTime(m) BY device(m), latitude(m), longitude(m);
+
 FORM deviceMovement 'Перемещение датчиков'
-    OBJECTS m = Measurement MAP
-    PROPERTIES dateTime(m), latitude = latitude (m), longitude = longitude(m), line 'Устройство' = id(device(m)), color 'Цвет' = rgb(mod(id(device(m)) * 371, 255), 255, 255), locationValue(m), groupEquals 'Гр' = TRUE DRAW m  
+    OBJECTS gm=(m=Measurement, d=Device, la=DOUBLE, lt=DOUBLE) MAP
+    PROPERTIES dateTime(m), latitude 'Широта' = la, longitude 'Долгота' = lt, line 'Устройство' = id(d), color 'Цвет' = rgb(mod(id(d) * 371, 255), 255, 255), locationValue(m)  
     ORDERS dateTime(m)
+    FILTERS m = measurement(d, la, lt)
     
     OBJECTS cmt = MeasurementType
     FILTERS value(m,cmt)
-    PROPERTIES DRAW m COLUMNS (cmt) PANEL displayValue(m, cmt) HEADER name(cmt) // , lastValue(d, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt)
+    PROPERTIES DRAW gm COLUMNS (cmt) PANEL displayValue(m, cmt) HEADER name(cmt) // , lastValue(d, cmt) HEADER name(cmt) + ' (raw)' SHOWIF hasDisplay(cmt)
 ;
 
 // filters
 //INDEX organization(Measurement m), dateTime(m);
 
 EXTEND FORM deviceMovement
-    OBJECTS o = Organization PANEL BEFORE m
+    OBJECTS o = Organization PANEL BEFORE gm
     
     PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
     FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
     
-    FILTERS organization(m) = o
+    FILTERS organization(d) = o
 ;
 
 DESIGN deviceMovement {
     OBJECTS {
-        NEW paramBox BEFORE BOX(m) {
+        NEW paramBox BEFORE BOX(gm) {
             type = CONTAINERH;
             MOVE BOX(o);
             fill = 0;
         }
     }
-    GRID (m) {
+    GRID (gm) {
         NEW dPanel {
             MOVE PROPERTY(displayValue(m, cmt)) {
-                columnKeysVertical = TRUE;
+                panelColumnVertical = TRUE;
             }
         }
     }
@@ -181,9 +184,9 @@ DESIGN deviceMovement {
 hasCoords (Device d) = (number(type(d), latitudeType()) AND number(type(d), longitudeType())) OR number(type(d), locationType()) MATERIALIZED;
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Device) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
 FORM selectDevices 'Выбор датчиков'
-    OBJECTS d = Device
-    PROPERTIES (d) selected, id, nameLocation, nameType READONLY
-    FILTERS hasCoords(d)
+    OBJECTS dv = Device
+    PROPERTIES (dv) selected, id, nameLocation, nameType READONLY
+    FILTERS hasCoords(dv)
 ;
 selectedDevices 'Датчики' = GROUP CONCAT ''+id(Device d) IF selected(d),',' ORDER d;
 hasSelectedDevices = GROUP MAX selected(Device d) PREREAD;
@@ -195,8 +198,8 @@ EXTEND FORM deviceMovement
         dateFrom() <- currentZDateTime();
         dateTo() <- currentZDateTime();            
     }
-    PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(d) = o; }, dateFrom(), dateTo()
-    FILTERS (NOT hasSelectedDevices() AND hasCoords(device(m))) OR selected(device(m)),
+    PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(dv) = o; }, dateFrom(), dateTo()
+    FILTERS (NOT hasSelectedDevices() AND hasCoords(d)) OR selected(d),
             NOT dateFrom() OR dateTime(m) >= dateFrom(),
             NOT dateTo() OR dateTime(m) <= dateTo()
 ;
