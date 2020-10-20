@@ -1,2 +1,7 @@
 V1.0.0 {
+    STORED PROPERTY ControllerManagement.in[ControllerManagement.ManagerTo,ControllerManagement.ControllerManager] -> ControllerManagement.in[ControllerManagement.ManagerTo,ControllerManagement.Management]
+    STORED PROPERTY ControllerManagement.name[ControllerManagement.ControllerManager] -> ControllerManagement.name[ControllerManagement.Management]
+    STORED PROPERTY ControllerManagement.onMessage[ControllerManagement.ControllerManager] -> ControllerManagement.onMessage[ControllerManagement.Management]
+    STORED PROPERTY ControllerManagement.offMessage[ControllerManagement.ControllerManager] -> ControllerManagement.offMessage[ControllerManagement.Management]
+    STORED PROPERTY ControllerManagement.organization[ControllerManagement.ControllerManager] -> ControllerManagement.organization[ControllerManagement.Management]
 }

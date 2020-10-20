@@ -11,7 +11,10 @@ organization 'Организация' = DATA Organization (Area) AUTOSET ;
 
 EXTEND FORM locations
     FILTERS organization(a) = o
+    FILTERS organization(lg) = o
 ;
+
+CONSTRAINT organization(parent(Location l)) != organization(l) CHECKED BY parent[Location] MESSAGE 'У вложенных точек размещения должны совпадать организации';
 
 selected 'Выбр.' = DATA LOCAL BOOLEAN (Location) CHANGEKEY 'ADD' CHANGEMOUSE 'CTRL CLK';
 FORM selectLocations 'Выбор точек размещения'

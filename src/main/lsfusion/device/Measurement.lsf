@@ -12,7 +12,7 @@ name 'Название' = DATA STRING[100] (MeasurementType) CHARWIDTH 70 IN id;
 
 FORM measurementTypes
     OBJECTS m = MeasurementType
-    PROPERTIES (m) name
+    PROPERTIES (m) READONLY name
 ;
 
 number 'Номер в CSV-файле' = DATA INTEGER (DeviceType, MeasurementType);

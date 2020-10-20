@@ -1,6 +1,6 @@
 MODULE Location;
 
-REQUIRE Controller, Device, Geo, Measurement;
+REQUIRE Controller, Device, Geo, Measurement, Hierarchy;
 
 CLASS Location 'Точка размещения' : POI;
 name 'Название' = DATA STRING (Location) NONULL IN id;
@@ -12,9 +12,25 @@ mainAddress(Location l) += ISTRING[150](address(l));
 latitude(Location l) += NUMERIC[11,6](latitude(l));
 longitude(Location l) += NUMERIC[11,6](longitude(l));
 
+@defineHierarchy(location);
+
+CLASS Attribute 'Атрибут';
+name 'Имя' = DATA STRING (Attribute);
+value 'Значение' = DATA DOUBLE (Location, Attribute);
+recValue 'Влож. значение' (Location l, Attribute a) = GROUP LAST value(Location il, a) ORDER level(l, il) MATERIALIZED;
+
 FORM locations 'Точки размещения'
     OBJECTS l = Location
-    PROPERTIES(l) name, address, latitude = latitude, longitude = longitude, popupName = name PANEL, calculateCoordinates GRID, NEW, DELETE;
+    PROPERTIES(l) name, address, latitude = latitude, longitude = longitude, popupName = name PANEL, calculateCoordinates GRID, NEW, DELETE, nameParent
+
+    OBJECTS cat = Attribute
+    PROPERTIES COLUMNS (cat) value(l, cat) HEADER name(cat), recValue(l, cat) HEADER name(cat) + ' (влож.) '
+    
+    TREE gl lg = Location PARENT parent(lg)
+    PROPERTIES(lg) name, address
+    
+    OBJECTS at = Attribute
+    PROPERTIES (at) name, NEW, DELETE
 ;
 
 DESIGN locations {
@@ -28,8 +44,22 @@ DESIGN locations {
             type = CONTAINERV;
             NEW tab {
                 type = TABBED;
-                MOVE BOX(l);
                 fill = 1;
+                
+                NEW tabl {
+                    caption = 'Точки размещения';
+                    type = TABBED;
+                    MOVE BOX(l) {
+                        caption = 'Список';
+                    }
+                    MOVE BOX(TREE gl) {
+                        caption = 'Дерево';
+                    }                    
+                    fill = 1;
+                }
+                MOVE BOX(at) {
+                    caption = 'Атрибуты размещения';
+                }
             }
             fill = 1;
         }

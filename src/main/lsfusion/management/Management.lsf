@@ -4,8 +4,14 @@ REQUIRE ControllerDevice, Device, Measurement, Schedule, Messenger, Location;
 
 NAMESPACE ControllerManagement;
 
-CLASS ControllerManager 'Управление';
-name 'Название' = DATA STRING (ControllerManager);
+CLASS Management 'Управление';
+name 'Название' = DATA STRING (Management);
+
+CLASS ControllerManager 'Управление' : Management;
+
+CLASS TemplateManagement 'Шаблон управления' : Management;
+deviceType = DATA DeviceType (TemplateManagement) NONULL;
+nameDeviceType 'Тип шаблона устр.' (TemplateManagement management) = name(deviceType(management));
 
 CLASS ForceMode {
     on 'Включить принудительно',
@@ -19,11 +25,45 @@ CLASS ConditionType {
     or 'ИЛИ'
 }
 
+CLASS ManagementDevice 'Датчик';
+type = ABSTRACT DeviceType (ManagementDevice);
+name = ABSTRACT STRING (ManagementDevice);
+
+EXTEND CLASS Device : ManagementDevice;
+name(Device device) += STRING(id(device));
+type(Device device) += Device.type(device); 
+
+CLASS TemplateDevice 'Датчик шаблона' : ManagementDevice;
+templateDevice = AGGR TemplateDevice WHERE DeviceType type IS DeviceType;
+type(TemplateDevice device) += type(device);
+name(TemplateDevice device) += 'Вирт. : ' + STRING(name(type(device)));
+
+backgroundTemplate = RGB(0, 200, 200);
+backgroundTemplateDevice (ManagementDevice d, Management m) = m IS TemplateManagement AND d IS TemplateDevice;
+backgroundTemplateManagement (Management d, Management m) = m IS TemplateManagement AND d IS TemplateManagement;
+checkTemplateDevice(ManagementDevice d, Management m) = NOT d IS TemplateDevice OR (m IS TemplateManagement AND type[TemplateDevice](d) = deviceType[TemplateManagement](m)); 
+checkTemplateManagement(Management d, Management m) = NOT d IS TemplateManagement OR (m IS TemplateManagement AND d = m);
+
+FORM managementDevices 'Датчики (управления)'
+    OBJECTS m = Management PANEL
+    OBJECTS d = ManagementDevice
+    PROPERTIES (d) BACKGROUND backgroundTemplate() IF backgroundTemplateDevice(d, m) READONLY name, type
+    FILTERS checkTemplateDevice(d, m)
+;
+DESIGN managementDevices {
+    OBJECTS {
+        NEW top {
+            MOVE BOX (d);
+            fill = 1;
+        }
+    }
+}
+
 CLASS ABSTRACT ManagerCondition 'Условие работы';
-name 'Описание' = ABSTRACT STRING (ManagerCondition) IN id;
+name 'Описание' = ABSTRACT STRING (ManagerCondition) IN id MATERIALIZED;
 type = DATA ConditionType (ManagerCondition);
 type(ManagerCondition c) <- ConditionType.and WHEN SET(c IS ManagerCondition);
-controller = DATA ControllerManager (ManagerCondition) AUTOSET;
+controller = DATA Management (ManagerCondition) AGGR AUTOSET;
 order 'Порядок' = DATA INTEGER (ManagerCondition) CHARWIDTH 2;
 lastOrder = GROUP MAX order(ManagerCondition m) BY controller(m);
 WHEN LOCAL SETCHANGED(controller(ManagerCondition m)) DO 
@@ -37,7 +77,7 @@ nameType 'Условие' (ManagerCondition c) = IF isLast(c) THEN '' ELSE stati
 conditionGroup (ManagerCondition m) = PARTITION SUM IF type(m) = ConditionType.or THEN 1 ELSE 0 ORDER DESC order(m), m BY controller(m) MATERIALIZED;
 cgCount = GROUP SUM 1 BY controller(ManagerCondition g), conditionGroup(g) MATERIALIZED;
 isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
-isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m), conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
+isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m) AS ControllerManager, conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
 isAutoTrue(ControllerManager mg) = GROUP SUM 1 IF cgCount(mg, INTEGER g) = isTrue(mg, g) MATERIALIZED;
 shouldBeOn 'Должно быть включено' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)) MATERIALIZED; // проверяет работает условие или нет
 isOn 'Включено' (ControllerManager mg) = DATA BOOLEAN (ControllerManager);
@@ -45,31 +85,38 @@ isNotWhatShould = shouldBeOn(ControllerManager mg) AND NOT isOn(mg) OR isOn(mg) 
 backgroundIsNotWhatShould = RGB(255, 0, 0) IF isNotWhatShould(ControllerManager mg);
 
 CLASS ABSTRACT ConditionValue 'Значение';
-name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50;
+name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
 currentValue 'Значение' = ABSTRACT DOUBLE (ConditionValue) MATERIALIZED;
+device = ABSTRACT ManagementDevice (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
+management = ABSTRACT Management (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
+
+CLASS ABSTRACT InstancedConditionValue : ConditionValue;
 
 CLASS MeasurementConditionValue 'Значение измерения' : ConditionValue;
-measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(Device device), MeasurementType measurementType);
+measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(ManagementDevice device), MeasurementType measurementType);
 currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
-name(MeasurementConditionValue v) += 'Устройство: ' + id(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
-CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType, device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
+name(MeasurementConditionValue v) += 'Устройство: ' + name(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(MeasurementConditionValue v) += device(v);
+CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType[MeasurementConditionValue], device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
 
-CLASS AverageMeasurementConditionValue 'Среднее значение за интервал' : ConditionValue;
-device = DATA Device (AverageMeasurementConditionValue) NONULL PREREAD;
+CLASS AverageMeasurementConditionValue 'Среднее значение за интервал' : InstancedConditionValue;
+device = DATA ManagementDevice (AverageMeasurementConditionValue) NONULL PREREAD;
 measurementType = DATA MeasurementType (AverageMeasurementConditionValue) NONULL;
-nameDevice 'Устройство' (AverageMeasurementConditionValue v) = id(device(v)) IN id;
+nameDevice 'Устройство' (AverageMeasurementConditionValue v) = name(device(v)) IN id;
 nameMeasurementType 'Тип измерения' (AverageMeasurementConditionValue v) = name(measurementType(v)) IN id;
 range 'Интервал' = DATA LONG (AverageMeasurementConditionValue) IN id;
 currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentZDateTimeSnapshot(), range(v)), currentZDateTimeSnapshot());
 name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + nameMeasurementType(v) + ' за ' + range(v) + 'с. на ' + nameDevice(v) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(AverageMeasurementConditionValue v) += device(v);
 
-CLASS InAreaConditionValue 'Находится в области' : ConditionValue;
-device = DATA Device (InAreaConditionValue) NONULL PREREAD;
+CLASS InAreaConditionValue 'Находится в области' : InstancedConditionValue;
+device = DATA ManagementDevice (InAreaConditionValue) NONULL PREREAD;
 area = DATA Area (InAreaConditionValue) NONULL;
-nameDevice 'Устройство' (InAreaConditionValue v) = id(device(v)) IN id;
+nameDevice 'Устройство' (InAreaConditionValue v) = name(device(v)) IN id;
 nameArea 'Область' (InAreaConditionValue v) = name(area(v)) IN id;
 currentValue(InAreaConditionValue v) += 1 IF isIn(device(v), area(v));
 name(InAreaConditionValue v) += 'Находится в области: ' + nameDevice(v) + ' в ' + nameArea(v) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(InAreaConditionValue v) += device(v);
 
 CLASS FixedConditionValue 'Фиксированное значение' : ConditionValue;
 value 'Значение' = DATA DOUBLE (FixedConditionValue) IN id;
@@ -78,34 +125,49 @@ currentValue(FixedConditionValue v) += value(v);
 name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
 
 CLASS DelayConditionValue 'Секунд с последнего измерения' : ConditionValue;
-delayConditionValue = AGGR DelayConditionValue WHERE Device device IS Device;
+delayConditionValue = AGGR DelayConditionValue WHERE ManagementDevice device IS Device;
 currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentZDateTimeSnapshot());
-name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + id(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + name(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(DelayConditionValue v) += device(v);
 
-changeDevice ABSTRACT (AverageMeasurementConditionValue);
+CLASS AttributeLocationConditionValue 'Значение атрибута размещения' : ConditionValue;
+in = ABSTRACT BOOLEAN (ManagementDevice, Attribute);
+attributeConditionValue = AGGR AttributeLocationConditionValue WHERE in(ManagementDevice device, Attribute attribute);
+currentValue(AttributeLocationConditionValue v) += recValue(location(device(v)), attribute(v));
+name(AttributeLocationConditionValue v) += 'Атрибут размещения: ' + name(device(v)) + ' - ' + name(attribute(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(AttributeLocationConditionValue v) += device(v);
+
+changeDevice ABSTRACT (AverageMeasurementConditionValue, Management);
 FORM averageConditionValue 'Среднее значение за интервал'
+    OBJECTS mt = Management PANEL
     OBJECTS v = AverageMeasurementConditionValue PANEL
-    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameMeasurementType ON CHANGE {
+    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v, mt), nameMeasurementType ON CHANGE {
         DIALOG measurementTypes OBJECTS m = measurementType(v) CHANGE FILTERS number(type(device(v)),m);
     }, range
 ; 
 
-changeDevice ABSTRACT (InAreaConditionValue);
+changeDevice ABSTRACT (InAreaConditionValue, Management);
 FORM inAreaConditionValue 'Находится в области'
+    OBJECTS mt = Management PANEL
     OBJECTS v = InAreaConditionValue PANEL
-    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v), nameArea;
+    PROPERTIES (v) nameDevice ON CHANGE changeDevice(v, mt), nameArea;
 ; 
 
-change ABSTRACT (ConditionValue);
-change(FixedConditionValue fv) + {
+change ABSTRACT (ConditionValue, Management);
+change(FixedConditionValue fv, Management m) + {
     INPUT n = name(fv) CHANGE;
 } 
 FORM conditionValues 'Значения'
+    OBJECTS m = Management
     OBJECTS v = ConditionValue
-    PROPERTIES (v) objectClassName READONLY, name ON CHANGE change(v), currentValue, 
+    PROPERTIES (v) BACKGROUND backgroundTemplate() IF (backgroundTemplateDevice(device(v), m) OR backgroundTemplateManagement(management(v), m)) 
+                objectClassName READONLY, name ON CHANGE change(v, m), currentValue
+    PROPERTIES (v)  
                 fixed 'Фиксированное значение'=NEW[FixedConditionValue], 
                 average 'Среднее за интервал'=NEW[AverageMeasurementConditionValue],
-                in 'Проверка области'=NEW[InAreaConditionValue]                 
+                in 'Проверка области'=NEW[InAreaConditionValue]
+                
+    FILTERS checkTemplateDevice(device(v), m), checkTemplateManagement(management(v), m)
 ;
 DESIGN conditionValues {
     OBJECTS {
@@ -143,7 +205,7 @@ CLASS TimeCondition : ManagerCondition;
 schedule = DATA Schedule (TimeCondition);
 name(TimeCondition t) += name(schedule(t));
 isTrue(TimeCondition t) += TRUE IF in(currentDateTimeSnapshot(), schedule(t));
-newTimeCondition 'Добавить расписание' (ControllerManager m) {
+newTimeCondition 'Добавить расписание' (Management m) {
     DIALOG LIST Schedule INPUT s DO
         NEW t = TimeCondition {
             controller(t) <- m;
@@ -176,24 +238,18 @@ sendMessage(EmailContact ch, STRING text) + {
     EMAIL SUBJECT text TO email(ch) BODY text;
 }
 
-in 'Вкл.' = DATA BOOLEAN (ManagerTo, ControllerManager);
-nameChats 'Кому' (ControllerManager cm) = GROUP CONCAT name(Chat ch) IF in(ch, cm),',' ORDER ch;
+in 'Вкл.' = DATA BOOLEAN (ManagerTo, Management);
+nameChats 'Кому' (Management cm) = GROUP CONCAT name(Chat ch) IF in(ch, cm),',' ORDER ch;
 FORM changeChats 'Выбор уведомлений'
-    OBJECTS cm = ControllerManager PANEL
+    OBJECTS cm = Management PANEL
     OBJECTS ch = ManagerTo
     PROPERTIES in(ch, cm), objectClassName(ch) READONLY, name(ch) READONLYIF ch IS Chat
     PROPERTIES 'Добавить Email' = NEW[EmailContact](ch), DELETE(ch) SHOWIF ch IS EmailContact
 ;
-dialogChangeChats ABSTRACT (ControllerManager);
+dialogChangeChats ABSTRACT (Management);
 
-// temp
-chat = DATA Chat (ControllerManager);
-onStarted() + {
-    in(Chat c, ControllerManager m) <- TRUE WHERE chat(m) = c;
-}
-
-onMessage 'Сообщение вкл.' = DATA STRING (ControllerManager);
-offMessage 'Сообщение выкл.' = DATA STRING (ControllerManager);
+onMessage 'Сообщение вкл.' = DATA STRING (Management);
+offMessage 'Сообщение выкл.' = DATA STRING (Management);
 
 runOn(ControllerManager c) {
     IF controllerDevice(c) THEN
@@ -209,8 +265,8 @@ runOff(ControllerManager c) {
 }
 
 FORM controllerManager 'Управление'
-    OBJECTS c = ControllerManager PANEL
-    PROPERTIES (c) name, nameControllerDevice, nameChats ON CHANGE dialogChangeChats(c), isOn, shouldBeOn, nameMode //, nameOn, nameOff
+    OBJECTS c = Management PANEL
+    PROPERTIES (c) name, nameControllerDevice, nameDeviceType, nameChats ON CHANGE dialogChangeChats(c), isOn, shouldBeOn, nameMode //, nameOn, nameOff
     OBJECTS mc = ManagerCondition
     PROPERTIES (mc) order, name READONLY, nameType, isTrue
     PROPERTIES (c) newTimeCondition DRAW mc TOOLBAR 
@@ -219,7 +275,7 @@ FORM controllerManager 'Управление'
     FILTERS c = controller(mc)
     ORDERS order(mc)
     
-    EDIT ControllerManager OBJECT c;
+    EDIT Management OBJECT c;
 ;
 
 DESIGN controllerManager {
@@ -301,20 +357,22 @@ DESIGN controllerManager {
 }
 
 CLASS LastChangeConditionValue 'Секунд с последнего изменения' : ConditionValue;
-lastChangeConditionValue = AGGR LastChangeConditionValue WHERE ControllerManager manager IS ControllerManager;
+lastChangeConditionValue = AGGR LastChangeConditionValue WHERE Management manager IS Management;
 currentValue(LastChangeConditionValue v) += subtractSeconds(dateTime(lastLog(manager(v))), currentZDateTimeSnapshot());
 name(LastChangeConditionValue v) += 'Секунд с последнего изменения: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+management(LastChangeConditionValue v) += manager(v); 
 
 CLASS StateConditionValue 'Включен' : ConditionValue;
-stateConditionValue = AGGR StateConditionValue WHERE ControllerManager manager IS ControllerManager;
+stateConditionValue = AGGR StateConditionValue WHERE Management manager IS Management;
 currentValue(StateConditionValue v) += 1 IF isOn(manager(v));
 name(StateConditionValue v) += 'Включен: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'выкл.') + ' )';
+management(StateConditionValue v) += manager(v);
 
 WHEN CHANGED(shouldBeOn(ControllerManager c)) DO {
     checkWorking(c);
 }
 
-controllerManager = GROUP AGGR ControllerManager mg BY controllerDevice(mg);
+controllerManager = GROUP AGGR ControllerManager mg BY controllerDevice(mg AS ControllerManager);
 nameControllerManager(ControllerDevice cd) = name(controllerManager(cd));
 isOn 'Включено' (ControllerDevice cd) = isOn(controllerManager(cd));
 
@@ -356,8 +414,9 @@ DESIGN controllers {
 }
 
 FORM controllerManagers 'Управления'
-    OBJECTS cm = ControllerManager
-    PROPERTIES (cm) NEWSESSION name, isOn BACKGROUND backgroundIsNotWhatShould(cm), NEW, EDIT, DELETE
+    OBJECTS cm = Management
+    PROPERTIES (cm) NEWSESSION objectClassName READONLY, name, isOn BACKGROUND backgroundIsNotWhatShould(cm), 
+            NEW[ControllerManager], 'Добавить шаблон' = NEW[TemplateManagement], EDIT, DELETE
 ;
 
 NAVIGATOR {
@@ -395,3 +454,170 @@ DESIGN controllerManagers {
         }
     }
 }
+
+copyDevices = DATA LOCAL Device (TemplateDevice);
+copyManagements = DATA LOCAL ControllerManager (TemplateManagement);
+
+copiedConditionValue = DATA LOCAL ConditionValue ();
+copy ABSTRACT MULTI OVERRIDE (ConditionValue);
+changed = ABSTRACT BOOLEAN (ConditionValue);
+copy(ConditionValue value) + {
+    copiedConditionValue() <- value;
+}
+copy(LastChangeConditionValue value) + {
+    FOR ControllerManager sd = copyManagements(manager(value)) DO
+        copiedConditionValue() <- lastChangeConditionValue(sd);
+    ELSE
+        copiedConditionValue() <- value;
+}
+copy(StateConditionValue value) + {
+    FOR ControllerManager sd = copyManagements(manager(value)) DO
+        copiedConditionValue() <- stateConditionValue(sd);
+    ELSE
+        copiedConditionValue() <- value;
+}
+copy(MeasurementConditionValue value) +{
+    FOR Device sd = copyDevices(device(value)) DO
+        copiedConditionValue() <- measurementConditionValue(sd, measurementType(value));
+    ELSE
+        copiedConditionValue() <- value;
+}
+copy(DelayConditionValue value) +{
+    FOR Device sd = copyDevices(device(value)) DO
+        copiedConditionValue() <- delayConditionValue(sd);
+    ELSE
+        copiedConditionValue() <- value;
+}
+copy(AttributeLocationConditionValue value) +{
+    FOR Device sd = copyDevices(device(value)) DO
+        copiedConditionValue() <- attributeConditionValue(sd, attribute(value));
+    ELSE
+        copiedConditionValue() <- value;
+}
+// copy of instanced condition values are in orgManagement, since we need an organization parameter and it can not be polymorphed
+overCopy ABSTRACT (InstancedConditionValue, Device);
+copy(InstancedConditionValue value) +{
+    FOR Device sd = copyDevices(device(value)) DO
+        overCopy(value, sd);
+    ELSE
+        copiedConditionValue() <- value;
+}
+
+copy(ManagerCondition from, ManagerCondition to) {
+    type(to) <- type(from);
+    order(to) <- order(from);
+}
+copiedManagerCondition = DATA LOCAL ManagerCondition ();
+copy ABSTRACT MULTI (ManagerCondition);
+changed = ABSTRACT BOOLEAN (ManagerCondition);
+copy(TimeCondition tc) +{
+    NEW cp = TimeCondition {
+        schedule(cp) <- schedule(tc);
+        copiedManagerCondition() <- cp;
+    }
+}
+changed(TimeCondition tc) += CHANGED(schedule(tc));
+copy(ValuesCondition tc) +{
+    NEW cp = ValuesCondition {
+        copy(left(tc)); 
+        left(cp) <- copiedConditionValue();
+        copy(right(tc));
+        right(cp) <- copiedConditionValue();
+        copiedManagerCondition() <- cp;
+    }
+}
+changed(ValuesCondition vc) += CHANGED(left(vc)) OR CHANGED(right(vc));
+
+template 'Шаблон' = DATA TemplateManagement (ControllerManager);
+templateDevice 'Устройство шаблона' = DATA Device (ControllerManager);
+controllerManager = GROUP AGGR ControllerManager cm BY templateDevice(cm), template(cm);
+
+nameTemplate 'Шаблон' (ControllerManager cm) = name(template(cm));  
+nameTemplateDevice 'Устройство шаблона' (ControllerManager cm) = name(templateDevice(cm));
+EXTEND FORM controllerManager
+    PROPERTIES (c) SHOWIF template(c) nameTemplate, nameTemplateDevice
+;  
+
+in 'Вкл.' = DATA BOOLEAN (Location, TemplateManagement);
+mode = DATA ForceMode (Device, TemplateManagement);
+nameMode 'Ручное управление' (Device d, TemplateManagement m) = staticCaption(mode(d, m)) CHARWIDTH 10;
+in 'Вкл.' (Device d, TemplateManagement m) = mode(d, m) = ForceMode.on OR (NOT mode(d, m) AND in(location(d), m) AND type(d) = deviceType(m)); 
+
+EXTEND FORM devices
+    OBJECTS tm = TemplateManagement
+    PROPERTIES in(d, tm), nameMode(d, tm), name(tm)
+    
+    FILTERS deviceType(tm) = type(d)
+;
+
+DESIGN devices {
+    tab {
+        MOVE BOX(tm) {
+            caption = 'Шаблоны управления';
+        }
+    }
+}
+EXTEND FORM locations
+    OBJECTS tm = TemplateManagement
+    PROPERTIES in(l, tm), name(tm)
+;
+
+DESIGN locations {
+    BOX(l) {
+        MOVE BOX(tm) {
+            caption = 'Шаблоны управления';
+        }
+    }
+}
+
+copy(TemplateManagement manager, ControllerManager cp) {
+    copyDevices(TemplateDevice td) <- NULL;
+    copyDevices(templateDevice(deviceType(manager))) <- templateDevice(cp);
+    copyManagements(TemplateManagement mg) <- NULL;
+    copyManagements(TemplateManagement mg) <- cp;
+
+    FOR controller(ManagerCondition mcfrom) = manager DO {
+        copy(mcfrom);
+        FOR ManagerCondition mcto = copiedManagerCondition() DO {
+            controller(mcto) <- cp;
+            copy(mcto, mcfrom);
+        }             
+    }
+    
+    name(cp) <- name(manager) + ' : ' + name(templateDevice(cp));
+    onMessage(cp) <- onMessage(manager);        
+    offMessage(cp) <- offMessage(manager);
+    in(ManagerTo mto, cp) <- in(mto, manager);
+    
+    template(cp) <- manager;
+}
+changed (Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
+                                    (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc)) AND controller(mc) = m); 
+
+onChange ABSTRACT (Management);
+onChange(ControllerManager cm) + {
+    IF template(cm) AND NOT SET(template(cm)) THEN {
+        MESSAGE 'Запрещено изменять параметры управления, созданного по шаблону' NOWAIT;
+        CANCEL;
+    }            
+}
+onChange(TemplateManagement m) + {
+    FOR ControllerManager cm = controllerManager(Device device, m) DO {
+        DELETE ManagerCondition cond WHERE controller(cond) = cm;
+        copy(m, cm);
+    }
+} 
+WHEN changed(Management management) DO onChange(management);
+
+overCopy ABSTRACT (ControllerManager, Device);
+WHEN SET(in(Device device, TemplateManagement template)) DO
+    NEW cm = ControllerManager {
+        templateDevice(cm) <- device;
+        template(cm) <- template;
+        
+        copy(template, cm);
+        overCopy(cm, device);
+    }
+    
+WHEN DROPPED(in(templateDevice(ControllerManager cm), template(cm))) DO
+    DELETE cm;

@@ -4,7 +4,10 @@ REQUIRE Options, Organization,
         OrgDevice, OrgMeasurement, 
         OrgController, OrgControllerDevice,
         OrgManagement,
-        MqttServer, Server;
+        ProcessMonitor, SQLUtils, ProcessUtils, SchedulerDefaultData, Backup,
+        GrafanaDevice,
+        MqttServer, Server, 
+        Telegram, Viber, Skype, Slack;
 
 simID 'Sim ID' = DATA STRING (Device);
 EXTEND FORM deviceTypes

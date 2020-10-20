@@ -4,9 +4,16 @@ REQUIRE OrgDevice, Management, OrgControllerDevice, OrgLocation;
 
 NAMESPACE ControllerManagement;
 
-organization = DATA Organization (ControllerManager) AUTOSET;
+organization = DATA Organization (Management) AUTOSET;
 
 @addOrganization(controllerManagers, cm);
+
+EXTEND FORM devices
+    FILTERS organization(tm) = o
+;
+EXTEND FORM locations
+    FILTERS organization(tm) = o
+;
 
 organization 'Организация' = ABSTRACT Organization (ConditionValue);
 
@@ -22,11 +29,70 @@ organization(InAreaConditionValue v) += organization(v);
 organization(LastChangeConditionValue v) += organization(manager(v));
 organization(StateConditionValue v) += organization(manager(v));
 
-changeDevice(AverageMeasurementConditionValue av) +{
-    DIALOG devices OBJECTS o=organization(av), d=device(av) CHANGE;
+organization = DATA Organization (Attribute);
+EXTEND FORM locations
+    FILTERS organization(cat) = o, organization(at) = o
+;
+in(ManagementDevice d, Attribute at) += organization(d) = organization(at) OR (d IS TemplateDevice AND at IS Attribute);
+organization(AttributeLocationConditionValue v) += organization(attribute(v));
+
+averageMeasurementConditionValue = GROUP MAX AverageMeasurementConditionValue av BY device(av), measurementType(av), range(av), organization(av);
+overCopy(AverageMeasurementConditionValue value, Device sd) +{
+    FOR AverageMeasurementConditionValue cv = averageMeasurementConditionValue(sd, measurementType(value), range(value), organization(value)) DO 
+        copiedConditionValue() <- cv;
+    ELSE
+        NEW cv = AverageMeasurementConditionValue {
+            device(cv) <- sd;
+            measurementType(cv) <- measurementType(value);
+            range(cv) <- range(value);
+            
+            organization(cv) <- organization(value);
+            
+            copiedConditionValue() <- cv;           
+        }
 }
-changeDevice(InAreaConditionValue av) +{
-    DIALOG devices OBJECTS o=organization(av), d=device(av) CHANGE;
+inAreaConditionValue = GROUP MAX InAreaConditionValue av BY device(av), area(av), organization(av);
+overCopy(InAreaConditionValue value, Device sd) +{
+    FOR InAreaConditionValue cv = inAreaConditionValue(sd, area(value), organization(value)) DO 
+        copiedConditionValue() <- cv;
+    ELSE
+        NEW cv = InAreaConditionValue {
+            device(cv) <- sd;
+            area(cv) <- area(value);
+            
+            organization(cv) <- organization(value);
+            
+            copiedConditionValue() <- cv;
+        }
+}
+overCopy (ControllerManager cm, Device d) +{
+    organization(cm) <- organization(d);
+}
+
+// @addOrganization(managementDevices)
+EXTEND FORM managementDevices
+    OBJECTS o = Organization PANEL BEFORE d
+    PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
+    FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
+    
+    FILTERS (organization(d) = o OR d IS TemplateDevice) 
+;
+
+DESIGN managementDevices {
+    top {
+        NEW paramBox FIRST {
+            type = CONTAINERH;
+            MOVE BOX(o);
+            fill = 0;
+        }
+    } 
+} 
+
+changeDevice(AverageMeasurementConditionValue av, Management mt) +{
+    DIALOG managementDevices OBJECTS o=organization(av), d=device(av) CHANGE, m = mt;
+}
+changeDevice(InAreaConditionValue av, Management mt) +{
+    DIALOG managementDevices OBJECTS o=organization(av), d=device(av) CHANGE, m = mt;
 }
 CONSTRAINT organization(area(InAreaConditionValue av)) != organization(av) CHECKED BY area[InAreaConditionValue] MESSAGE 'Область условия не принадлежит организации условия';
 
@@ -37,16 +103,17 @@ EXTEND FORM inAreaConditionValue
     OBJECTS o = Organization BEFORE v
 ;
 
-change(AverageMeasurementConditionValue av) +{
-    DIALOG averageConditionValue OBJECTS o=organization(av), v=av;
+change(AverageMeasurementConditionValue av, Management m) +{
+    DIALOG averageConditionValue OBJECTS o=organization(av), v=av, mt=m;
 } 
-change(InAreaConditionValue av) +{
-    DIALOG inAreaConditionValue OBJECTS o=organization(av), v=av;
+change(InAreaConditionValue av, Management m) +{
+    DIALOG inAreaConditionValue OBJECTS o=organization(av), v=av, mt = m;
 } 
 
 EXTEND FORM conditionValues
     OBJECTS o = Organization BEFORE v
-    FILTERS organization(v) = o
+
+    FILTERS organization(v) = o OR (NOT organization(v) AND (device(v) IS TemplateDevice OR management(v) IS TemplateManagement))
 ;
 
 EXTEND FORM controllerManagers
@@ -54,10 +121,10 @@ EXTEND FORM controllerManagers
 ;
 
 dialogChangeLeftConditionValue(ValuesCondition vc) + {
-    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE;
+    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = left(vc) CHANGE, m = controller(vc);
 }
 dialogChangeRightConditionValue(ValuesCondition vc) + {
-    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE;
+    DIALOG conditionValues OBJECTS o = organization(controller(vc)), v = right(vc) CHANGE, m = controller(vc);
 } 
 
 organization = DATA Organization (ManagerTo) AUTOSET;
@@ -76,12 +143,12 @@ onStarted() + {
 //    OBJECTS o = Organization BEFORE cm
 //    FILTERS organization(ch) = o
 //;
-dialogChangeChats(ControllerManager cmm) + {
+dialogChangeChats(Management cmm) + {
     DIALOG changeChats OBJECTS cm = cmm FILTERS organization(ch) = organization(cmm);
 }
 
-CONSTRAINT organization(controllerDevice(ControllerManager cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
-CONSTRAINT organization(ManagerTo ch) != organization(ControllerManager cm) AND in(ch, cm) MESSAGE 'Организация чата не соответсвует организации устройства';
+CONSTRAINT organization(controllerDevice(Management cm)) != organization(cm) CHECKED BY controllerDevice[ControllerManager] MESSAGE 'Организация расписания не соответсвует организации устройства';
+CONSTRAINT organization(ManagerTo ch) != organization(Management cm) AND in(ch, cm) MESSAGE 'Организация чата не соответсвует организации устройства';
 
 overNew(ControllerManager cm, ControllerDevice cd) + {
     organization(cm) <- organization(cd);
