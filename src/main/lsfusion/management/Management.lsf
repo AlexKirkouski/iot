@@ -585,8 +585,8 @@ copy(TemplateManagement manager, ControllerManager cp) {
     }
     
     name(cp) <- name(manager) + ' : ' + name(templateDevice(cp));
-    onMessage(cp) <- onMessage(manager);        
-    offMessage(cp) <- offMessage(manager);
+    onMessage(cp) <- onMessage(manager) + ' : ' + name(templateDevice(cp));        
+    offMessage(cp) <- offMessage(manager) + ' : ' + name(templateDevice(cp));
     in(ManagerTo mto, cp) <- in(mto, manager);
     
     template(cp) <- manager;
