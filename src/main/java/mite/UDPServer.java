@@ -14,25 +14,27 @@ import lsfusion.server.language.property.LP;
 import lsfusion.server.logics.LogicsInstance;
 import lsfusion.server.logics.action.session.DataSession;
 import lsfusion.server.logics.classes.data.file.CSVClass;
-import lsfusion.server.logics.classes.data.time.DateTimeClass;
 import lsfusion.server.logics.classes.data.time.ZDateTimeClass;
 import lsfusion.server.physics.admin.log.ServerLoggers;
+import org.json.JSONObject;
+import org.springframework.cglib.core.Local;
 
+import java.io.*;
 import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Calendar;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 
 public class UDPServer extends MonitorServer {
@@ -110,6 +112,119 @@ public class UDPServer extends MonitorServer {
         return deviceType;
     }
 
+//    private void writeTimestamp(ByteBuffer out, LocalDateTime timestamp) {
+//    }
+//    private LocalDateTime getTimestamp(ByteBuffer in) {
+//    }
+
+//    private void receiveMeasurements(ByteBuffer buffer) {
+    private void receiveMeasurements(DatagramPacket receivePacket, int serialId, JSONObject jsonObject) {
+        long flags = jsonObject.getInt("flags"); // getUnsignedInt(buffer);
+        LocalDateTime dt = LocalDateTime.parse(jsonObject.getString("time"), formatter);// getTimestamp(buffer);
+        float temp = jsonObject.getFloat("temp"); // buffer.getFloat();
+        float humidity = jsonObject.getFloat("hum"); // buffer.getFloat();
+
+        deviceId = (long)serialId;
+        cDt = ZDateTimeClass.instance.formatString(dt.atZone(ZoneId.systemDefault()).toInstant());
+        cMeasuring = deviceId + ";" + temp + ";" + humidity;
+    }
+
+    private void sendTsync(DatagramPacket request, long serialId) throws IOException {
+        JSONObject out = new JSONObject();
+//        ByteBuffer out = ByteBuffer.allocate(2+4+4+7+4);
+//        writeUnsignedShort(out, 0xEA01);
+        out.put("msgid", 0xEA01);
+//        writeUnsignedInt(out, serialId);
+        out.put("serial", serialId);
+//        writeUnsignedInt(out, 0);
+        out.put("flags", 0);
+//        writeTimestamp(out, LocalDateTime.now());
+        out.put("tsync", LocalDateTime.now().format(formatter));
+
+        sendResponseWithCRC(request, out);
+    }
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
+
+    private void sendAck(DatagramPacket request, long serialId) throws IOException {
+        JSONObject out = new JSONObject();
+//        ByteBuffer out = ByteBuffer.allocate(2+4+4+4);
+//        writeUnsignedShort(out, 0xAC01);
+        out.put("msgid", 0xAC01);
+//        writeUnsignedInt(out, serialId);
+        out.put("serial", serialId);
+//        writeUnsignedInt(out, 0);
+        out.put("flags", 0);
+
+        sendResponseWithCRC(request, out);
+    }
+
+    private void sendResponseWithCRC(DatagramPacket request, JSONObject out) throws IOException {
+//        writeCRC32(out);
+
+        byte[] bytes = out.toString().getBytes(); //out.array();
+        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), port);
+        serverSocket.send(sendPacket);
+    }
+
+    private void writeCRC32(ByteBuffer buf) throws IOException {
+        Checksum checksum = new CRC32();
+
+        // update the current checksum with the specified array of bytes
+        checksum.update(buf.array(), 0, buf.position());
+
+        // get the current checksum value
+        writeUnsignedInt(buf, checksum.getValue());
+    }
+
+    private static int asUnsignedShort(short s) {
+        return s & 0xFFFF;
+    }
+    private static long asUnsignedInt(int s) {
+        return s & 0xFFFFFFFFL;
+    }
+    private static int getUnsignedShort(ByteBuffer byteBuffer) {
+        return asUnsignedShort(byteBuffer.getShort());
+    }
+    private static long getUnsignedInt(ByteBuffer byteBuffer) {
+        return asUnsignedInt(byteBuffer.getInt());
+    }
+    private static void writeUnsignedShort(ByteBuffer byteBuffer, int value) {
+        byteBuffer.putShort((short) value);
+    }
+    private static void writeUnsignedInt(ByteBuffer byteBuffer, long value) {
+        byteBuffer.putInt((int) value);
+    }
+
+    private boolean receiveNewPacket(DatagramPacket receivePacket, String receivedString) throws IOException {
+        JSONObject jsonObject = new JSONObject(receivedString);
+//        ByteBuffer byteBuffer = ByteBuffer.wrap(receiveData).order(ByteOrder.LITTLE_ENDIAN);
+
+        int packetType = jsonObject.getInt("msgid");
+        int serialId = jsonObject.getInt("serial");
+
+//        int packetType = getUnsignedShort(byteBuffer);
+//        long serialId = getUnsignedInt(byteBuffer);
+        switch (packetType) {
+            case 0xEB01: // DEVID
+                //Packet id u16	Serial u32	Flags u32	T-min
+                //f32	T-max f32	H-min float 32	H-max float 32	T-meas u16	T-send u16	CRC u32
+                sendAck(receivePacket, serialId);
+                break;
+            case 0xEA01: // TSYNC
+                // Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	CRC u32
+                sendTsync(receivePacket, serialId);
+                break;
+            case 0x5A01: // MEASUREMENTS
+//                Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	Temp float 32 	Humidity float 32	Reserved u32
+                receiveMeasurements(receivePacket, serialId, jsonObject);
+                sendAck(receivePacket, serialId);
+                return true;
+        }
+
+        return false;
+    }
+
     public void start() throws SocketException {
         serverSocket = new DatagramSocket(port);
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
@@ -127,22 +242,26 @@ public class UDPServer extends MonitorServer {
                         serverSocket.receive(receivePacket);
                         if (receivePacket == null) continue;
                         receivedString = new String(receivePacket.getData()).trim();
-                        int nb = 0;
-                        if(receivedString.startsWith("b'")) {
-                            print("OLD PACKET: " + receivedString);
-                            nb = 2;
-                        } else if (receivedString.startsWith("b\"b'")) {
-                            print("NEW PACKET: " + receivedString);
-                            nb = 4;
+                        if(receivedString.startsWith("{")) {
+                            if(!receiveNewPacket(receivePacket, receivedString)) continue;
                         } else {
-                            print("??? PACKET: " + receivedString);
-                            continue;
+                            int nb = 0;
+                            if (receivedString.startsWith("b'")) {
+                                print("OLD PACKET: " + receivedString);
+                                nb = 2;
+                            } else if (receivedString.startsWith("b\"b'")) {
+                                print("NEW PACKET: " + receivedString);
+                                nb = 4;
+                            } else {
+                                print("??? PACKET: " + receivedString);
+                                continue;
+                            }
+                            receivedString = receivedString.substring(nb);
+                            receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
+                            if (receivedString.startsWith(";"))
+                                receivedString = receivedString.substring(1);
+                            if (!parsePacket(receivedString, nb)) continue;
                         }
-                        receivedString = receivedString.substring(nb);
-                        receivedString = receivedString.substring(0,receivedString.lastIndexOf(";")+1);
-                        if(receivedString.startsWith(";"))
-                            receivedString = receivedString.substring(1);
-                        if (!parsePacket(receivedString, nb)) continue;
 
                         DataObject deviceType = getDeviceType(deviceId);
                         StringBuilder text = texts.get(deviceType);

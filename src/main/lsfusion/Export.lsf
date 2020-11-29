@@ -19,7 +19,7 @@ exportMeasurements 'Экспортировать измерения' (Organizati
         RETURN;
     }
     APPLY NESTED (exportFile) {
-        EXPORT JSON FROM sensorNumber = deviceId(Measurement m), date = dateTime(m), value = value(m, MeasurementType mt), valueType = exportName WHERE toExport(m) AND organization(m) = o AND exportName = exportName(type(device(m)), mt);
+        EXPORT JSON FROM seriesNumber = deviceId(Measurement m), sensorType = nameDeviceType(m), longitude = longitude(m), latitude = latitude(m), date = dateTime(m), value = value(m, MeasurementType mt), valueType = exportName WHERE toExport(m) AND organization(m) = o AND exportName = exportName(type(device(m)), mt);
         LOCAL result = JSONFILE ();     
         headers('Authorization') <- 'Bearer ' + authToken(o);
         EXTERNAL HTTP url(o) HEADERS headers PARAMS exportFile() TO result;
