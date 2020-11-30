@@ -24,7 +24,7 @@ fillDefaultAccess(UserRole r) {
 }
 
 isOrg 'Роль организации' (UserRole r) = DATA BOOLEAN (UserRole);
-isOrg(CustomUser user) = isOrg(mainRole(user));
+isOrg(CustomUser user) = GROUP MAX isOrg(UserRole ur) IF in(user, ur);
 CONSTRAINT (organization(CustomUser u) AND NOT isOrg(u)) OR (isOrg(u) AND NOT organization(u)) MESSAGE 'Для этой роли пользователя должна быть задана организация'; 
 
 copy(UserRole to, UserRole fr) + {
