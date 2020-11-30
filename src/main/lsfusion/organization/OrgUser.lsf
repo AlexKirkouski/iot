@@ -77,9 +77,19 @@ META addOrganization(form, object)
     } 
 END
 
+FORM dialogUserRoles
+    OBJECTS c = CustomUser PANEL
+    OBJECTS ur = UserRole
+    PROPERTIES name(ur), in(c, ur)
+;
+
+userRoles 'Роли' (CustomUser c) = GROUP CONCAT name(UserRole ur) IF in(c, ur);
+
 FORM organizationUsers 'Пользователи'
     OBJECTS c = CustomUser
-    PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, nameMainRole 
+    PROPERTIES (c) firstName, lastName, login, isLocked, sha256Password ON CHANGE changeSHA256Password(c), name, userRoles ON CHANGE {
+        DIALOG dialogUserRoles OBJECTS c = c;
+    }
 //    FILTERS isOrg(c)
 ;
 DESIGN organizationUsers {
@@ -101,7 +111,7 @@ DESIGN organizationUsers {
 @addOrganization(organizationUsers, c);
 
 EXTEND FORM organizationUsers
-    PROPERTIES 'Добавить' = { NEW u = CustomUser { mainRole[User](u) <- userRoleSID('orguser'); organization(u) <- o; } } DRAW c TOOLBAR
+    PROPERTIES 'Добавить' = { NEW u = CustomUser { in(u, userRoleSID('orguser')) <- TRUE; organization(u) <- o; } } DRAW c TOOLBAR
     PROPERTIES (c) DELETE
 ;
 
