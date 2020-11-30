@@ -162,9 +162,11 @@ public class UDPServer extends MonitorServer {
     private void sendResponseWithCRC(DatagramPacket request, JSONObject out) throws IOException {
 //        writeCRC32(out);
 
-        byte[] bytes = out.toString().getBytes(); //out.array();
-        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), port);
+        String outString = out.toString();
+        byte[] bytes = outString.getBytes(); //out.array();
+        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort());
         serverSocket.send(sendPacket);
+        print("RESPONSE " + request.getAddress() + " " + request.getPort() + " " + outString);
     }
 
     private void writeCRC32(ByteBuffer buf) throws IOException {
@@ -243,6 +245,7 @@ public class UDPServer extends MonitorServer {
                         if (receivePacket == null) continue;
                         receivedString = new String(receivePacket.getData()).trim();
                         if(receivedString.startsWith("{")) {
+                            print("JSON PACKET: " + receivedString);
                             if(!receiveNewPacket(receivePacket, receivedString)) continue;
                         } else {
                             int nb = 0;
