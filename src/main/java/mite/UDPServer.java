@@ -123,10 +123,11 @@ public class UDPServer extends MonitorServer {
         LocalDateTime dt = LocalDateTime.parse(jsonObject.getString("time"), formatter);// getTimestamp(buffer);
         float temp = jsonObject.getFloat("temp"); // buffer.getFloat();
         float humidity = jsonObject.getFloat("hum"); // buffer.getFloat();
+        float batt = jsonObject.getFloat("bat"); // buffer.getFloat();
 
         deviceId = (long)serialId;
         cDt = ZDateTimeClass.instance.formatString(dt.atZone(ZoneId.systemDefault()).toInstant());
-        cMeasuring = deviceId + ";" + temp + ";" + humidity;
+        cMeasuring = deviceId + ";" + temp + ";" + humidity + ';' + batt;
     }
 
     private void sendTsync(DatagramPacket request, long serialId) throws IOException {
