@@ -88,6 +88,7 @@ CLASS ABSTRACT ConditionValue 'Значение';
 name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
 currentValue 'Значение' = ABSTRACT DOUBLE (ConditionValue) MATERIALIZED;
 device = ABSTRACT ManagementDevice (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
+measurementType = ABSTRACT MeasurementType (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
 management = ABSTRACT Management (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
 
 CLASS ABSTRACT InstancedConditionValue : ConditionValue;
@@ -97,6 +98,7 @@ measurementConditionValue = AGGR MeasurementConditionValue WHERE number(type(Man
 currentValue(MeasurementConditionValue v) += lastValue(device(v), measurementType(v));
 name(MeasurementConditionValue v) += 'Устройство: ' + name(device(v)) + ' - ' + name(measurementType(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 device(MeasurementConditionValue v) += device(v);
+measurementType(MeasurementConditionValue v) += measurementType(v);
 CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType[MeasurementConditionValue], device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
 
 CLASS AverageMeasurementConditionValue 'Среднее значение за интервал' : InstancedConditionValue;
@@ -108,6 +110,7 @@ range 'Интервал' = DATA LONG (AverageMeasurementConditionValue) IN id;
 currentValue(AverageMeasurementConditionValue v) += value(device(v), measurementType(v), subtractSeconds(currentZDateTimeSnapshot(), range(v)), currentZDateTimeSnapshot());
 name(AverageMeasurementConditionValue v) += 'Среднее значение за интервал: ' + nameMeasurementType(v) + ' за ' + range(v) + 'с. на ' + nameDevice(v) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 device(AverageMeasurementConditionValue v) += device(v);
+measurementType(AverageMeasurementConditionValue v) += measurementType(v);
 
 CLASS InAreaConditionValue 'Находится в области' : InstancedConditionValue;
 device = DATA ManagementDevice (InAreaConditionValue) NONULL PREREAD;

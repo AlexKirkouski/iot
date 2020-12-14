@@ -17,17 +17,14 @@ import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.ZDateTimeClass;
 import lsfusion.server.physics.admin.log.ServerLoggers;
 import org.json.JSONObject;
-import org.springframework.cglib.core.Local;
 
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -125,7 +122,6 @@ public class UDPServer extends MonitorServer {
         float humidity = jsonObject.getFloat("hum"); // buffer.getFloat();
         float batt = jsonObject.getFloat("bat"); // buffer.getFloat();
 
-        deviceId = (long)serialId;
         cDt = ZDateTimeClass.instance.formatString(dt.atZone(ZoneId.systemDefault()).toInstant());
         cMeasuring = deviceId + ";" + temp + ";" + humidity + ';' + batt;
     }
@@ -155,7 +151,25 @@ public class UDPServer extends MonitorServer {
 //        writeUnsignedInt(out, serialId);
         out.put("serial", serialId);
 //        writeUnsignedInt(out, 0);
-        out.put("flags", 0);
+
+        int flags = 0;
+        UpdateDeviceSettingsAction.Values values;
+        if((values = UpdateDeviceSettingsAction.devices.remove(deviceId)) != null) {
+            flags = 3;
+            if(values.measurementPeriod != null)
+                out.put("mtime", values.measurementPeriod.intValue());
+            if(values.transmissionPeriod != null)
+                out.put("stime", values.transmissionPeriod.intValue());
+            if(values.minTemperature != null)
+                out.put("tmin", values.minTemperature.floatValue());
+            if(values.maxTemperature != null)
+                out.put("tmax", values.maxTemperature.floatValue());
+            if(values.minHumidity != null)
+                out.put("hmin", values.minHumidity.floatValue());
+            if(values.maxHumidity != null)
+                out.put("hmax", values.maxHumidity.floatValue());
+        }
+        out.put("flags", flags);
 
         sendResponseWithCRC(request, out);
     }
@@ -205,6 +219,7 @@ public class UDPServer extends MonitorServer {
 
         int packetType = jsonObject.getInt("msgid");
         int serialId = jsonObject.getInt("serial");
+        deviceId = (long)serialId;
 
 //        int packetType = getUnsignedShort(byteBuffer);
 //        long serialId = getUnsignedInt(byteBuffer);

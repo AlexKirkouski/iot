@@ -19,3 +19,38 @@ simID 'Sim ID' = DATA STRING (Controller);
 EXTEND FORM controllerTypes
     PROPERTIES (c) simID
 ;
+
+temperatureType = GROUP AGGR MeasurementType type WHERE name(type) = 'Температура';
+humidityType = GROUP AGGR MeasurementType type WHERE name(type) = 'Влажность';
+
+maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
+                                                                   value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
+minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
+                                                                   value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
+                                                                   
+GROUP settings 'Настройки' : public;                                                   
+measurementPeriod 'Период измерений' = DATA NUMERIC (Device) IN settings;
+transmissionPeriod 'Период передачи' = DATA NUMERIC (Device) IN settings;
+maxTemperature 'Макс. температура' (Device d) = maxFixedValue(d AS Device, temperatureType()) IN settings;
+maxHumidity 'Макс. влажность' (Device d) = maxFixedValue(d AS Device, humidityType()) IN settings;
+minTemperature 'Мин. температура' (Device d) = minFixedValue(d AS Device, temperatureType()) IN settings;
+minHumidity 'Мин. влажность' (Device d) = minFixedValue(d AS Device, humidityType()) IN settings;
+
+updateDeviceSettings 'Обновить' INTERNAL 'mite.UpdateDeviceSettingsAction' (Device) IN settings; 
+WHEN CHANGED (measurementPeriod(Device d)) OR CHANGED (transmissionPeriod(d)) OR 
+        CHANGED (maxTemperature(d)) OR CHANGED (maxHumidity(d)) OR
+        CHANGED (minTemperature(d)) OR CHANGED (minHumidity(d)) DO
+    updateDeviceSettings(d);
+    
+EXTEND FORM devices
+    PROPERTIES (d) PANEL measurementPeriod, transmissionPeriod, minTemperature, maxTemperature, minHumidity, maxHumidity, updateDeviceSettings
+;
+
+DESIGN devices {
+    tab {
+        NEW settings {
+            caption = 'Настройки'; 
+            MOVE GROUP (settings, d) { type = CONTAINERV; };
+        }
+    }
+}
