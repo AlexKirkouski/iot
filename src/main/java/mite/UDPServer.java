@@ -155,7 +155,7 @@ public class UDPServer extends MonitorServer {
         int flags = 0;
         UpdateDeviceSettingsAction.Values values;
         if((values = UpdateDeviceSettingsAction.devices.remove(deviceId)) != null) {
-            flags = 3;
+            flags = 4; // 3 bit
             if(values.measurementPeriod != null)
                 out.put("mtime", values.measurementPeriod.intValue());
             if(values.transmissionPeriod != null)
