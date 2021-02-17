@@ -43,6 +43,7 @@ public class UDPServer extends MonitorServer {
     private final LogicsInstance logicsInstance;
     private final int port;
     private final LA importAction;
+    private final LA writeSimIDAction;
     private final LP deviceType;
     private final DataObject unknownDevice;
     private final DataObject serverObject;
@@ -73,10 +74,11 @@ public class UDPServer extends MonitorServer {
         return logicsInstance;
     }
 
-    public UDPServer(LogicsInstance logicsInstance, int port, LA importAction, LP deviceType, DataObject unknownDevice, DataObject serverObject) {
+    public UDPServer(LogicsInstance logicsInstance, int port, LA importAction, LP deviceType, LA writeSimIDAction, DataObject unknownDevice, DataObject serverObject) {
         this.logicsInstance = logicsInstance;
         this.port = port;
         this.importAction = importAction;
+        this.writeSimIDAction = writeSimIDAction;
         this.deviceType = deviceType;
         this.unknownDevice = unknownDevice;
         this.serverObject = serverObject;
@@ -227,6 +229,12 @@ public class UDPServer extends MonitorServer {
             case 0xEB01: // DEVID
                 //Packet id u16	Serial u32	Flags u32	T-min
                 //f32	T-max f32	H-min float 32	H-max float 32	T-meas u16	T-send u16	CRC u32
+                long simId = jsonObject.getLong("imsi");
+                try(DataSession session = createSession()){
+                    writeSimIDAction.execute(session, getStack(), new DataObject(deviceId), new DataObject(String.valueOf(simId)));
+                } catch (Throwable t) {
+                    print("ERROR, IMPORT SID: "+ "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                }
                 sendAck(receivePacket, serialId);
                 break;
             case 0xEA01: // TSYNC

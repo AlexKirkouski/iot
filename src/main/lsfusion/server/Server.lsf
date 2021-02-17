@@ -9,6 +9,8 @@ port 'Порт' = DATA INTEGER (Server);
 qps 'Кол-во пакетов для записи' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 isRunning 'Запущен' = DATA BOOLEAN (Server);
 
+writeSimID(LONG l, STRING simID) ABSTRACT;
+
 startUDPServer INTERNAL 'mite.StartUDPServerAction' (Server, INTEGER, TEXT);
 stopUDPServer INTERNAL 'mite.StopUDPServerAction' (Server);
 

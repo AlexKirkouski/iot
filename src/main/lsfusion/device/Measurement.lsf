@@ -31,7 +31,7 @@ displayMeasurement = GROUP AGGR DisplayMeasurement m BY type(m), value(m) MATERI
 hasDisplay = GROUP SUM 1 BY type(DisplayMeasurement dm); 
 
 displayInt 'Значение' (MeasurementType mt, INTEGER i) = caption(displayMeasurement(mt, i));
-display (MeasurementType mt, DOUBLE d) = OVERRIDE displayInt(mt, round(d, 0)), STRING(NUMERIC[30,2](d)) IF mt IS MeasurementType;
+display (MeasurementType mt, DOUBLE d) = OVERRIDE displayInt(mt, round(d, 0)), STRING(NUMERIC[30,2](d)) IF mt IS MeasurementType, '0.00' IF mt IS MeasurementType;
 
 FORM displayMeasurements 'Тексты измерений'
     OBJECTS mt = MeasurementType PANEL

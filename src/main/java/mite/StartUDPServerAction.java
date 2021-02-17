@@ -38,7 +38,7 @@ public class StartUDPServerAction extends InternalAction {
 
         try {
             ConcreteCustomClass deviceType = (ConcreteCustomClass) findClass("DeviceType");
-            UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), deviceType.getDataObject("unknown"), serverObject);
+            UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), findAction("writeSimID[LONG,STRING]"), deviceType.getDataObject("unknown"), serverObject);
             server.qps = (Integer) findProperty("qps[Server]").read(executionContext,serverObject);
             if (server.qps == null) server.qps = 1;
             server.prnConsole = (Integer) findProperty("udpPrnConsole[]").read(executionContext);

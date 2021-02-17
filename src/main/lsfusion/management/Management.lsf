@@ -66,10 +66,10 @@ type(ManagerCondition c) <- ConditionType.and WHEN SET(c IS ManagerCondition);
 controller = DATA Management (ManagerCondition) 
             AGGR
             NONULL 
-//            DELETE 
+            DELETE 
             AUTOSET;
-WHEN DROPPED (controller(ManagerCondition md)) DO
-    DELETE md;
+//WHEN DROPPED (controller(ManagerCondition md)) DO
+//    DELETE md;
 order 'Порядок' = DATA INTEGER (ManagerCondition) CHARWIDTH 2;
 lastOrder = GROUP MAX order(ManagerCondition m) BY controller(m);
 WHEN LOCAL SETCHANGED(controller(ManagerCondition m)) DO 
