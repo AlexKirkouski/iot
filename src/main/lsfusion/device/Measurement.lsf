@@ -120,7 +120,7 @@ DESIGN devices {
         NEW dPanel {
 //            MOVE PROPERTY(lastValue(d, cmt));
             MOVE PROPERTY(lastDisplayValue(d, cmt)) {
-                columnKeysVertical = TRUE;
+                panelColumnVertical = TRUE;
             }
         }
     }
