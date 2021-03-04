@@ -76,7 +76,6 @@ importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server serv
                                       (OVERRIDE('\t\t\t'+            'unAdjustedValue(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImportValue(n, dt, mt),'' ORDER n) + ';\n'),'') + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
-                                                '\t'+  'APPLY;\n' +
                                                 '\}\n' CHARWIDTH 5;
 
 

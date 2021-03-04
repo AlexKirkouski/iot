@@ -25,9 +25,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.CRC32;
@@ -85,6 +83,7 @@ public class UDPServer extends MonitorServer {
     }
 
     private Map<DataObject, StringBuilder> texts = new HashMap<>(); // Map: устройство, блок пакетов
+    private List<Runnable> runnables = new ArrayList<>();
 
     private DatagramSocket serverSocket;
     protected ExecutorService daemonTasksExecutor;
@@ -179,11 +178,20 @@ public class UDPServer extends MonitorServer {
     private void sendResponseWithCRC(DatagramPacket request, JSONObject out) throws IOException {
 //        writeCRC32(out);
 
-        String outString = out.toString();
-        byte[] bytes = outString.getBytes(); //out.array();
-        DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, request.getAddress(), request.getPort());
-        serverSocket.send(sendPacket);
-        print("RESPONSE " + request.getAddress() + " " + request.getPort() + " " + outString);
+        InetAddress address = request.getAddress();
+        int port = request.getPort();
+
+        runnables.add(() -> {
+            String outString = out.toString();
+            byte[] bytes = outString.getBytes(); //out.array();
+            DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
+            try {
+                serverSocket.send(sendPacket);
+            } catch (IOException e) {
+                throw Throwables.propagate(e);
+            }
+            print("RESPONSE " + address + " " + port + " " + outString);
+        });
     }
 
     private void writeCRC32(ByteBuffer buf) throws IOException {
@@ -319,6 +327,7 @@ public class UDPServer extends MonitorServer {
     // --- Импорт в CSV
     private void importCSV() {
         ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
+        final List<Runnable> textRunnables = new ArrayList<>(runnables);
         for (final DataObject deviceType : texts.keySet() ) {
             final String textToProceed = texts.get(deviceType).toString();
             executorService.submit(new Runnable() {
@@ -326,6 +335,13 @@ public class UDPServer extends MonitorServer {
                     print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
                     try(DataSession session = createSession()){
                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
+                        session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
+                        for(Runnable runnable : textRunnables)
+                            try {
+                                runnable.run();
+                            } catch (Throwable t) {
+                                print("ERROR, RUNNING RESPONSE: " + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                            }
                     } catch (Throwable t) {
                         print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                     }
@@ -333,6 +349,7 @@ public class UDPServer extends MonitorServer {
             });
         }
         texts.clear();
+        runnables.clear();
     }
 
     // --- Обработка датчиков, начинается с b'(;)
