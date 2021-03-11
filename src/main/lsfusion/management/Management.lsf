@@ -474,15 +474,25 @@ copy(ConditionValue value) + {
     copiedConditionValue() <- value;
 }
 copy(LastChangeConditionValue value) + {
-    FOR ControllerManager sd = copyManagements(manager(value)) DO
-        copiedConditionValue() <- lastChangeConditionValue(sd);
-    ELSE
+    FOR ControllerManager sd = copyManagements(manager(value)) DO {
+        FOR LastChangeConditionValue lcv = lastChangeConditionValue(sd) DO
+            copiedConditionValue() <- lcv;
+        ELSE NEW lcv = LastChangeConditionValue { // we have to create it's explicitly since the aggregation creation events will be called later
+            manager(lcv) <- sd;
+            copiedConditionValue() <- lcv;
+        }
+    } ELSE
         copiedConditionValue() <- value;
 }
 copy(StateConditionValue value) + {
-    FOR ControllerManager sd = copyManagements(manager(value)) DO
-        copiedConditionValue() <- stateConditionValue(sd);
-    ELSE
+    FOR ControllerManager sd = copyManagements(manager(value)) DO {
+        FOR StateConditionValue scv = stateConditionValue(sd) DO
+            copiedConditionValue() <- scv;
+        ELSE NEW scv = StateConditionValue { // we have to create it's explicitly since the aggregation creation events will be called later
+            manager(scv) <- sd;
+            copiedConditionValue() <- scv;
+        }        
+    } ELSE
         copiedConditionValue() <- value;
 }
 copy(MeasurementConditionValue value) +{
@@ -583,7 +593,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
     copyDevices(TemplateDevice td) <- NULL;
     copyDevices(templateDevice(deviceType(manager))) <- templateDevice(cp);
     copyManagements(TemplateManagement mg) <- NULL;
-    copyManagements(TemplateManagement mg) <- cp;
+    copyManagements(manager) <- cp;
 
     FOR controller(ManagerCondition mcfrom) = manager DO {
         copy(mcfrom);
