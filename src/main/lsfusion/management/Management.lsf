@@ -134,7 +134,7 @@ currentValue(FixedConditionValue v) += value(v);
 name(FixedConditionValue v) += CONCAT ' : ', name(v), value(v);
 
 CLASS DelayConditionValue 'Секунд с последнего измерения' : ConditionValue;
-delayConditionValue = AGGR DelayConditionValue WHERE ManagementDevice device IS Device;
+delayConditionValue = AGGR DelayConditionValue WHERE ManagementDevice device IS ManagementDevice;
 currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(device(v))), currentZDateTimeSnapshot());
 name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + name(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 device(DelayConditionValue v) += device(v);
