@@ -139,12 +139,12 @@ public class UDPServer extends MonitorServer {
 //        writeTimestamp(out, LocalDateTime.now());
         out.put("tsync", LocalDateTime.now().format(formatter));
 
-        sendResponseWithCRC(request, out);
+        sendResponseWithCRC(request, out, true);
     }
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
-    private void sendAck(DatagramPacket request, long serialId) throws IOException {
+    private void sendAck(DatagramPacket request, long serialId, boolean immediately) throws IOException {
         JSONObject out = new JSONObject();
 //        ByteBuffer out = ByteBuffer.allocate(2+4+4+4);
 //        writeUnsignedShort(out, 0xAC01);
@@ -172,16 +172,16 @@ public class UDPServer extends MonitorServer {
         }
         out.put("flags", flags);
 
-        sendResponseWithCRC(request, out);
+        sendResponseWithCRC(request, out, immediately);
     }
 
-    private void sendResponseWithCRC(DatagramPacket request, JSONObject out) throws IOException {
+    private void sendResponseWithCRC(DatagramPacket request, JSONObject out, boolean immediately) throws IOException {
 //        writeCRC32(out);
 
         InetAddress address = request.getAddress();
         int port = request.getPort();
 
-        runnables.add(() -> {
+        Runnable runnable = () -> {
             String outString = out.toString();
             byte[] bytes = outString.getBytes(); //out.array();
             DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
@@ -191,7 +191,11 @@ public class UDPServer extends MonitorServer {
                 throw Throwables.propagate(e);
             }
             print("RESPONSE " + address + " " + port + " " + outString);
-        });
+        };
+        if(immediately)
+            runnable.run();
+        else
+            runnables.add(runnable);
     }
 
     private void writeCRC32(ByteBuffer buf) throws IOException {
@@ -243,7 +247,7 @@ public class UDPServer extends MonitorServer {
                 } catch (Throwable t) {
                     print("ERROR, IMPORT SID: "+ "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                 }
-                sendAck(receivePacket, serialId);
+                sendAck(receivePacket, serialId, true);
                 break;
             case 0xEA01: // TSYNC
                 // Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	CRC u32
@@ -252,7 +256,7 @@ public class UDPServer extends MonitorServer {
             case 0x5A01: // MEASUREMENTS
 //                Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	Temp float 32 	Humidity float 32	Reserved u32
                 receiveMeasurements(receivePacket, serialId, jsonObject);
-                sendAck(receivePacket, serialId);
+                sendAck(receivePacket, serialId, false);
                 return true;
         }
 
