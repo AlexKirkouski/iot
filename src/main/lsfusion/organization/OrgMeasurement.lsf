@@ -139,10 +139,16 @@ locationValue 'Знач. точки разм.' (Measurement m) = LONG(round0(val
 
 location (Measurement m) += location(organization(m), locationValue(m));
 
-measurement = GROUP LAST Measurement m ORDER dateTime(m) BY device(m), latitude(m), longitude(m);
+dateFrom 'Время от' = DATA LOCAL ZDATETIME ();
+dateTo 'Время до' = DATA LOCAL ZDATETIME ();
+
+measurement = GROUP LAST Measurement m ORDER dateTime(m) 
+                            WHERE (NOT dateFrom() OR dateTime(m) >= dateFrom()) AND (NOT dateTo() OR dateTime(m) <= dateTo()) 
+                            BY device(m), latitude(m), longitude(m);
 
 FORM deviceMovement 'Перемещение датчиков'
     OBJECTS gm=(m=Measurement, d=Device, la=DOUBLE, lt=DOUBLE) MAP
+    PROPERTIES dateFrom(), dateTo()
     PROPERTIES dateTime(m), latitude 'Широта' = la, longitude 'Долгота' = lt, line 'Устройство' = id(d), color 'Цвет' = rgb(mod(id(d) * 371, 255), 255, 255), locationValue(m)  
     ORDERS dateTime(m)
     FILTERS m = measurement(d, la, lt)
@@ -190,18 +196,14 @@ FORM selectDevices 'Выбор датчиков'
 ;
 selectedDevices 'Датчики' = GROUP CONCAT ''+id(Device d) IF selected(d),',' ORDER d;
 hasSelectedDevices = GROUP MAX selected(Device d) PREREAD;
-dateFrom 'Время от' = DATA LOCAL ZDATETIME ();
-dateTo 'Время до' = DATA LOCAL ZDATETIME ();
 
 EXTEND FORM deviceMovement
     EVENTS ON INIT {
         dateFrom() <- currentZDateTime();
         dateTo() <- currentZDateTime();            
     }
-    PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(dv) = o; }, dateFrom(), dateTo()
-    FILTERS (NOT hasSelectedDevices() AND hasCoords(d)) OR selected(d),
-            NOT dateFrom() OR dateTime(m) >= dateFrom(),
-            NOT dateTo() OR dateTime(m) <= dateTo()
+    PROPERTIES selectedDevices() ON CHANGE { DIALOG selectDevices FILTERS organization(dv) = o; }
+    FILTERS (NOT hasSelectedDevices() AND hasCoords(d)) OR selected(d)
 ;
 
 DESIGN deviceMovement {
