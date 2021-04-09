@@ -1,11 +1,13 @@
 package mite;
 
 import com.google.common.base.Throwables;
+import lsfusion.base.BaseUtils;
 import lsfusion.base.ExceptionUtils;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
 import lsfusion.server.base.controller.stack.ExecutionStackAspect;
 import lsfusion.server.base.controller.thread.ExecutorFactory;
+import lsfusion.server.base.task.TaskRunner;
 import lsfusion.server.data.sql.exception.SQLHandledException;
 import lsfusion.server.data.value.DataObject;
 import lsfusion.server.data.value.ObjectValue;
@@ -87,6 +89,7 @@ public class UDPServer extends MonitorServer {
 
     private DatagramSocket serverSocket;
     protected ExecutorService daemonTasksExecutor;
+    protected ExecutorService importTasksExecutor;
 
     public static void dropCaches() {
         deviceTypes.clear();
@@ -265,6 +268,7 @@ public class UDPServer extends MonitorServer {
 
     public void start() throws SocketException {
         serverSocket = new DatagramSocket(port);
+        importTasksExecutor = ExecutorFactory.createMonitorThreadService(BaseUtils.max(TaskRunner.availableProcessors() / 2, 1), UDPServer.this);
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {
@@ -330,11 +334,10 @@ public class UDPServer extends MonitorServer {
 
     // --- Импорт в CSV
     private void importCSV() {
-        ExecutorService executorService = ExecutorFactory.createMonitorThreadService(100, UDPServer.this);
         final List<Runnable> textRunnables = new ArrayList<>(runnables);
         for (final DataObject deviceType : texts.keySet() ) {
             final String textToProceed = texts.get(deviceType).toString();
-            executorService.submit(new Runnable() {
+            importTasksExecutor.submit(new Runnable() {
                 public void run() {
                     print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
                     try(DataSession session = createSession()){
@@ -388,6 +391,7 @@ public class UDPServer extends MonitorServer {
             serverSocket.close();
         } finally {
             daemonTasksExecutor.shutdown();
+            importTasksExecutor.shutdown();;
         }
     }
 }
