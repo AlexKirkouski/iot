@@ -31,7 +31,7 @@ server = DATA Server (Measurement);
 
 FORM servers 'Сервера UDP' 
     OBJECTS s = Server
-    PROPERTIES (s) name, qps, threads, port, NEW, DELETE
+    PROPERTIES (s) name, qps, threads, port, maxDelay, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
 //    OBJECTS (m = Measurement, mt = MeasurementType)
