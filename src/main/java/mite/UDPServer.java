@@ -52,6 +52,7 @@ public class UDPServer extends MonitorServer {
     private String cDt;                 // Дата и время измерения
     private String cMeasuring;          // Строка измерений
     public  Integer qps;                // Количество пакетов для записи, устанавливается перед стартом сервера
+    public  Integer threads;
     private Integer nQps;               // Текущий счетчик пакетов
     private Boolean lRead;              // Флаг цикла потока чтения UDP
     public  Integer prnConsole = 0;     // печать отладочной информации в консоль
@@ -268,7 +269,7 @@ public class UDPServer extends MonitorServer {
 
     public void start() throws SocketException {
         serverSocket = new DatagramSocket(port);
-        importTasksExecutor = ExecutorFactory.createMonitorThreadService(BaseUtils.max(TaskRunner.availableProcessors() / 2, 1), UDPServer.this);
+        importTasksExecutor = ExecutorFactory.createMonitorThreadService(threads, UDPServer.this);
         daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         daemonTasksExecutor.submit(new Runnable() {
             public void run() {

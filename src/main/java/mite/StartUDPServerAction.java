@@ -2,6 +2,7 @@ package mite;
 
 import com.google.common.base.Throwables;
 import lsfusion.interop.action.MessageClientAction;
+import lsfusion.server.base.task.TaskRunner;
 import lsfusion.server.data.sql.exception.SQLHandledException;
 import lsfusion.server.data.value.DataObject;
 import lsfusion.server.language.ScriptingErrorLog;
@@ -41,6 +42,8 @@ public class StartUDPServerAction extends InternalAction {
             UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), findAction("writeSimID[LONG,STRING]"), deviceType.getDataObject("unknown"), serverObject);
             server.qps = (Integer) findProperty("qps[Server]").read(executionContext,serverObject);
             if (server.qps == null) server.qps = 1;
+            server.threads = (Integer) findProperty("threads[Server]").read(executionContext,serverObject);
+            if (server.threads == null) server.threads = TaskRunner.availableProcessors();
             server.prnConsole = (Integer) findProperty("udpPrnConsole[]").read(executionContext);
             if (server.prnConsole == null) server.prnConsole = 0;
             server.start();

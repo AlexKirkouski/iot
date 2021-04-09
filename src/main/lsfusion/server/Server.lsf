@@ -7,6 +7,7 @@ CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
 port 'Порт' = DATA INTEGER (Server);
 qps 'Кол-во пакетов для записи' = DATA INTEGER (Server);  // кол-во пакетов перед записью
+threads 'Кол-во потоков' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 isRunning 'Запущен' = DATA BOOLEAN (Server);
 
 writeSimID(LONG l, STRING simID) ABSTRACT;
@@ -29,15 +30,15 @@ server = DATA Server (Measurement);
 
 FORM servers 'Сервера UDP' 
     OBJECTS s = Server
-    PROPERTIES (s) name, qps, port, NEW, DELETE
+    PROPERTIES (s) name, qps, threads, port, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
-    OBJECTS (m = Measurement, mt = MeasurementType)
-    PROPERTIES (m) dateTime READONLY 
-    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)') READONLY
-    PROPERTIES value(m, mt) READONLY 
-    ORDERS dateTime(m) DESC
-    FILTERS server(m) = s  
+//    OBJECTS (m = Measurement, mt = MeasurementType)
+//    PROPERTIES (m) dateTime READONLY 
+//    PROPERTIES 'ИД'=(OVERRIDE deviceId(m)+'', idImport(m) + '(не найдено)') READONLY
+//    PROPERTIES value(m, mt) READONLY 
+//    ORDERS dateTime(m) DESC
+//    FILTERS server(m) = s  
 ;
 
 NAVIGATOR {
