@@ -44,6 +44,8 @@ public class StartUDPServerAction extends InternalAction {
             if (server.qps == null) server.qps = 1;
             server.threads = (Integer) findProperty("threads[Server]").read(executionContext,serverObject);
             if (server.threads == null) server.threads = TaskRunner.availableProcessors();
+            server.maxDelay = (Integer) findProperty("maxDelay[Server]").read(executionContext,serverObject);
+            if (server.maxDelay == null) server.maxDelay = 10;
             server.prnConsole = (Integer) findProperty("udpPrnConsole[]").read(executionContext);
             if (server.prnConsole == null) server.prnConsole = 0;
             server.start();

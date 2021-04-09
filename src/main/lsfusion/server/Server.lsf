@@ -8,6 +8,7 @@ name 'Наименование сервера' =  DATA STRING[100] (Server) CHAR
 port 'Порт' = DATA INTEGER (Server);
 qps 'Кол-во пакетов для записи' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 threads 'Кол-во потоков' = DATA INTEGER (Server);  // кол-во пакетов перед записью
+maxDelay 'Макс. задержка' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 isRunning 'Запущен' = DATA BOOLEAN (Server);
 
 writeSimID(LONG l, STRING simID) ABSTRACT;

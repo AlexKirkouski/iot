@@ -53,7 +53,9 @@ public class UDPServer extends MonitorServer {
     private String cMeasuring;          // Строка измерений
     public  Integer qps;                // Количество пакетов для записи, устанавливается перед стартом сервера
     public  Integer threads;
+    public  Integer maxDelay;           // in seconds
     private Integer nQps;               // Текущий счетчик пакетов
+    private long    lastTimeStamp;
     private Boolean lRead;              // Флаг цикла потока чтения UDP
     public  Integer prnConsole = 0;     // печать отладочной информации в консоль
 
@@ -275,6 +277,7 @@ public class UDPServer extends MonitorServer {
             public void run() {
 //                byte[] receiveData = new byte[1024];
                 nQps = 0;
+                lastTimeStamp = System.currentTimeMillis();
                 lRead = true;
                 while(lRead)
                 {
@@ -321,10 +324,12 @@ public class UDPServer extends MonitorServer {
                         text.append(cMeasuring);
 
                         nQps += 1;
-                        if (nQps >= qps) nQps = 0; else continue;
-
-                        // импортируем устройства в csv
-                        importCSV();
+                        long timestamp = System.currentTimeMillis();
+                        if (nQps >= qps || timestamp - lastTimeStamp > maxDelay * 1000) {
+                            nQps = 0;
+                            lastTimeStamp = timestamp;
+                            importCSV();
+                        }
                     } catch (Throwable t) {
                         print("ERROR: " + t.getMessage());
                     }
