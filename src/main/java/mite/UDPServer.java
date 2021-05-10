@@ -175,6 +175,10 @@ public class UDPServer extends MonitorServer {
                 out.put("hmin", values.minHumidity.floatValue());
             if(values.maxHumidity != null)
                 out.put("hmax", values.maxHumidity.floatValue());
+            if(values.adjustmentTemperature != null)
+                out.put("toffset", values.adjustmentTemperature.floatValue());
+            if(values.adjustmentHumidity != null)
+                out.put("hoffset", values.adjustmentHumidity.floatValue());
         }
         out.put("flags", flags);
 

@@ -28,14 +28,18 @@ public class UpdateDeviceSettingsAction extends InternalAction {
         public final Double maxTemperature;
         public final Double minHumidity;
         public final Double maxHumidity;
+        public final Double adjustmentTemperature;
+        public final Double adjustmentHumidity;
 
-        public Values(BigDecimal measurementPeriod, BigDecimal transmissionPeriod, Double minTemperature, Double maxTemperature, Double minHumidity, Double maxHumidity) {
+        public Values(BigDecimal measurementPeriod, BigDecimal transmissionPeriod, Double minTemperature, Double maxTemperature, Double minHumidity, Double maxHumidity, Double adjustmentTemperature, Double adjustmentHumidity) {
             this.measurementPeriod = measurementPeriod;
             this.transmissionPeriod = transmissionPeriod;
             this.minTemperature = minTemperature;
             this.maxTemperature = maxTemperature;
             this.minHumidity = minHumidity;
             this.maxHumidity = maxHumidity;
+            this.adjustmentTemperature = adjustmentTemperature;
+            this.adjustmentHumidity = adjustmentHumidity;
         }
     }
 
@@ -58,7 +62,9 @@ public class UpdateDeviceSettingsAction extends InternalAction {
                     (Double) findProperty("minTemperature[Device]").read(executionContext, deviceObject),
                     (Double) findProperty("maxTemperature[Device]").read(executionContext, deviceObject),
                     (Double) findProperty("minHumidity[Device]").read(executionContext, deviceObject),
-                    (Double) findProperty("maxHumidity[Device]").read(executionContext, deviceObject)
+                    (Double) findProperty("maxHumidity[Device]").read(executionContext, deviceObject),
+                    (Double) findProperty("adjustmentTemperature[Device]").read(executionContext, deviceObject),
+                    (Double) findProperty("adjustmentHumidity[Device]").read(executionContext, deviceObject)
             ));
         } catch (ScriptingErrorLog.SemanticErrorException e) {
             executionContext.requestUserInteraction(new MessageClientAction(e.getMessage(), "Error"));

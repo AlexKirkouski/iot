@@ -39,15 +39,18 @@ maxTemperature 'Макс. температура' (Device d) = maxFixedValue(d A
 maxHumidity 'Макс. влажность' (Device d) = maxFixedValue(d AS Device, humidityType()) IN settings;
 minTemperature 'Мин. температура' (Device d) = minFixedValue(d AS Device, temperatureType()) IN settings;
 minHumidity 'Мин. влажность' (Device d) = minFixedValue(d AS Device, humidityType()) IN settings;
+adjustmentTemperature 'Температура корр.' (Device d) = importAdjustmentValue(d AS Device, temperatureType()) IN settings;
+adjustmentHumidity 'Влажность корр.' (Device d) = importAdjustmentValue(d AS Device, humidityType()) IN settings;
 
 updateDeviceSettings 'Обновить' INTERNAL 'mite.UpdateDeviceSettingsAction' (Device) IN settings; 
 WHEN CHANGED (measurementPeriod(Device d)) OR CHANGED (transmissionPeriod(d)) OR 
         CHANGED (maxTemperature(d)) OR CHANGED (maxHumidity(d)) OR
+        CHANGED (adjustmentTemperature(d)) OR CHANGED (adjustmentHumidity(d)) OR
         CHANGED (minTemperature(d)) OR CHANGED (minHumidity(d)) DO
     updateDeviceSettings(d);
     
 EXTEND FORM devices
-    PROPERTIES (d) PANEL measurementPeriod, transmissionPeriod, minTemperature, maxTemperature, minHumidity, maxHumidity, updateDeviceSettings
+    PROPERTIES (d) PANEL measurementPeriod, transmissionPeriod, minTemperature, maxTemperature, minHumidity, maxHumidity, adjustmentTemperature, adjustmentHumidity, updateDeviceSettings
 ;
 
 DESIGN devices {
