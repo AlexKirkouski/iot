@@ -30,6 +30,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -92,6 +94,7 @@ public class UDPServer extends MonitorServer {
 
     private DatagramSocket serverSocket;
     protected ExecutorService daemonTasksExecutor;
+    protected ScheduledExecutorService scheduledTasksExecutor;
     protected ExecutorService importTasksExecutor;
 
     public static void dropCaches() {
@@ -276,70 +279,74 @@ public class UDPServer extends MonitorServer {
     public void start() throws SocketException {
         serverSocket = new DatagramSocket(port);
         importTasksExecutor = ExecutorFactory.createMonitorThreadService(threads, UDPServer.this);
-        daemonTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
-        daemonTasksExecutor.submit(new Runnable() {
-            public void run() {
+        scheduledTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
+        scheduledTasksExecutor.schedule(this::checkAndFlushPackets, 100, TimeUnit.MILLISECONDS);
+        daemonTasksExecutor = ExecutorFactory.createMonitorThreadService(0, this);
+        daemonTasksExecutor.submit(() -> {
 //                byte[] receiveData = new byte[1024];
-                nQps = 0;
-                lastTimeStamp = System.currentTimeMillis();
-                lRead = true;
-                while(lRead)
-                {
-                    String receivedString;
-                    try {
-                        byte[] receiveData = new byte[1024];
-                        DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                        serverSocket.receive(receivePacket);
-                        if (receivePacket == null) continue;
-                        receivedString = new String(receivePacket.getData()).trim();
-                        if(receivedString.startsWith("{")) {
-                            print("JSON PACKET: " + receivedString);
-                            if(!receiveNewPacket(receivePacket, receivedString)) continue;
+            nQps = 0;
+            lastTimeStamp = System.currentTimeMillis();
+            lRead = true;
+            while(lRead)
+            {
+                String receivedString;
+                try {
+                    byte[] receiveData = new byte[1024];
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    serverSocket.receive(receivePacket);
+                    if (receivePacket == null) continue;
+                    receivedString = new String(receivePacket.getData()).trim();
+                    if(receivedString.startsWith("{")) {
+                        print("JSON PACKET: " + receivedString);
+                        if(!receiveNewPacket(receivePacket, receivedString)) continue;
+                    } else {
+                        int nb = 0;
+                        if (receivedString.startsWith("b'")) {
+                            print("OLD PACKET: " + receivedString);
+                            nb = 2;
+                        } else if (receivedString.startsWith("b\"b'")) {
+                            print("NEW PACKET: " + receivedString);
+                            nb = 4;
                         } else {
-                            int nb = 0;
-                            if (receivedString.startsWith("b'")) {
-                                print("OLD PACKET: " + receivedString);
-                                nb = 2;
-                            } else if (receivedString.startsWith("b\"b'")) {
-                                print("NEW PACKET: " + receivedString);
-                                nb = 4;
-                            } else {
-                                print("??? PACKET: " + receivedString);
-                                continue;
-                            }
-                            receivedString = receivedString.substring(nb);
-                            receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
-                            if (receivedString.startsWith(";"))
-                                receivedString = receivedString.substring(1);
-                            if (!parsePacket(receivedString, nb)) continue;
+                            print("??? PACKET: " + receivedString);
+                            continue;
                         }
-
-                        DataObject deviceType = getDeviceType(deviceId);
-                        StringBuilder text = texts.get(deviceType);
-                        // дозаполняем текст импорта по своему устройству
-                        if(text == null) {
-                            text = new StringBuilder();
-                            texts.put(deviceType, text);
-                        }
-
-                        if(text.length() > 0) text.append('\n');
-                        text.append(cDt);
-                        text.append(';');
-                        text.append(cMeasuring);
-
-                        nQps += 1;
-                        long timestamp = System.currentTimeMillis();
-                        if (nQps >= qps || timestamp - lastTimeStamp > maxDelay * 1000) {
-                            nQps = 0;
-                            lastTimeStamp = timestamp;
-                            importCSV();
-                        }
-                    } catch (Throwable t) {
-                        print("ERROR: " + t.getMessage());
+                        receivedString = receivedString.substring(nb);
+                        receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
+                        if (receivedString.startsWith(";"))
+                            receivedString = receivedString.substring(1);
+                        if (!parsePacket(receivedString, nb)) continue;
                     }
+
+                    DataObject deviceType = getDeviceType(deviceId);
+                    StringBuilder text = texts.get(deviceType);
+                    // дозаполняем текст импорта по своему устройству
+                    if(text == null) {
+                        text = new StringBuilder();
+                        texts.put(deviceType, text);
+                    }
+
+                    if(text.length() > 0) text.append('\n');
+                    text.append(cDt);
+                    text.append(';');
+                    text.append(cMeasuring);
+
+                    nQps += 1;
+                    checkAndFlushPackets();
+                } catch (Throwable t) {
+                    print("ERROR: " + t.getMessage());
                 }
             }
         });
+    }
+
+    public void checkAndFlushPackets() {
+        long timestamp = System.currentTimeMillis();
+        if (nQps >= qps || timestamp - lastTimeStamp > maxDelay * 1000) {
+            nQps = 0;
+            lastTimeStamp = timestamp;
+            importCSV();
+        }
     }
 
     // --- Импорт в CSV
@@ -401,6 +408,7 @@ public class UDPServer extends MonitorServer {
             serverSocket.close();
         } finally {
             daemonTasksExecutor.shutdown();
+            scheduledTasksExecutor.shutdown();
             importTasksExecutor.shutdown();;
         }
     }
