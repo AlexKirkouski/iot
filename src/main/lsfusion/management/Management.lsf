@@ -108,7 +108,7 @@ measurementType(MeasurementConditionValue v) += measurementType(v);
 CONSTRAINT device(MeasurementConditionValue v) AND measurementType(v) AND NOT number(type(device(v)), measurementType(v)) CHECKED BY measurementType[MeasurementConditionValue], device[MeasurementConditionValue] MESSAGE 'Тип измерения должен соответствовать типу устройства';
 
 CLASS AverageMeasurementConditionValue 'Среднее значение за интервал' : InstancedConditionValue;
-device = DATA ManagementDevice (AverageMeasurementConditionValue) NONULL PREREAD;
+device = DATA ManagementDevice (AverageMeasurementConditionValue) NONULL DELETE PREREAD;
 measurementType = DATA MeasurementType (AverageMeasurementConditionValue) NONULL;
 nameDevice 'Устройство' (AverageMeasurementConditionValue v) = name(device(v)) IN id;
 nameMeasurementType 'Тип измерения' (AverageMeasurementConditionValue v) = name(measurementType(v)) IN id;
@@ -119,7 +119,7 @@ device(AverageMeasurementConditionValue v) += device(v);
 measurementType(AverageMeasurementConditionValue v) += measurementType(v);
 
 CLASS InAreaConditionValue 'Находится в области' : InstancedConditionValue;
-device = DATA ManagementDevice (InAreaConditionValue) NONULL PREREAD;
+device = DATA ManagementDevice (InAreaConditionValue) NONULL DELETE PREREAD;
 area = DATA Area (InAreaConditionValue) NONULL;
 nameDevice 'Устройство' (InAreaConditionValue v) = name(device(v)) IN id;
 nameArea 'Область' (InAreaConditionValue v) = name(area(v)) IN id;
