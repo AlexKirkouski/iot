@@ -616,7 +616,7 @@ changed (Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CH
 onChange ABSTRACT (Management);
 onChange(ControllerManager cm) + {
     IF template(cm) AND NOT SET(template(cm)) THEN {
-        MESSAGE 'Запрещено изменять параметры управления, созданного по шаблону' NOWAIT;
+        MESSAGE 'Запрещено изменять параметры управления, созданного по шаблону (имя упр.: ' + name(cm) + ')' NOWAIT;
         CANCEL;
     }            
 }
