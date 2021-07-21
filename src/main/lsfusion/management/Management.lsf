@@ -139,6 +139,12 @@ currentValue(DelayConditionValue v) += subtractSeconds(dateTime(lastMeasurement(
 name(DelayConditionValue v) += 'Секунд с последнего измерения: ' + name(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 device(DelayConditionValue v) += device(v);
 
+CLASS DateCheckConditionValue 'Дней до поверки' : ConditionValue;
+dateCheckConditionValue = AGGR DateCheckConditionValue WHERE ManagementDevice device IS ManagementDevice;
+currentValue(DateCheckConditionValue v) += daysBetweenDates(currentDate(), dateCheck(device(v)));
+name(DateCheckConditionValue v) += 'Дней до поверки: ' + name(device(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
+device(DateCheckConditionValue v) += device(v);
+
 CLASS AttributeLocationConditionValue 'Значение атрибута размещения' : ConditionValue;
 in = ABSTRACT BOOLEAN (ManagementDevice, Attribute);
 attributeConditionValue = AGGR AttributeLocationConditionValue WHERE in(ManagementDevice device, Attribute attribute);

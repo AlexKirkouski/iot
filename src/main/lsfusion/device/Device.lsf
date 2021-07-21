@@ -9,6 +9,7 @@ CLASS DeviceType 'Тип датчика' {
 TABLE deviceType(DeviceType);
 id 'ID' = DATA LONG (DeviceType);
 name 'Название' = DATA BPISTRING[1000] (DeviceType) CHARWIDTH 20 IN id;
+dateCheck 'Дата поверки' = DATA DATE (Device);
 
 FORM deviceTypes 'Типы датчиков'
     OBJECTS t = DeviceType
@@ -49,7 +50,7 @@ WHEN GROUP SUM 1 IF CHANGED(type(Device dt)) DO
 
 EXTEND FORM deviceTypes
     OBJECTS d = Device
-    PROPERTIES (d) id, NEW, DELETE
+    PROPERTIES (d) id, dateCheck, NEW, DELETE
     FILTERS type(d) = t
 ;
 

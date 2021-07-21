@@ -20,13 +20,21 @@ exportMeasurements 'Экспортировать измерения' (Organizati
     }
     APPLY NESTED (exportFile) {
         EXPORT JSON FROM seriesNumber = deviceId(Measurement m), sensorType = nameDeviceType(m), longitude = longitude(m), latitude = latitude(m), date = getMilliSeconds(dateTime(m)), value = value(m, MeasurementType mt), valueType = exportName WHERE toExport(m) AND organization(m) = o AND exportName = exportName(type(device(m)), mt);
-        LOCAL result = JSONFILE ();     
-        headers('Authorization') <- 'Bearer ' + authToken(o);
-        EXTERNAL HTTP url(o) HEADERS headers PARAMS exportFile() TO result;
-        IF NOT failedHttp() THEN
+        LOCAL result = JSONFILE ();
+        LOCAL succeeded = BOOLEAN ();   
+        IF startsWith(url(o), 'http') THEN { 
+            headers('Authorization') <- 'Bearer ' + authToken(o);
+            EXTERNAL HTTP url(o) HEADERS headers PARAMS exportFile() TO result;
+            IF NOT failedHttp() THEN
+                succeeded() <- TRUE;               
+            ELSE 
+                MESSAGE 'Ошибка. Код ошибки: ' + statusHttp() + '\nОтвет:' + result() NOWAIT;
+        } ELSE {
+            EXTERNAL UDP url(o) PARAMS RAWFILE(exportFile());
+            succeeded() <- TRUE;
+        }
+        IF succeeded() THEN 
             exported(Measurement m) <- TRUE WHERE toExport(m);
-        ELSE 
-            MESSAGE 'Ошибка. Код ошибки: ' + statusHttp() + '\nОтвет:' + result() NOWAIT; 
     }
 }
 

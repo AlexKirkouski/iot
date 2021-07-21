@@ -21,6 +21,7 @@ organization(MeasurementConditionValue v) += organization(device(v));
 organization = DATA Organization (FixedConditionValue) AUTOSET;
 organization(FixedConditionValue v) += organization(v);
 organization(DelayConditionValue v) += organization(device(v));
+organization(DateCheckConditionValue v) += organization(device(v));
 
 organization = DATA Organization (AverageMeasurementConditionValue) AUTOSET;
 organization(AverageMeasurementConditionValue v) += organization(v);
