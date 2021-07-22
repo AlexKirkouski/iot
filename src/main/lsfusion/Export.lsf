@@ -34,7 +34,7 @@ exportMeasurements 'Экспортировать измерения' (Organizati
             succeeded() <- TRUE;
         }
         IF succeeded() THEN 
-            exported(Measurement m) <- TRUE WHERE toExport(m);
+            exported(Measurement m) <- TRUE WHERE toExport(m) AND organization(m) = o;
     }
 }
 
