@@ -595,6 +595,13 @@ DESIGN locations {
     }
 }
 
+deviceName (ControllerManager cp) = (CONCAT ' ', name(templateDevice(cp)), nameLocation(templateDevice(cp)));
+
+copyNames(TemplateManagement manager, ControllerManager cp) {
+    name(cp) <- name(manager) + ' : ' + deviceName(cp);
+    onMessage(cp) <- onMessage(manager) + ' : ' + deviceName(cp);        
+    offMessage(cp) <- offMessage(manager) + ' : ' + deviceName(cp);
+} 
 copy(TemplateManagement manager, ControllerManager cp) {
     copyDevices(TemplateDevice td) <- NULL;
     copyDevices(templateDevice(deviceType(manager))) <- templateDevice(cp);
@@ -608,14 +615,16 @@ copy(TemplateManagement manager, ControllerManager cp) {
             copy(mcto, mcfrom);
         }             
     }
-    
-    name(cp) <- name(manager) + ' : ' + name(templateDevice(cp));
-    onMessage(cp) <- onMessage(manager) + ' : ' + name(templateDevice(cp));        
-    offMessage(cp) <- offMessage(manager) + ' : ' + name(templateDevice(cp));
+
+    copyNames(manager, cp);    
     in(ManagerTo mto, cp) <- in(mto, manager);
     
     template(cp) <- manager;
 }
+
+WHEN SETCHANGED (deviceName(ControllerManager cp)) DO
+    copyNames(template(cp), cp);
+
 changed (Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
                                     (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc)) AND controller(mc) = m); 
 
