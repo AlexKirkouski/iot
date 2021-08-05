@@ -616,16 +616,16 @@ copy(TemplateManagement manager, ControllerManager cp) {
         }             
     }
 
-    copyNames(manager, cp);    
     in(ManagerTo mto, cp) <- in(mto, manager);
     
     template(cp) <- manager;
 }
 
-WHEN SETCHANGED (deviceName(ControllerManager cp)) DO
+changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
+WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp) DO
     copyNames(template(cp), cp);
 
-changed (Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
+changed (Management m) = (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
                                     (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc)) AND controller(mc) = m); 
 
 onChange ABSTRACT (Management);
