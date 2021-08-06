@@ -66,10 +66,10 @@ type(ManagerCondition c) <- ConditionType.and WHEN SET(c IS ManagerCondition);
 controller = DATA Management (ManagerCondition) 
             AGGR
             NONULL 
-            DELETE 
+//            DELETE 
             AUTOSET;
-//WHEN DROPPED (controller(ManagerCondition md)) DO
-//    DELETE md;
+WHEN DROPPED (controller(ManagerCondition md)) DO
+    DELETE md;
 order 'Порядок' = DATA INTEGER (ManagerCondition) CHARWIDTH 2;
 lastOrder = GROUP MAX order(ManagerCondition m) BY controller(m);
 WHEN LOCAL SETCHANGED(controller(ManagerCondition m)) DO 
@@ -622,8 +622,8 @@ copy(TemplateManagement manager, ControllerManager cp) {
 }
 
 changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
-WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp) DO
-    copyNames(template(cp), cp);
+//WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp) DO
+//    copyNames(template(cp), cp);
 
 changed (Management m) = (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
                                     (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc)) AND controller(mc) = m); 
@@ -653,5 +653,7 @@ WHEN SET(in(Device device, TemplateManagement template)) DO
         overCopy(cm, device);
     }
     
-WHEN DROPPED(in(templateDevice(ControllerManager cm), template(cm))) DO
+WHEN DROPPED(in(templateDevice(ControllerManager cm), template(cm))) DO {
     DELETE cm;
+    DELETE ManagerCondition cond WHERE controller(cond) = cm;
+}
