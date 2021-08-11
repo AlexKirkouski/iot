@@ -622,7 +622,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
 }
 
 changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
-WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp) DO
+WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp AS ControllerManager) DO
     copyNames(template(cp), cp);
 
 changed (Management m) = (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
