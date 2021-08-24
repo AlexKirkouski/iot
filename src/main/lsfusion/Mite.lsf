@@ -18,6 +18,7 @@ writeSimID(LONG l, STRING simID) + {
     APPLY FOR Device d = device(l) DO
         simID(d) <- simID;
 }
+deviceBySimID = GROUP AGGR Device d BY simID(d);
 
 simID 'Sim ID' = DATA STRING (Controller);
 EXTEND FORM controllerTypes
@@ -58,6 +59,85 @@ DESIGN devices {
         NEW settings {
             caption = 'Настройки'; 
             MOVE GROUP (settings, d) { type = CONTAINERV; };
+        }
+    }
+}
+
+GROUP root;
+GROUP result : root;
+
+GROUP json;
+
+//code = DATA LOCAL STRING(INTEGER);
+date = DATA LOCAL DATETIME (INTEGER);
+imei = DATA LOCAL STRING(INTEGER);
+value = DATA LOCAL STRING(INTEGER);
+
+countImei = GROUP SUM 1 BY imei(INTEGER row);
+
+FORM importResults
+    OBJECTS items = INTEGER IN result
+
+//    PROPERTIES(items) code
+    PROPERTIES(items) IN json date, value, imei
+    FILTERS imported(items);
+    
+GROUP nav 'Параметры импорта БТС';
+navLogin 'Логин доступа' = DATA STRING () IN nav;
+navPassword 'Пароль доступа' = DATA STRING () IN nav;
+lastImportTime 'Последнее время импорта' = DATA DATETIME () IN nav;
+
+importMeasurements 'Импортировать измерения' () {
+    LOCAL token = STRING (); 
+
+    EXTERNAL HTTP 'https://api.nav.by/info/integration_get_token.php?type=GET_TOKEN&login=$1&password=$2' PARAMS navLogin(), navPassword() TO exportFile;
+    IF failedHttp() THEN {
+        MESSAGE 'Unable to get token ' + statusHttp() + '\n' + STRING(JSONFILE(exportFile())) NOWAIT;
+        RETURN;
+    }
+    
+    IMPORT JSON FROM exportFile() TO () token;
+    
+    EXTERNAL HTTP 'https://api.nav.by/info/integration.php?type=EVENTS&token=$1&event_codes=temp_sensor1&datetime=$2&limit=ALL' PARAMS token(), (OVERRIDE lastImportTime(),1982_01_01_12:00) TO exportFile;
+
+    IF failedHttp() THEN {
+        MESSAGE 'Unable to get data ' + statusHttp() + '\n' + STRING(JSONFILE(exportFile())) NOWAIT;
+        RETURN;
+    }
+    
+    IMPORT importResults JSON FROM exportFile();
+    
+    LOCAL missingImeis = STRING ();
+    missingImeis() <- GROUP CONCAT STRING imei IF countImei(imei) AND NOT deviceBySimID(imei), ', ';
+    IF missingImeis() THEN {
+        MESSAGE 'IMEIs not found : ' + missingImeis() NOWAIT;        
+        RETURN;
+    }
+    
+    FOR Device dv = deviceBySimID(imei(INTEGER row)) DO {
+        NEW m = Measurement { 
+            dateTime(m) <- ZDATETIME(date(row)); 
+            device(m) <- dv; 
+            idImport(m) <- LONG(imei(row)); 
+            unAdjustedValue(m, temperatureType()) <- DOUBLE(value(row)); 
+        }
+    }
+    lastImportTime() <- currentDateTime();
+    APPLY;
+}
+
+EXTEND FORM options
+    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements
+;
+DESIGN options {
+    pane {
+        NEW hnav {
+            caption = 'Параметры импорта БТС'; 
+            type = CONTAINERV;
+            MOVE PROPERTY(navLogin());
+            MOVE PROPERTY(navPassword());
+            MOVE PROPERTY(lastImportTime());
+            MOVE PROPERTY(importMeasurements());
         }
     }
 }
