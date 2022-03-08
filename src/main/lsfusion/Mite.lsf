@@ -27,6 +27,7 @@ EXTEND FORM controllerTypes
 
 temperatureType = GROUP AGGR MeasurementType type WHERE name(type) = 'Температура';
 humidityType = GROUP AGGR MeasurementType type WHERE name(type) = 'Влажность';
+batteryType = GROUP AGGR MeasurementType type WHERE name(type) = 'Батарея';
 
 maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
                                                                    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
@@ -108,7 +109,7 @@ importMeasurements 'Импортировать измерения' () {
     IMPORT importResults JSON FROM exportFile();
     
     LOCAL missingImeis = STRING ();
-    missingImeis() <- GROUP CONCAT STRING imei IF countImei(imei) AND NOT deviceBySimID(imei), ', ';
+    missingImeis() <- GROUP CONCAT STRING imei IF countImei(imei) AND NOT deviceBySimID(imei), ', ' ORDER imei;
     IF missingImeis() THEN {
         MESSAGE 'IMEIs not found : ' + missingImeis() NOWAIT;        
         RETURN;
@@ -126,18 +127,63 @@ importMeasurements 'Импортировать измерения' () {
     APPLY;
 }
 
+GROUP ftp 'Параметры импорта FTP';
+importFTPPath 'Путь к файлу импорта' = DATA STRING () IN ftp;
+
+importFTPMeasurements 'Импортировать измерения' () {
+    LOCAL token = STRING (); 
+
+    READ importFTPPath() TO exportFile;
+//    IF failedHttp() THEN {
+//        MESSAGE 'Unable to get token ' + statusHttp() + '\n' + STRING(JSONFILE(exportFile())) NOWAIT;
+//        RETURN;
+//    }
+    
+    LOCAL eui64 = STRING (INTEGER);
+    LOCAL tmmeasure = LONG (INTEGER);
+    LOCAL temperatur = DOUBLE (INTEGER);
+    LOCAL humidity = DOUBLE (INTEGER);
+    LOCAL battery = DOUBLE (INTEGER);
+    IMPORT DBF FROM exportFile() TO eui64, tmmeasure, temperatur, humidity, battery 
+    
+    LOCAL missingEui64 = STRING ();
+    missingEui64() <- GROUP CONCAT STRING eui64 IF [GROUP SUM 1 IF eui64(INTEGER row) = eui64]() AND NOT deviceBySimID(eui64), ', ' ORDER eui64;
+    IF missingEui64() THEN {
+        MESSAGE 'EUI64s not found : ' + missingEui64() NOWAIT;        
+        RETURN;
+    }
+    
+    FOR Device dv = deviceBySimID(eui64(INTEGER row)) DO {
+        NEW m = Measurement { 
+            dateTime(m) <- toZDateTime(tmmeasure(row)); 
+            device(m) <- dv; 
+//            idImport(m) <- LONG(eui64(row)); 
+            unAdjustedValue(m, temperatureType()) <- DOUBLE(temperatur(row)); 
+            unAdjustedValue(m, humidityType()) <- DOUBLE(humidity(row)); 
+            unAdjustedValue(m, batteryType()) <- DOUBLE(battery(row)); 
+        }
+    }
+    APPLY;
+    IF NOT canceled() THEN 
+        delete(importFTPPath());
+}
+
 EXTEND FORM options
-    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements
+    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements, importFTPPath, importFTPMeasurements
 ;
 DESIGN options {
     pane {
         NEW hnav {
             caption = 'Параметры импорта БТС'; 
-            type = CONTAINERV;
             MOVE PROPERTY(navLogin());
             MOVE PROPERTY(navPassword());
             MOVE PROPERTY(lastImportTime());
             MOVE PROPERTY(importMeasurements());
+        }
+        NEW hftp {
+            caption = 'Параметры импорта FTP'; 
+            MOVE PROPERTY(importFTPPath());
+            MOVE PROPERTY(importFTPMeasurements());
         }
     }
 }

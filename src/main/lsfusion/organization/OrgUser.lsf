@@ -83,7 +83,7 @@ FORM dialogUserRoles
     PROPERTIES name(ur), in(c, ur)
 ;
 
-userRoles 'Роли' (CustomUser c) = GROUP CONCAT name(UserRole ur) IF in(c, ur), ',';
+userRoles 'Роли' (CustomUser c) = GROUP CONCAT name(UserRole ur) IF in(c, ur), ',' ORDER ur;
 
 FORM organizationUsers 'Пользователи'
     OBJECTS c = CustomUser
