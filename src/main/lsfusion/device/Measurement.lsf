@@ -26,7 +26,7 @@ type = DATA MeasurementType (DisplayMeasurement);
 caption 'Текст' = DATA STRING (DisplayMeasurement);
 value 'Значение' = DATA INTEGER (DisplayMeasurement);
 
-displayValues 'Тексты измерений' = GROUP CONCAT value(DisplayMeasurement dm) + ' - ' + caption(dm), ',' BY type(dm); 
+displayValues 'Тексты измерений' = GROUP CONCAT value(DisplayMeasurement dm) + ' - ' + caption(dm), ',' ORDER dm BY type(dm); 
 displayMeasurement = GROUP AGGR DisplayMeasurement m BY type(m), value(m) MATERIALIZED;
 hasDisplay = GROUP SUM 1 BY type(DisplayMeasurement dm); 
 
