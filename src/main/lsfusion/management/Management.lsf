@@ -612,7 +612,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
         copy(mcfrom);
         FOR ManagerCondition mcto = copiedManagerCondition() DO {
             controller(mcto) <- cp;
-            copy(mcto, mcfrom);
+            copy(mcfrom, mcto);
         }             
     }
 
