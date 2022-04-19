@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="16afcd29-3cb1-476b-8cfb-430333e8b04a">
+	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle2" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle1" mode="Opaque" backcolor="#DFDFDF" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle0" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<field name="o.object" class="java.lang.Long"/>
+	<field name="name(o)" class="java.lang.String"/>
+	<field name="m.object" class="java.lang.Long"/>
+	<field name="deviceId(m)" class="java.lang.Long"/>
+	<field name="nameDeviceType(m)" class="java.lang.String"/>
+	<field name="temp" class="java.lang.Double"/>
+	<field name="hum" class="java.lang.Double"/>
+	<group name="designGroup14968">
+		<groupExpression><![CDATA[String.valueOf($F{o.object})]]></groupExpression>
+		<groupHeader>
+			<band height="18" splitType="Prevent">
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="64" height="18" uuid="aa499668-e572-4d8f-a191-2d6cc8d81eeb"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Название"]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="64" y="0" width="738" height="18" uuid="fd4c9ae5-dba1-4288-addb-72d0377a24b5"/>
+					<textElement textAlignment="Left"/>
+					<textFieldExpression><![CDATA[$F{name(o)}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<pageHeader>
+		<band height="18">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="143" height="18" uuid="5e94b29c-14d8-4ba5-844b-82d57c761df7"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["ИД устройства"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="143" y="0" width="464" height="18" uuid="0a3adc15-9466-43f3-ae00-2cbe25a6740e"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Тип устройства"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="607" y="0" width="96" height="18" uuid="6ca3489e-10a0-480d-9b61-8130c95bb172"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="703" y="0" width="99" height="18" uuid="f304613c-7e34-4393-a8e7-eb10412ffbe6"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="18">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="143" height="18" uuid="90f87957-4eca-4a7e-91bf-c35342c31b69"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{deviceId(m)}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="143" y="0" width="464" height="18" uuid="3e156dec-72d7-431f-af06-1668c6cca554"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA[$F{nameDeviceType(m)}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="607" y="0" width="96" height="18" uuid="09e5c911-a4dd-43cb-8535-d242f8cf9f17"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{temp}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="703" y="0" width="99" height="18" uuid="d1bc8c64-e3ae-42da-9b0a-4e99f892cf94"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{hum}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

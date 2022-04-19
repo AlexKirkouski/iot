@@ -187,3 +187,20 @@ DESIGN options {
         }
     }
 }
+
+FORM printMeasurements
+    OBJECTS o = Organization PANEL
+    PROPERTIES name(o)
+    OBJECTS m = Measurement
+    FILTERS organization(m) = o
+    PROPERTIES deviceId(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
+;
+
+printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
+    DIALOG dialogDates OBJECTS dFrom INPUT, dTo INPUT DO
+        PRINT printMeasurements OBJECTS o = o FILTERS dateTime(m) >= ZDATETIME(dFrom) AND dateTime(m) <= ZDATETIME(dTo);
+}
+
+EXTEND FORM organizations
+    PROPERTIES (o) printMeasurements TOOLBAR
+;
