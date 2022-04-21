@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="16afcd29-3cb1-476b-8cfb-430333e8b04a">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="d328893c-5145-4515-a26a-75b637cbf060">
 	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
 	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
 	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
@@ -30,20 +30,21 @@
 	<field name="name(o)" class="java.lang.String"/>
 	<field name="m.object" class="java.lang.Long"/>
 	<field name="deviceId(m)" class="java.lang.Long"/>
+	<field name="dateTime(m)" class="java.util.Date"/>
 	<field name="nameDeviceType(m)" class="java.lang.String"/>
 	<field name="temp" class="java.lang.Double"/>
 	<field name="hum" class="java.lang.Double"/>
-	<group name="designGroup14968">
+	<group name="designGroup14960">
 		<groupExpression><![CDATA[String.valueOf($F{o.object})]]></groupExpression>
 		<groupHeader>
 			<band height="18" splitType="Prevent">
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="64" height="18" uuid="aa499668-e572-4d8f-a191-2d6cc8d81eeb"/>
+					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="64" height="18" uuid="df741225-071a-4488-8fd8-6158ca5e431f"/>
 					<textElement textAlignment="Center"/>
 					<textFieldExpression><![CDATA["Название"]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="64" y="0" width="738" height="18" uuid="fd4c9ae5-dba1-4288-addb-72d0377a24b5"/>
+					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="64" y="0" width="738" height="18" uuid="5af4eb2a-192d-4386-90c3-ae51ab48502d"/>
 					<textElement textAlignment="Left"/>
 					<textFieldExpression><![CDATA[$F{name(o)}]]></textFieldExpression>
 				</textField>
@@ -53,22 +54,27 @@
 	<pageHeader>
 		<band height="18">
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="143" height="18" uuid="5e94b29c-14d8-4ba5-844b-82d57c761df7"/>
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="130" height="18" uuid="397e0c58-b40f-4f7c-907e-b1ab999c568b"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA["ИД устройства"]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="143" y="0" width="464" height="18" uuid="0a3adc15-9466-43f3-ae00-2cbe25a6740e"/>
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="130" y="0" width="80" height="18" uuid="aa04befb-95e4-4933-bb1d-4b5fe35a0b6c"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Время измерения"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="210" y="0" width="413" height="18" uuid="79b4da8b-9dde-4a6f-af83-2af3d258d0e5"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA["Тип устройства"]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="607" y="0" width="96" height="18" uuid="6ca3489e-10a0-480d-9b61-8130c95bb172"/>
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="623" y="0" width="89" height="18" uuid="14502f78-1444-401c-b7bc-179cfeca7249"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="703" y="0" width="99" height="18" uuid="f304613c-7e34-4393-a8e7-eb10412ffbe6"/>
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="712" y="0" width="90" height="18" uuid="7b23b49b-f391-4708-bc0a-79587f413155"/>
 				<textElement textAlignment="Center"/>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
@@ -77,22 +83,27 @@
 	<detail>
 		<band height="18">
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="143" height="18" uuid="90f87957-4eca-4a7e-91bf-c35342c31b69"/>
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="130" height="18" uuid="c891af99-82f2-4a45-b401-0a931e3f8fa0"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{deviceId(m)}]]></textFieldExpression>
 			</textField>
+			<textField textAdjust="StretchHeight" pattern="dd.MM.yy H:mm:ss" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="130" y="0" width="80" height="18" uuid="fb474441-8c80-42f4-8f5a-3a1757095d35"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{dateTime(m)}]]></textFieldExpression>
+			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="143" y="0" width="464" height="18" uuid="3e156dec-72d7-431f-af06-1668c6cca554"/>
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="210" y="0" width="413" height="18" uuid="a8809f8e-da4b-4dc8-9b58-ddb8f1ae5c4d"/>
 				<textElement textAlignment="Left"/>
 				<textFieldExpression><![CDATA[$F{nameDeviceType(m)}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="607" y="0" width="96" height="18" uuid="09e5c911-a4dd-43cb-8535-d242f8cf9f17"/>
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="623" y="0" width="89" height="18" uuid="0903f42a-5c53-40f7-9ac9-8eb91d13eade"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{temp}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="703" y="0" width="99" height="18" uuid="d1bc8c64-e3ae-42da-9b0a-4e99f892cf94"/>
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="712" y="0" width="90" height="18" uuid="6ba9b9d2-dfe2-4725-841d-099bdb9f43e7"/>
 				<textElement textAlignment="Right"/>
 				<textFieldExpression><![CDATA[$F{hum}]]></textFieldExpression>
 			</textField>

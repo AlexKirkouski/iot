@@ -193,7 +193,7 @@ FORM printMeasurements
     PROPERTIES name(o)
     OBJECTS m = Measurement
     FILTERS organization(m) = o
-    PROPERTIES deviceId(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
+    PROPERTIES deviceId(m), dateTime(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
 ;
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
