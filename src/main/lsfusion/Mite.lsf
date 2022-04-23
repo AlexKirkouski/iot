@@ -153,9 +153,9 @@ importFTPMeasurements 'Импортировать измерения' () {
         RETURN;
     }
     
-    FOR Device dv = deviceBySimID(eui64(INTEGER row)) DO {
+    FOR Device dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND tz > dateTime(lastMeasurement(dv)) NOINLINE (dv) DO {
         NEW m = Measurement { 
-            dateTime(m) <- toZDateTime(tmmeasure(row)); 
+            dateTime(m) <- tz; 
             device(m) <- dv; 
 //            idImport(m) <- LONG(eui64(row)); 
             unAdjustedValue(m, temperatureType()) <- DOUBLE(temperatur(row)); 
