@@ -110,6 +110,11 @@ FORM dialogDates
     PROPERTIES VALUE(dFrom), VALUE(dTo)
 ;
 
+FORM dialogZDateTimes
+    OBJECTS dFrom 'Дата от' = ZDATETIME PANEL, dTo 'Дата до' = ZDATETIME PANEL
+    PROPERTIES VALUE(dFrom), VALUE(dTo)
+;
+
 emailReportXls 'Отправить измерения' (Organization o) {
     DIALOG dialogDates OBJECTS dFrom INPUT, dTo INPUT DO
         emailReportXls(o, dFrom, dTo);

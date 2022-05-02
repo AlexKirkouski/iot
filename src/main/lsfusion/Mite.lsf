@@ -197,8 +197,8 @@ FORM printMeasurements
 ;
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
-    DIALOG dialogDates OBJECTS dFrom INPUT, dTo INPUT DO
-        PRINT printMeasurements OBJECTS o = o FILTERS dateTime(m) >= ZDATETIME(dFrom) AND dateTime(m) <= ZDATETIME(dTo);
+    DIALOG dialogZDateTimes OBJECTS dFrom INPUT, dTo INPUT DO
+        PRINT printMeasurements OBJECTS o = o FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo;
 }
 
 EXTEND FORM organizations
