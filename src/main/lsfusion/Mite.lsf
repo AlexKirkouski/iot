@@ -197,7 +197,7 @@ FORM printMeasurements
 ;
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
-    DIALOG dialogZDateTimes OBJECTS dFrom INPUT, dTo INPUT DO
+    DIALOG dialogZDateTimes OBJECTS dFrom = subtractSeconds(currentZDateTime(), 60*60) INPUT, dTo INPUT DO
         PRINT printMeasurements OBJECTS o = o FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo;
 }
 
