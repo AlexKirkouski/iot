@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.19.0.final using JasperReports Library version 6.19.0-646c68931cebf1a58bc65c4359d1f0ca223c5e94  -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="842" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="d328893c-5145-4515-a26a-75b637cbf060">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="2a6e8107-4c53-4bd6-aff8-cbfa1b156d6d">
 	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
 	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
 	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
@@ -9,194 +8,58 @@
 		</box>
 		<paragraph leftIndent="2" rightIndent="2"/>
 	</style>
-	<style name="GroupCellStyle2" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+	<style name="GroupCellStyle3" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
 		<box>
 			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 		</box>
 		<paragraph leftIndent="2" rightIndent="2"/>
 	</style>
-	<style name="GroupCellStyle1" mode="Opaque" backcolor="#DFDFDF" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+	<style name="GroupCellStyle2" mode="Opaque" backcolor="#D5D5D5" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
 		<box>
 			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 		</box>
 		<paragraph leftIndent="2" rightIndent="2"/>
 	</style>
-	<style name="GroupCellStyle0" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
+	<style name="GroupCellStyle1" mode="Opaque" backcolor="#EAEAEA" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
 		<box>
 			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 		</box>
 		<paragraph leftIndent="2" rightIndent="2"/>
 	</style>
+	<parameter name="m_report" class="net.sf.jasperreports.engine.JasperReport"/>
+	<parameter name="m_source" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="m_params" class="java.util.Map"/>
 	<field name="o.object" class="java.lang.Long"/>
 	<field name="name(o)" class="java.lang.String"/>
-	<field name="m.object" class="java.lang.Long"/>
-	<field name="deviceId(m)" class="java.lang.Long"/>
-	<field name="dateTime(m)" class="java.time.Instant"/>
-	<field name="nameDeviceType(m)" class="java.lang.String"/>
-	<field name="temp" class="java.lang.Double"/>
-	<field name="hum" class="java.lang.Double"/>
-	<group name="designGroup14960">
+	<field name="d.object" class="java.lang.Long"/>
+	<group name="designGroup14990">
 		<groupExpression><![CDATA[String.valueOf($F{o.object})]]></groupExpression>
 		<groupHeader>
-			<band height="555" splitType="Prevent">
-				<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				<meterChart>
-					<chart evaluationTime="Master">
-						<reportElement mode="Transparent" x="0" y="0" width="420" height="200" uuid="18fc7cb0-6f2f-42a2-97ed-dccfff10277a"/>
-						<box>
-							<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-						</box>
-						<chartTitle>
-							<font size="12"/>
-							<titleExpression><![CDATA["Температура"]]></titleExpression>
-						</chartTitle>
-						<chartSubtitle/>
-						<chartLegend/>
-					</chart>
-					<valueDataset>
-						<dataset resetType="Report"/>
-						<valueExpression><![CDATA[$F{temp}]]></valueExpression>
-					</valueDataset>
-					<meterPlot>
-						<plot backgroundAlpha="1.0" foregroundAlpha="0.45"/>
-						<valueDisplay/>
-						<dataRange>
-							<lowExpression><![CDATA[1]]></lowExpression>
-							<highExpression><![CDATA[100]]></highExpression>
-						</dataRange>
-					</meterPlot>
-				</meterChart>
-				<meterChart>
-					<chart evaluationTime="Report" theme="default">
-						<reportElement x="420" y="0" width="421" height="200" uuid="10a4fa33-42cf-478d-ba7d-9a765045a26b">
-							<property name="com.jaspersoft.studio.unit.width" value="px"/>
-						</reportElement>
-						<chartTitle color="#0A0A0A">
-							<font size="12"/>
-							<titleExpression><![CDATA["Влажность"]]></titleExpression>
-						</chartTitle>
-						<chartSubtitle/>
-						<chartLegend/>
-					</chart>
-					<valueDataset>
-						<dataset resetType="Report"/>
-						<valueExpression><![CDATA[$F{hum}]]></valueExpression>
-					</valueDataset>
-					<meterPlot shape="pie">
-						<plot backgroundAlpha="0.7" foregroundAlpha="0.65">
-							<seriesColor seriesOrder="0" color="#335454"/>
-						</plot>
-						<valueDisplay/>
-						<dataRange>
-							<lowExpression><![CDATA[1]]></lowExpression>
-							<highExpression><![CDATA[100]]></highExpression>
-						</dataRange>
-					</meterPlot>
-				</meterChart>
-				<xyLineChart>
-					<chart evaluationTime="Report">
-						<reportElement x="0" y="200" width="842" height="180" uuid="5d6f49af-3110-4faf-a47a-5a760a13b198"/>
-						<chartTitle/>
-						<chartSubtitle/>
-						<chartLegend/>
-					</chart>
-					<xyDataset>
-						<dataset resetType="Report"/>
-						<xySeries>
-							<seriesExpression><![CDATA[$F{deviceId(m)}]]></seriesExpression>
-							<xValueExpression><![CDATA[$F{dateTime(m)}.getEpochSecond()]]></xValueExpression>
-							<yValueExpression><![CDATA[$F{temp}]]></yValueExpression>
-							<labelExpression><![CDATA["Temp"]]></labelExpression>
-						</xySeries>
-					</xyDataset>
-					<linePlot>
-						<plot/>
-						<categoryAxisFormat>
-							<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
-						</categoryAxisFormat>
-						<valueAxisFormat>
-							<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
-						</valueAxisFormat>
-					</linePlot>
-				</xyLineChart>
-				<xyLineChart>
-					<chart evaluationTime="Report">
-						<reportElement x="0" y="380" width="842" height="175" uuid="cc0da536-b2f4-4d24-a9df-04daaf52b962"/>
-						<chartTitle/>
-						<chartSubtitle/>
-						<chartLegend/>
-					</chart>
-					<xyDataset>
-						<dataset resetType="Report"/>
-						<xySeries>
-							<seriesExpression><![CDATA[$F{deviceId(m)}]]></seriesExpression>
-							<xValueExpression><![CDATA[$F{dateTime(m)}.getEpochSecond()]]></xValueExpression>
-							<yValueExpression><![CDATA[$F{hum}]]></yValueExpression>
-							<labelExpression><![CDATA["Humidity"]]></labelExpression>
-						</xySeries>
-					</xyDataset>
-					<linePlot>
-						<plot/>
-						<categoryAxisFormat>
-							<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
-						</categoryAxisFormat>
-						<valueAxisFormat>
-							<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
-						</valueAxisFormat>
-					</linePlot>
-				</xyLineChart>
+			<band height="18" splitType="Prevent">
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="0" y="0" width="64" height="18" uuid="b3250c66-0547-4102-88eb-e90848e29132"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Название"]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="64" y="0" width="738" height="18" uuid="ac5aa746-d465-4599-8e8e-70f600b2c00e"/>
+					<textElement textAlignment="Left"/>
+					<textFieldExpression><![CDATA[$F{name(o)}]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupHeader>
 	</group>
-	<pageHeader>
-		<band height="40">
-			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<image scaleImage="FillFrame" onErrorType="Icon">
-				<reportElement x="0" y="0" width="230" height="40" uuid="60977488-54d6-4954-88a4-0e4e368d7f64"/>
-				<box>
-					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<imageExpression><![CDATA["C:/Users/Админимстратор/Downloads/dompharm_logo.png"]]></imageExpression>
-			</image>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement positionType="Float" stretchType="RelativeToBandHeight" x="400" y="5" width="220" height="30" uuid="2415812b-af5c-4d66-82ef-67281e31533c"/>
-				<textElement textAlignment="Right">
-					<font size="16"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{deviceId(m)}]]></textFieldExpression>
-			</textField>
-			<textField pattern="MMMMM dd, yyyy">
-				<reportElement x="700" y="5" width="142" height="30" uuid="3582e4c5-86db-42d2-81b2-aab252341994"/>
-				<textElement>
-					<font size="16" isItalic="true"/>
-				</textElement>
-				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
-			</textField>
-			<staticText>
-				<reportElement x="250" y="5" width="150" height="30" uuid="6a74badd-da47-4103-b2dc-426af6cb32fe"/>
-				<textElement>
-					<font size="16" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Доминантафарм - ]]></text>
-			</staticText>
-		</band>
-	</pageHeader>
+	<group name="designGroup14993">
+		<groupExpression><![CDATA[String.valueOf($F{d.object})]]></groupExpression>
+	</group>
 	<detail>
-		<band height="25">
-			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<image scaleImage="FillFrame" onErrorType="Icon">
-				<reportElement stretchType="RelativeToBandHeight" x="750" y="0" width="92" height="25" uuid="d45eed62-87f4-4872-9997-675384d00892">
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<imageExpression><![CDATA["C:/Users/Админимстратор/Downloads/mite-logo.png"]]></imageExpression>
-			</image>
+		<band>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="c76fbb81-f0b1-4a64-a4c4-aa164ba1eeac"/>
+				<parametersMapExpression><![CDATA[$P{m_params}]]></parametersMapExpression>
+				<dataSourceExpression><![CDATA[$P{m_source}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{m_report}]]></subreportExpression>
+			</subreport>
 		</band>
 	</detail>
 </jasperReport>
