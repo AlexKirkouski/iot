@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements_m" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="5c46b366-6fda-4f87-b917-b185c4e86e1a">
+<!-- Created with Jaspersoft Studio version 6.19.0.final using JasperReports Library version 6.19.0-646c68931cebf1a58bc65c4359d1f0ca223c5e94  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.printMeasurements_m" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="1fc570d4-2d55-4893-b119-b03b005f4cff">
 	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
 	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
 	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="lsf.TimesNewRoman" fontSize="10">
@@ -16,66 +17,329 @@
 	</style>
 	<field name="m.object" class="java.lang.Long"/>
 	<field name="deviceId(m)" class="java.lang.Long"/>
-	<field name="dateTime(m)" class="java.time.Instant"/>
+	<field name="dateTime(m)" class="java.util.Date"/>
 	<field name="nameDeviceType(m)" class="java.lang.String"/>
 	<field name="temp" class="java.lang.Double"/>
 	<field name="hum" class="java.lang.Double"/>
+	<field name="name(o)" class="java.lang.String"/>
 	<pageHeader>
-		<band height="18">
+		<band height="50">
+			<staticText>
+				<reportElement x="150" y="10" width="200" height="30" forecolor="#0099FF" uuid="3a0fb330-d0b1-442a-941a-4ec99efae29d">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.tabStopWidth" value="px"/>
+					<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement markup="styled">
+					<font fontName="Serif" size="20" isBold="true"/>
+					<paragraph leftIndent="0" rightIndent="0" tabStopWidth="0"/>
+				</textElement>
+				<text><![CDATA[Dominanta]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="247" y="10" width="90" height="30" forecolor="#66FF66" uuid="6bfbc71e-70a5-4ea3-9b8d-6331c66ec566">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.tabStopWidth" value="px"/>
+					<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement markup="styled">
+					<font fontName="Serif" size="20" isBold="true"/>
+					<paragraph leftIndent="0" rightIndent="0" tabStopWidth="0"/>
+				</textElement>
+				<text><![CDATA[pharm]]></text>
+			</staticText>
+			<image scaleImage="FillFrame" onErrorType="Icon">
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="-20" width="80" height="70" uuid="84e6c755-32e2-48d8-bd30-a17035a066c6">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<imageExpression><![CDATA["/usr/lsfusion/pic/mite-logo.jpg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement x="390" y="10" width="39" height="30" forecolor="#000000" uuid="52561150-3c64-40fd-92be-335ea576e4c8">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.tabStopWidth" value="px"/>
+					<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement markup="styled">
+					<font fontName="lsf.TimesNewRoman" size="16" isBold="false"/>
+					<paragraph leftIndent="0" rightIndent="0" tabStopWidth="0"/>
+				</textElement>
+				<text><![CDATA[ id - ]]></text>
+			</staticText>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="130" height="18" uuid="6d40f6ba-a0f6-4ad3-83ef-00f010f492df"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["ИД устройства"]]></textFieldExpression>
+				<reportElement positionType="Float" stretchType="RelativeToBandHeight" x="420" y="10" width="190" height="30" uuid="428a2a37-8207-47de-8a14-b29b8aed2f64">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<font fontName="lsf.TimesNewRoman" size="16"/>
+					<paragraph leftIndent="0" rightIndent="0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{deviceId(m)}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="130" y="0" width="80" height="18" uuid="182a66dd-b763-4f38-96a5-13fbfd2e7e64"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Время измерения"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="210" y="0" width="413" height="18" uuid="feea9cd9-72a9-4c21-806a-e5e81504a4fd"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Тип устройства"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="623" y="0" width="89" height="18" uuid="a1e14c5c-7035-44e1-a6e7-10f3f2d7efcd"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="712" y="0" width="90" height="18" uuid="b09c6250-4238-475d-b881-e9eb34965937"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			<textField pattern="MMMMM dd, yyyy">
+				<reportElement x="700" y="10" width="142" height="30" uuid="355f0d22-c55b-4a22-aa66-e845ce402121"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font size="16" isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
 	<detail>
-		<band height="18">
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="130" height="18" uuid="a3e1135e-a6a1-4fed-a0b6-a67ec442a4da"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{deviceId(m)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" pattern="dd.MM.yy H:mm:ss" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="130" y="0" width="80" height="18" uuid="b23db41f-2415-4188-a40f-287c3efaa426"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{dateTime(m)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="210" y="0" width="413" height="18" uuid="e4fffcc4-1086-4a7f-a88e-fe9dc35a4c25"/>
-				<textElement textAlignment="Left"/>
-				<textFieldExpression><![CDATA[$F{nameDeviceType(m)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="623" y="0" width="89" height="18" uuid="4b225db8-167d-4326-bcab-c305550d94ca"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{temp}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="712" y="0" width="90" height="18" uuid="dcd0f5ac-512b-4336-9af9-8beec4463da5"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{hum}]]></textFieldExpression>
-			</textField>
+		<band height="507">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<printWhenExpression><![CDATA[$V{PAGE_COUNT}==1]]></printWhenExpression>
+			<meterChart>
+				<chart isShowLegend="false" evaluationTime="Report" renderType="draw">
+					<reportElement style="DefaultStyle" stretchType="RelativeToTallestObject" isPrintRepeatedValues="false" x="420" y="0" width="421" height="160" uuid="27eb7843-369e-41ab-9949-3089e2538f41">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box topPadding="0" leftPadding="0" bottomPadding="0" rightPadding="0">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<chartTitle>
+						<font size="15"/>
+						<titleExpression><![CDATA["B: "+new DecimalFormat("##").format($F{hum})+"%"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle color="#0A0A0A">
+						<font size="0"/>
+					</chartSubtitle>
+					<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Bottom">
+						<font fontName="lsf.TimesNewRoman" size="0" isBold="false"/>
+					</chartLegend>
+				</chart>
+				<valueDataset>
+					<dataset resetType="Report"/>
+					<valueExpression><![CDATA[$F{hum}]]></valueExpression>
+				</valueDataset>
+				<meterPlot shape="pie" angle="180" units="%" meterColor="#99FF66" needleColor="#C7C3C3" tickColor="#C7C3C3">
+					<plot backcolor="#CC9966" orientation="Horizontal" backgroundAlpha="1.0">
+						<seriesColor seriesOrder="0" color="#50CCB7"/>
+					</plot>
+					<tickLabelFont>
+						<font fontName="lsf.TimesNewRoman" size="10"/>
+					</tickLabelFont>
+					<valueDisplay color="#000000" mask="##">
+						<font fontName="lsf.TimesNewRoman" size="0"/>
+					</valueDisplay>
+					<dataRange>
+						<lowExpression><![CDATA[1]]></lowExpression>
+						<highExpression><![CDATA[100]]></highExpression>
+					</dataRange>
+					<meterInterval color="#99FF66" alpha="1.0">
+						<dataRange>
+							<lowExpression><![CDATA[1]]></lowExpression>
+							<highExpression><![CDATA[100]]></highExpression>
+						</dataRange>
+					</meterInterval>
+				</meterPlot>
+			</meterChart>
+			<timeSeriesChart>
+				<chart evaluationTime="Report">
+					<reportElement x="0" y="327" width="841" height="180" uuid="2cf052a3-eb93-4830-b04e-652c1e12516d">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend textColor="#000000"/>
+				</chart>
+				<timeSeriesDataset timePeriod="Hour">
+					<dataset resetType="Report"/>
+					<timeSeries>
+						<seriesExpression><![CDATA["Влажность"]]></seriesExpression>
+						<timePeriodExpression><![CDATA[$F{dateTime(m)}]]></timePeriodExpression>
+						<valueExpression><![CDATA[$F{hum}]]></valueExpression>
+						<labelExpression><![CDATA[$F{deviceId(m)}.toString()]]></labelExpression>
+					</timeSeries>
+				</timeSeriesDataset>
+				<timeSeriesPlot>
+					<plot>
+						<seriesColor seriesOrder="0" color="#83F421"/>
+					</plot>
+					<timeAxisFormat>
+						<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
+					</timeAxisFormat>
+					<valueAxisFormat>
+						<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
+					</valueAxisFormat>
+				</timeSeriesPlot>
+			</timeSeriesChart>
+			<timeSeriesChart>
+				<chart evaluationTime="Report" theme="default">
+					<reportElement x="0" y="145" width="841" height="180" uuid="663a1ed9-10d1-45fa-a683-511e80a84dc0">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend position="Bottom"/>
+				</chart>
+				<timeSeriesDataset timePeriod="Hour">
+					<dataset resetType="Report"/>
+					<timeSeries>
+						<seriesExpression><![CDATA["Температура"]]></seriesExpression>
+						<timePeriodExpression><![CDATA[$F{dateTime(m)}]]></timePeriodExpression>
+						<valueExpression><![CDATA[$F{temp}]]></valueExpression>
+						<labelExpression><![CDATA[$F{deviceId(m)}.toString()]]></labelExpression>
+					</timeSeries>
+				</timeSeriesDataset>
+				<timeSeriesPlot>
+					<plot>
+						<seriesColor seriesOrder="0" color="#16CEF7"/>
+					</plot>
+					<timeAxisFormat>
+						<axisFormat labelColor="#000000" tickLabelColor="#000000" axisLineColor="#000000"/>
+					</timeAxisFormat>
+					<valueAxisFormat>
+						<axisFormat labelColor="#000000" tickLabelColor="#000000" verticalTickLabels="true" axisLineColor="#000000"/>
+					</valueAxisFormat>
+				</timeSeriesPlot>
+			</timeSeriesChart>
+			<meterChart>
+				<chart isShowLegend="false" evaluationTime="Report" renderType="draw" theme="default">
+					<reportElement style="GroupCellStyle0" stretchType="ContainerBottom" isPrintRepeatedValues="false" x="0" y="0" width="421" height="160" isRemoveLineWhenBlank="true" uuid="0e1feb53-314f-40f8-9f9e-ef0249246f80">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box bottomPadding="0">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<chartTitle position="Left">
+						<font fontName="lsf.TimesNewRoman" size="15"/>
+						<titleExpression><![CDATA["T: "+new DecimalFormat("##.##").format($F{temp})+"°C"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle>
+						<font fontName="lsf.TimesNewRoman"/>
+					</chartSubtitle>
+					<chartLegend position="Left">
+						<font fontName="lsf.TimesNewRoman" size="0"/>
+					</chartLegend>
+				</chart>
+				<valueDataset>
+					<dataset resetType="Report"/>
+					<valueExpression><![CDATA[$F{temp}]]></valueExpression>
+				</valueDataset>
+				<meterPlot units="°C" tickInterval="5.0" meterColor="#16CEF7" needleColor="#DBDBDB" tickColor="#DBDBDB">
+					<plot backcolor="#ED4845" orientation="Horizontal" backgroundAlpha="1.0" foregroundAlpha="1.0">
+						<seriesColor seriesOrder="0" color="#16CEF7"/>
+						<seriesColor seriesOrder="1" color="#599977"/>
+					</plot>
+					<tickLabelFont>
+						<font fontName="lsf.TimesNewRoman" size="10"/>
+					</tickLabelFont>
+					<valueDisplay color="#000000" mask="##">
+						<font fontName="lsf.TimesNewRoman" size="0" isBold="true"/>
+					</valueDisplay>
+					<dataRange>
+						<lowExpression><![CDATA[-10]]></lowExpression>
+						<highExpression><![CDATA[30]]></highExpression>
+					</dataRange>
+					<meterInterval color="#16CEF7" alpha="1.0">
+						<dataRange>
+							<lowExpression><![CDATA[-10]]></lowExpression>
+							<highExpression><![CDATA[30]]></highExpression>
+						</dataRange>
+					</meterInterval>
+				</meterPlot>
+			</meterChart>
 		</band>
 	</detail>
+	<pageFooter>
+		<band height="38">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="FillFrame" onErrorType="Icon">
+				<reportElement x="600" y="0" width="241" height="38" uuid="eb3b17e8-add7-4f16-8617-86ab4e4e0b81">
+					<property name="com.jaspersoft.studio.unit.y" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<imageExpression><![CDATA["/usr/lsfusion/pic/dompharm_logo.png"]]></imageExpression>
+			</image>
+			<textField textAdjust="ScaleFont" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="600" height="38" backcolor="#999999" uuid="db0f5064-a79c-4c43-b6d5-cb8a10b82d6f">
+					<property name="com.jaspersoft.studio.unit.tabStopWidth" value="px"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left">
+					<paragraph tabStopWidth="0"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{name(o)}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
 </jasperReport>
