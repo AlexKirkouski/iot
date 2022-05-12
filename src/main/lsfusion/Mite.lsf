@@ -189,18 +189,19 @@ DESIGN options {
 }
 
 FORM printMeasurements
-    OBJECTS o = Organization PANEL
+    OBJECTS dFrom = ZDATETIME PANEL, dTo = ZDATETIME PANEL, o = Organization PANEL
     PROPERTIES name(o)
     OBJECTS d = Device
     FILTERS organization(d) = o 
     OBJECTS m = Measurement SUBREPORT
+    FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo
     FILTERS device(m) = d
     PROPERTIES deviceId(m), dateTime(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
 ;
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
     DIALOG dialogZDateTimes OBJECTS dFrom = subtractSeconds(currentZDateTime(), 60*60) INPUT, dTo INPUT DO
-        PRINT printMeasurements OBJECTS o = o FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo;
+        PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo;
 }
 
 EXTEND FORM organizations
