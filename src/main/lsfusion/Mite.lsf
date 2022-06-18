@@ -188,6 +188,8 @@ DESIGN options {
     }
 }
 
+excludeFromPrintMeasurements 'Искл. из отчета изм. (NEW)' = DATA BOOLEAN (Device);
+ 
 FORM printMeasurements
     OBJECTS dFrom = ZDATETIME PANEL, dTo = ZDATETIME PANEL, o = Organization PANEL
     PROPERTIES name(o)
@@ -195,15 +197,29 @@ FORM printMeasurements
     FILTERS organization(d) = o 
     OBJECTS m = Measurement SUBREPORT
     FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo
-    FILTERS device(m) = d
+    FILTERS device(m) = d, NOT excludeFromPrintMeasurements(d)
     PROPERTIES deviceId(m), dateTime(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
 ;
+
+emailMeasurements 'Отправить измерения (NEW)' (Organization o, ZDATETIME dFrom, ZDATETIME dTo) {
+    PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo TO exportFile();
+    EMAIL SUBJECT 'Отчет об измерениях' TO email(o) ATTACH exportFile() NAME 'Отчет'; 
+}
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
     DIALOG dialogZDateTimes OBJECTS dFrom = subtractSeconds(currentZDateTime(), 60*60) INPUT, dTo INPUT DO
         PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo;
 }
 
+emailMeasurements 'Отправить измерения (NEW)' (Organization o) {
+    DIALOG dialogZDateTimes OBJECTS dFrom = subtractSeconds(currentZDateTime(), 60*60) INPUT, dTo INPUT DO
+        emailMeasurements(o, dFrom, dTo);
+}
+
+EXTEND FORM devices
+    PROPERTIES excludeFromPrintMeasurements(d)
+;
+
 EXTEND FORM organizations
-    PROPERTIES (o) printMeasurements TOOLBAR
+    PROPERTIES (o) printMeasurements TOOLBAR, emailMeasurements TOOLBAR
 ;
