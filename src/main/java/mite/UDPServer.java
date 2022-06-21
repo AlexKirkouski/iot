@@ -334,7 +334,7 @@ public class UDPServer extends MonitorServer {
                     nQps += 1;
                     checkAndFlushPackets();
                 } catch (Throwable t) {
-                    print("ERROR: " + t.getMessage());
+                    print("ERROR: " + "\n" + ExceptionUtils.getStackTrace(t));
                 }
             }
         });
