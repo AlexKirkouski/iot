@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.CRC32;
 import java.util.zip.Checksum;
 
@@ -188,6 +189,8 @@ public class UDPServer extends MonitorServer {
         sendResponseWithCRC(request, out, immediately);
     }
 
+    private static AtomicLong responseIndex = new AtomicLong();
+
     private void sendResponseWithCRC(DatagramPacket request, JSONObject out, boolean immediately) throws IOException {
 //        writeCRC32(out);
 
@@ -197,13 +200,15 @@ public class UDPServer extends MonitorServer {
         Runnable runnable = () -> {
             String outString = out.toString();
             byte[] bytes = outString.getBytes(); //out.array();
+            long index = responseIndex.getAndIncrement();
+            print("RESPONSE SENDING " + address + " " + port + " " + outString + " INDEX: " + index);
             DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
             try {
                 serverSocket.send(sendPacket);
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
-            print("RESPONSE " + address + " " + port + " " + outString);
+            print("RESPONSE SENT " + address + " " + port + " " + outString + " INDEX: " + index);
         };
         if(immediately)
             runnable.run();
