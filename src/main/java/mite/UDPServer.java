@@ -268,13 +268,21 @@ public class UDPServer extends MonitorServer {
                 break;
             case 0x5A01: // MEASUREMENTS
 //                Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	Temp float 32 	Humidity float 32	Reserved u32
+                boolean immediate = immediateIds.contains(deviceId);
+                if(immediate)
+                    sendAck(receivePacket, serialId, true);
+
                 receiveMeasurements(receivePacket, serialId, jsonObject);
-                sendAck(receivePacket, serialId, false);
+
+                if(!immediate)
+                    sendAck(receivePacket, serialId, false);
                 return true;
         }
 
         return false;
     }
+
+    private final Set<Long> immediateIds = BaseUtils.toSet(1210000022L, 1210000028L, 1210000112L, 1210000115L, 1210000109L);
 
     public void start() throws SocketException {
         serverSocket = new DatagramSocket(port);
