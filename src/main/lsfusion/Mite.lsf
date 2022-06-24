@@ -153,7 +153,7 @@ importFTPMeasurements 'Импортировать измерения' () {
         RETURN;
     }
     
-    FOR Device dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND tz > dateTime(lastMeasurement(dv)) NOINLINE (dv) DO {
+    FOR Device dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) NOINLINE (dv) DO {
         NEW m = Measurement { 
             dateTime(m) <- tz; 
             device(m) <- dv; 
@@ -202,7 +202,7 @@ FORM printMeasurements
 ;
 
 emailMeasurements 'Отправить измерения (NEW)' (Organization o, ZDATETIME dFrom, ZDATETIME dTo) {
-    PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo TO exportFile();
+    PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo PDF TO exportFile;
     EMAIL SUBJECT 'Отчет об измерениях' TO email(o) ATTACH exportFile() NAME 'Отчет'; 
 }
 
