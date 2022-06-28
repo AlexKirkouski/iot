@@ -194,16 +194,20 @@ FORM printMeasurements
     OBJECTS dFrom = ZDATETIME PANEL, dTo = ZDATETIME PANEL, o = Organization PANEL
     PROPERTIES name(o)
     OBJECTS d = Device
-    FILTERS organization(d) = o 
+    FILTERS organization(d) = o, NOT excludeFromPrintMeasurements(d) 
     OBJECTS m = Measurement SUBREPORT
     FILTERS dateTime(m) >= dFrom AND dateTime(m) <= dTo
-    FILTERS device(m) = d, NOT excludeFromPrintMeasurements(d)
+    FILTERS device(m) = d
     PROPERTIES deviceId(m), dateTime(m), nameDeviceType(m), temp = value(m, temperatureType()), hum = value(m, humidityType())
 ;
 
 emailMeasurements 'Отправить измерения (NEW)' (Organization o, ZDATETIME dFrom, ZDATETIME dTo) {
     PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo PDF TO exportFile;
-    EMAIL SUBJECT 'Отчет об измерениях' TO email(o) ATTACH exportFile() NAME 'Отчет'; 
+    EMAIL 
+            SUBJECT ('Отчет об измерениях :' + DATETIME(dFrom) + ' - ' + DATETIME(dTo)) 
+            TO email(o)
+            BODY 'Добрый день, \n\nОтчет по датчикам: ' + (GROUP CONCAT '' + id(Device d) IF organization(d) = o AND NOT excludeFromPrintMeasurements(d), ';\n' ORDER d) + '\n' + ' в приложении. \n\n\nС уважением, \nКоманда MITE' 
+            ATTACH exportFile() NAME 'Отчет'; 
 }
 
 printMeasurements 'Распечатать измерения (NEW)' (Organization o) {
