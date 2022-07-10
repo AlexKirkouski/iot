@@ -204,7 +204,7 @@ FORM printMeasurements
 emailMeasurements 'Отправить измерения (NEW)' (Organization o, ZDATETIME dFrom, ZDATETIME dTo) {
     PRINT printMeasurements OBJECTS o = o, dFrom = dFrom, dTo = dTo PDF TO exportFile;
     EMAIL 
-            SUBJECT ('Отчет об измерениях :' + DATETIME(dFrom) + ' - ' + DATETIME(dTo)) 
+            SUBJECT ('Отчет об измерениях: ' + DATETIME(dFrom) + ' - ' + DATETIME(dTo)) 
             TO email(o)
             BODY 'Добрый день, <br/><br/>Отчет по датчикам: ' + (GROUP CONCAT '' + id(Device d) IF organization(d) = o AND NOT excludeFromPrintMeasurements(d), ';<br/>' ORDER d) + '<br/>' + ' в приложении. <br/><br/><br/>С уважением, <br/>Команда MITE' 
             ATTACH exportFile() NAME 'ДоминантаФарм_' + DATE(DATETIME(dFrom)) + (IF DATE(DATETIME(dTo)) != DATE(DATETIME(dFrom)) THEN '-' + DATE(DATETIME(dTo)) ELSE ''); 
