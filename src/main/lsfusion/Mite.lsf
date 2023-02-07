@@ -14,7 +14,7 @@ simID 'Sim ID' = DATA STRING (Device);
 EXTEND FORM deviceTypes
     PROPERTIES (d) simID
 ;
-writeSimID(LONG l, STRING simID)  {
+writeSimID(LONG l, STRING simID) + {
     APPLY FOR Device d = device(l) DO
         simID(d) <- simID;
 }
