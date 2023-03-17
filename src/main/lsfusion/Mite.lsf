@@ -129,11 +129,12 @@ importMeasurements 'Импортировать измерения' () {
 
 GROUP ftp 'Параметры импорта FTP';
 importFTPPath 'Путь к файлу импорта' = DATA STRING () IN ftp;
+importExtraFTPPath 'Путь к файлу импорта (доп.)' = DATA STRING () IN ftp;
 
-importFTPMeasurements 'Импортировать измерения' () {
+importFTPMeasurements (STRING path) {
     LOCAL token = STRING (); 
 
-    READ importFTPPath() TO exportFile;
+    READ path TO exportFile;
 //    IF failedHttp() THEN {
 //        MESSAGE 'Unable to get token ' + statusHttp() + '\n' + STRING(JSONFILE(exportFile())) NOWAIT;
 //        RETURN;
@@ -165,11 +166,16 @@ importFTPMeasurements 'Импортировать измерения' () {
     }
     APPLY;
     IF NOT canceled() THEN 
-        delete(importFTPPath());
+        delete(path);
+}
+importFTPMeasurements 'Импортировать измерения' () {
+    importFTPMeasurements(importFTPPath());
+    IF importExtraFTPPath() THEN
+        importFTPMeasurements(importExtraFTPPath());
 }
 
 EXTEND FORM options
-    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements, importFTPPath, importFTPMeasurements
+    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements, importFTPPath, importExtraFTPPath, importFTPMeasurements
 ;
 DESIGN options {
     pane {
