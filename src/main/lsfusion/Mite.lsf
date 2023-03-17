@@ -189,6 +189,7 @@ DESIGN options {
         NEW hftp {
             caption = 'Параметры импорта FTP'; 
             MOVE PROPERTY(importFTPPath());
+            MOVE PROPERTY(importExtraFTPPath());
             MOVE PROPERTY(importFTPMeasurements());
         }
     }
