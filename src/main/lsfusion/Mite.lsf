@@ -169,13 +169,16 @@ importFTPMeasurements (STRING path) {
         delete(path);
 }
 importFTPMeasurements 'Импортировать измерения' () {
-    importFTPMeasurements(importFTPPath());
+    IF importFTPPath() THEN 
+       importFTPMeasurements(importFTPPath());
+}
+importExtraFTPMeasurements 'Импортировать измерения (доп.)' () {
     IF importExtraFTPPath() THEN
         importFTPMeasurements(importExtraFTPPath());
 }
 
 EXTEND FORM options
-    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements, importFTPPath, importExtraFTPPath, importFTPMeasurements
+    PROPERTIES () navLogin, navPassword, lastImportTime, importMeasurements, importFTPPath, importExtraFTPPath, importFTPMeasurements, importExtraFTPMeasurements 
 ;
 DESIGN options {
     pane {
@@ -191,6 +194,7 @@ DESIGN options {
             MOVE PROPERTY(importFTPPath());
             MOVE PROPERTY(importExtraFTPPath());
             MOVE PROPERTY(importFTPMeasurements());
+            MOVE PROPERTY(importExtraFTPMeasurements());            
         }
     }
 }
