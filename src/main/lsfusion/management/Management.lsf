@@ -343,6 +343,8 @@ checkWorking(ControllerManager c) {
                 runOff(c);
         }
         isOn(c) <- shouldBeOn(c);
+    } CATCH {
+        printToLog('CHECK EXCEPTION :' + messageCaughtException());
     }        
 }
 
