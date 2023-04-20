@@ -381,11 +381,14 @@ management(LastChangeConditionValue v) += manager(v);
 
 CLASS StateConditionValue 'Включен' : ConditionValue;
 stateConditionValue = AGGR StateConditionValue WHERE Management manager IS Management;
-currentValue(StateConditionValue v) += 1 IF isOn(manager(v));
+stateIsOn = DATA BOOLEAN (ControllerManager);
+WHEN CHANGED (isOn(ControllerManager c)) DO 
+    stateIsOn(c) <- isOn(c);
+currentValue(StateConditionValue v) += 1 IF stateIsOn(manager(v));
 name(StateConditionValue v) += 'Включен: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'выкл.') + ' )';
 management(StateConditionValue v) += manager(v);
 
-WHEN CHANGED(shouldBeOn(ControllerManager c)) DO {
+WHEN GOAFTER shouldBeOn CHANGED(shouldBeOn(ControllerManager c)) DO {
     checkWorking(c);
 }
 
