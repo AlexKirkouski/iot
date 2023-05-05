@@ -659,6 +659,6 @@ WHEN SET(in(Device device, TemplateManagement template)) DO
     }
     
 WHEN DROPPED(in(templateDevice(ControllerManager cm), template(cm))) DO {
-    DELETE cm;
     DELETE ManagerCondition cond WHERE controller(cond) = cm;
+    DELETE cm;
 }
