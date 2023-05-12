@@ -333,6 +333,7 @@ public class UDPServer extends MonitorServer {
                         receivedString = IOUtils.readStreamToString(tcpSocket.getInputStream());
                     } else {
                         tcpSocket = serverTCPSocket.accept();
+                        print("TCP CONNECTED : " + tcpSocket.getInetAddress());
                         tcpSockets.add(tcpSocket);
                         final Socket ftcpSocket = tcpSocket;
                         tcpTasksExecutor.submit(() -> receivePacket(ftcpSocket));
@@ -436,7 +437,7 @@ public class UDPServer extends MonitorServer {
     // для отладки, выводит в консоль с признаком UDP дата время текст
     private void print(String cMsg) {
         if (prnConsole > 0) {
-            print("UDP", cMsg);
+            print(tcp ? "TCP" : "UDP", cMsg);
         }
     }
 
