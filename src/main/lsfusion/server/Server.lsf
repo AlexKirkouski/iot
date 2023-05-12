@@ -6,6 +6,7 @@ REQUIRE Device, SystemEvents, Measurement, Options, Organization, OrgDevice,
 CLASS Server 'Сервер';
 name 'Наименование сервера' =  DATA STRING[100] (Server) CHARWIDTH 70;
 port 'Порт' = DATA INTEGER (Server);
+tcp 'TCP' = DATA BOOLEAN (Server);
 qps 'Кол-во пакетов для записи' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 threads 'Кол-во потоков' = DATA INTEGER (Server);  // кол-во пакетов перед записью
 maxDelay 'Макс. задержка' = DATA INTEGER (Server);  // кол-во пакетов перед записью
@@ -29,9 +30,9 @@ stopServer 'Остановить сервер' (Server server) {
 
 server = DATA Server (Measurement);
 
-FORM servers 'Сервера UDP' 
+FORM servers 'Сервера UDP / TCP' 
     OBJECTS s = Server
-    PROPERTIES (s) name, qps, threads, port, maxDelay, NEW, DELETE
+    PROPERTIES (s) name, qps, threads, tcp, port, maxDelay, NEW, DELETE
     PROPERTIES (s) TOOLBAR startServer SHOWIF NOT isRunning(s), stopServer SHOWIF isRunning(s)
     
 //    OBJECTS (m = Measurement, mt = MeasurementType)

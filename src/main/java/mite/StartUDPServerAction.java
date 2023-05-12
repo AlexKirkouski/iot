@@ -42,6 +42,7 @@ public class StartUDPServerAction extends InternalAction {
             UDPServer server = new UDPServer(executionContext.getLogicsInstance(), port, findAction(actionName), findProperty("type[LONG]"), findAction("writeSimID[LONG,STRING]"), deviceType.getDataObject("unknown"), serverObject);
             server.qps = (Integer) findProperty("qps[Server]").read(executionContext,serverObject);
             if (server.qps == null) server.qps = 1;
+            server.tcp = findProperty("tcp[Server]").read(executionContext,serverObject) != null;
             server.threads = (Integer) findProperty("threads[Server]").read(executionContext,serverObject);
             if (server.threads == null) server.threads = TaskRunner.availableProcessors();
             server.maxDelay = (Integer) findProperty("maxDelay[Server]").read(executionContext,serverObject);

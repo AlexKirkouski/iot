@@ -1,13 +1,12 @@
 package mite;
 
 import com.google.common.base.Throwables;
-import lsfusion.base.BaseUtils;
 import lsfusion.base.ExceptionUtils;
+import lsfusion.base.file.IOUtils;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
 import lsfusion.server.base.controller.stack.ExecutionStackAspect;
 import lsfusion.server.base.controller.thread.ExecutorFactory;
-import lsfusion.server.base.task.TaskRunner;
 import lsfusion.server.data.sql.exception.SQLHandledException;
 import lsfusion.server.data.value.DataObject;
 import lsfusion.server.data.value.ObjectValue;
@@ -93,8 +92,14 @@ public class UDPServer extends MonitorServer {
     private Map<DataObject, StringBuilder> texts = new HashMap<>(); // Map: устройство, блок пакетов
     private List<Runnable> runnables = new ArrayList<>();
 
-    private DatagramSocket serverSocket;
+    public boolean tcp;
+
+    private DatagramSocket serverUDPSocket;
+    private ServerSocket serverTCPSocket;
     protected ExecutorService daemonTasksExecutor;
+
+    private List<Socket> tcpSockets = new ArrayList<>();
+    protected ExecutorService tcpTasksExecutor;
     protected ScheduledExecutorService scheduledTasksExecutor;
     protected ExecutorService importTasksExecutor;
 
@@ -137,7 +142,7 @@ public class UDPServer extends MonitorServer {
         cMeasuring = deviceId + ";" + temp + ";" + humidity + ';' + batt;
     }
 
-    private void sendTsync(DatagramPacket request, long serialId) throws IOException {
+    private void sendTsync(DatagramPacket udpPacket, Socket tcpSocket, long serialId) throws IOException {
         JSONObject out = new JSONObject();
 //        ByteBuffer out = ByteBuffer.allocate(2+4+4+7+4);
 //        writeUnsignedShort(out, 0xEA01);
@@ -149,12 +154,12 @@ public class UDPServer extends MonitorServer {
 //        writeTimestamp(out, LocalDateTime.now());
         out.put("tsync", LocalDateTime.now().format(formatter));
 
-        sendResponseWithCRC(request, out, true);
+        sendResponseWithCRC(udpPacket, tcpSocket, out);
     }
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
-    private void sendAck(DatagramPacket request, long serialId, boolean immediately) throws IOException {
+    private void sendAck(DatagramPacket udpPacket, Socket tcpSocket, long serialId) throws IOException {
         JSONObject out = new JSONObject();
 //        ByteBuffer out = ByteBuffer.allocate(2+4+4+4);
 //        writeUnsignedShort(out, 0xAC01);
@@ -186,34 +191,44 @@ public class UDPServer extends MonitorServer {
         }
         out.put("flags", flags);
 
-        sendResponseWithCRC(request, out, immediately);
+        sendResponseWithCRC(udpPacket, tcpSocket, out);
     }
 
     private static AtomicLong responseIndex = new AtomicLong();
 
-    private void sendResponseWithCRC(DatagramPacket request, JSONObject out, boolean immediately) throws IOException {
+    private void sendResponseWithCRC(DatagramPacket udpPacket, Socket tcpSocket, JSONObject out) throws IOException {
 //        writeCRC32(out);
 
-        InetAddress address = request.getAddress();
-        int port = request.getPort();
+        InetAddress address;
+        int port;
+        if (tcp) {
+            address = tcpSocket.getInetAddress();
+            port = tcpSocket.getPort();
+        } else {
+            address = udpPacket.getAddress();
+            port = udpPacket.getPort();
+        }
 
         Runnable runnable = () -> {
             String outString = out.toString();
-            byte[] bytes = outString.getBytes(); //out.array();
             long index = responseIndex.getAndIncrement();
             print("RESPONSE SENDING " + address + " " + port + " " + outString + " INDEX: " + index);
-            DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
+            byte[] bytes = outString.getBytes(); //out.array();
             try {
-                serverSocket.send(sendPacket);
+                if(tcp) {
+                    OutputStream outputStream = tcpSocket.getOutputStream();
+                    outputStream.write(bytes);
+                    outputStream.flush();
+                } else {
+                    DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
+                    serverUDPSocket.send(sendPacket);
+                }
             } catch (IOException e) {
                 throw Throwables.propagate(e);
             }
             print("RESPONSE SENT " + address + " " + port + " " + outString + " INDEX: " + index);
         };
-        if(immediately)
-            runnable.run();
-        else
-            runnables.add(runnable);
+        runnable.run();
     }
 
     private void writeCRC32(ByteBuffer buf) throws IOException {
@@ -245,7 +260,7 @@ public class UDPServer extends MonitorServer {
         byteBuffer.putInt((int) value);
     }
 
-    private boolean receiveNewPacket(DatagramPacket receivePacket, String receivedString) throws IOException {
+    private boolean receiveNewPacket(DatagramPacket udpPacket, Socket tcpSocket, String receivedString) throws IOException {
         JSONObject jsonObject = new JSONObject(receivedString);
 //        ByteBuffer byteBuffer = ByteBuffer.wrap(receiveData).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -265,19 +280,19 @@ public class UDPServer extends MonitorServer {
                 } catch (Throwable t) {
                     print("ERROR, IMPORT SID: "+ "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                 }
-                sendAck(receivePacket, serialId, true);
+                sendAck(udpPacket, tcpSocket, serialId);
                 break;
             case 0xEA01: // TSYNC
                 // Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	CRC u32
-                sendTsync(receivePacket, serialId);
+                sendTsync(udpPacket, tcpSocket, serialId);
                 break;
             case 0x5A01: // MEASUREMENTS
 //                Packet id u16	Serial u32	Flags u32	Timestamp 7 bytes	Temp float 32 	Humidity float 32	Reserved u32
 //                boolean immediate = immediateIds.contains(deviceId);
 //                if(immediate)
-                    sendAck(receivePacket, serialId, true);
+                    sendAck(udpPacket, tcpSocket, serialId);
 
-                receiveMeasurements(receivePacket, serialId, jsonObject);
+                receiveMeasurements(udpPacket, serialId, jsonObject);
 
 //                if(!immediate)
 //                    sendAck(receivePacket, serialId, false);
@@ -289,71 +304,90 @@ public class UDPServer extends MonitorServer {
 
 //    private final Set<Long> immediateIds = BaseUtils.toSet(1210000022L, 1210000028L, 1210000112L, 1210000115L, 1210000109L);
 
-    public void start() throws SocketException {
-        serverSocket = new DatagramSocket(port);
+    public void start() throws IOException {
+        if(tcp)
+            serverTCPSocket = new ServerSocket(port);
+        else
+            serverUDPSocket = new DatagramSocket(port);
         importTasksExecutor = ExecutorFactory.createMonitorThreadService(threads, UDPServer.this);
         scheduledTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         scheduledTasksExecutor.schedule(this::checkAndFlushPackets, 100, TimeUnit.MILLISECONDS);
+        tcpTasksExecutor = ExecutorFactory.createMonitorThreadService(0, this);
         daemonTasksExecutor = ExecutorFactory.createMonitorThreadService(0, this);
-        daemonTasksExecutor.submit(() -> {
-//                byte[] receiveData = new byte[1024];
-            nQps = 0;
-            lastTimeStamp = System.currentTimeMillis();
-            lRead = true;
-            while(lRead)
-            {
-                String receivedString;
-                try {
-                    byte[] receiveData = new byte[1024];
-                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                    serverSocket.receive(receivePacket);
-                    if (receivePacket == null) continue;
-                    receivedString = new String(receivePacket.getData()).trim();
-                    if(receivedString.startsWith("{")) {
-                        print("JSON PACKET: " + receivedString);
-                        if(!receiveNewPacket(receivePacket, receivedString)) continue;
-                    } else {
-                        int nb = 0;
-                        if (receivedString.startsWith("b'")) {
-                            print("OLD PACKET: " + receivedString);
-                            nb = 2;
-                        } else if (receivedString.startsWith("b\"b'")) {
-                            print("NEW PACKET: " + receivedString);
-                            nb = 4;
-                        } else {
-                            print("??? PACKET: " + receivedString);
-                            continue;
-                        }
-                        receivedString = receivedString.substring(nb);
-                        receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
-                        if (receivedString.startsWith(";"))
-                            receivedString = receivedString.substring(1);
-                        if (!parsePacket(receivedString, nb)) continue;
-                    }
-
-                    DataObject deviceType = getDeviceType(deviceId);
-                    StringBuilder text = texts.get(deviceType);
-                    // дозаполняем текст импорта по своему устройству
-                    if(text == null) {
-                        text = new StringBuilder();
-                        texts.put(deviceType, text);
-                    }
-
-                    if(text.length() > 0) text.append('\n');
-                    text.append(cDt);
-                    text.append(';');
-                    text.append(cMeasuring);
-
-                    nQps += 1;
-                    checkAndFlushPackets();
-                } catch (Throwable t) {
-                    print("ERROR: " + "\n" + ExceptionUtils.getStackTrace(t));
-                }
-            }
-        });
+        daemonTasksExecutor.submit(() -> receivePacket(null));
     }
 
-    public void checkAndFlushPackets() {
+    private synchronized void receivePacket(Socket tcpSocket) {
+        //                byte[] receiveData = new byte[1024];
+        nQps = 0;
+        lastTimeStamp = System.currentTimeMillis();
+        lRead = true;
+        while(lRead)
+        {
+            String receivedString;
+            try {
+                DatagramPacket udpPacket = null;
+
+                if(tcp) {
+                    if(tcpSocket != null) {
+                        receivedString = IOUtils.readStreamToString(tcpSocket.getInputStream());
+                    } else {
+                        tcpSocket = serverTCPSocket.accept();
+                        tcpSockets.add(tcpSocket);
+                        final Socket ftcpSocket = tcpSocket;
+                        tcpTasksExecutor.submit(() -> receivePacket(ftcpSocket));
+                        continue;
+                    }
+                } else {
+                    byte[] receiveData = new byte[1024];
+                    udpPacket = new DatagramPacket(receiveData, receiveData.length);
+                    serverUDPSocket.receive(udpPacket);
+                    receivedString = new String(udpPacket.getData()).trim();
+                }
+                if(receivedString.startsWith("{")) {
+                    print("JSON PACKET: " + receivedString);
+                    if(!receiveNewPacket(udpPacket, tcpSocket, receivedString)) continue;
+                } else {
+                    int nb = 0;
+                    if (receivedString.startsWith("b'")) {
+                        print("OLD PACKET: " + receivedString);
+                        nb = 2;
+                    } else if (receivedString.startsWith("b\"b'")) {
+                        print("NEW PACKET: " + receivedString);
+                        nb = 4;
+                    } else {
+                        print("??? PACKET: " + receivedString);
+                        continue;
+                    }
+                    receivedString = receivedString.substring(nb);
+                    receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
+                    if (receivedString.startsWith(";"))
+                        receivedString = receivedString.substring(1);
+                    if (!parsePacket(receivedString, nb)) continue;
+                }
+
+                DataObject deviceType = getDeviceType(deviceId);
+                StringBuilder text = texts.get(deviceType);
+                // дозаполняем текст импорта по своему устройству
+                if(text == null) {
+                    text = new StringBuilder();
+                    texts.put(deviceType, text);
+                }
+
+                if(text.length() > 0) text.append('\n');
+                text.append(cDt);
+                text.append(';');
+                text.append(cMeasuring);
+
+                nQps += 1;
+                checkAndFlushPackets();
+            } catch (Throwable t) {
+                print("ERROR: " + "\n" + ExceptionUtils.getStackTrace(t));
+            }
+        }
+    }
+
+    public synchronized void checkAndFlushPackets() {
         long timestamp = System.currentTimeMillis();
         if (nQps >= qps || timestamp - lastTimeStamp > maxDelay * 1000) {
             nQps = 0;
@@ -364,7 +398,6 @@ public class UDPServer extends MonitorServer {
 
     // --- Импорт в CSV
     private void importCSV() {
-        final List<Runnable> textRunnables = new ArrayList<>(runnables);
         for (final DataObject deviceType : texts.keySet() ) {
             final String textToProceed = texts.get(deviceType).toString();
             importTasksExecutor.submit(new Runnable() {
@@ -373,12 +406,6 @@ public class UDPServer extends MonitorServer {
                     try(DataSession session = createSession()){
                         importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
                         session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
-                        for(Runnable runnable : textRunnables)
-                            try {
-                                runnable.run();
-                            } catch (Throwable t) {
-                                print("ERROR, RUNNING RESPONSE: " + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
-                            }
                     } catch (Throwable t) {
                         print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                     }
@@ -414,13 +441,24 @@ public class UDPServer extends MonitorServer {
     }
 
     // остановка сервера
-    public void stop() {
+    public synchronized void stop() {
         lRead = false;
         importCSV();        // может что-то осталось в буфере
         try {
-            serverSocket.close();
+            if(tcp) {
+                try {
+                    for (Socket tcpSocket : tcpSockets)
+                        tcpSocket.close();
+                    serverTCPSocket.close();
+                } catch (IOException e) {
+                    throw Throwables.propagate(e);
+                }
+            }
+            else
+                serverUDPSocket.close();
         } finally {
             daemonTasksExecutor.shutdown();
+            tcpTasksExecutor.shutdown();
             scheduledTasksExecutor.shutdown();
             importTasksExecutor.shutdown();;
         }
