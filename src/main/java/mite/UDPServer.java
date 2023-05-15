@@ -314,7 +314,7 @@ public class UDPServer extends MonitorServer {
         importTasksExecutor = ExecutorFactory.createMonitorThreadService(threads, UDPServer.this);
         scheduledTasksExecutor = ExecutorFactory.createMonitorScheduledThreadService(0, this);
         scheduledTasksExecutor.schedule(this::checkAndFlushPackets, 100, TimeUnit.MILLISECONDS);
-        tcpTasksExecutor = ExecutorFactory.createMonitorThreadService(0, this);
+        tcpTasksExecutor = ExecutorFactory.createMonitorThreadService(null, this);
         daemonTasksExecutor = ExecutorFactory.createMonitorThreadService(0, this);
         daemonTasksExecutor.submit(() -> receivePacket(null));
     }
@@ -352,6 +352,7 @@ public class UDPServer extends MonitorServer {
                         final Socket socket = serverTCPSocket.accept();
                         print("TCP CONNECTED : " + socket.getInetAddress());
                         TCPSocket rtcpSocket = new TCPSocket(socket);
+                        tcpSockets.add(rtcpSocket);
                         tcpSockets.add(rtcpSocket);
                         tcpTasksExecutor.submit(() -> receivePacket(rtcpSocket));
                         continue;
