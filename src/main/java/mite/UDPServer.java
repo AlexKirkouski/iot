@@ -332,11 +332,10 @@ public class UDPServer extends MonitorServer {
                     if(tcpSocket != null) {
                         receivedString = IOUtils.readStreamToString(tcpSocket.getInputStream());
                     } else {
-                        tcpSocket = serverTCPSocket.accept();
-                        print("TCP CONNECTED : " + tcpSocket.getInetAddress());
-                        tcpSockets.add(tcpSocket);
-                        final Socket ftcpSocket = tcpSocket;
-                        tcpTasksExecutor.submit(() -> receivePacket(ftcpSocket));
+                        final Socket fTcpSocket = serverTCPSocket.accept();
+                        print("TCP CONNECTED : " + fTcpSocket.getInetAddress());
+                        tcpSockets.add(fTcpSocket);
+                        tcpTasksExecutor.submit(() -> receivePacket(fTcpSocket));
                         continue;
                     }
                 } else {
