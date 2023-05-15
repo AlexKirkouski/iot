@@ -2,7 +2,6 @@ package mite;
 
 import com.google.common.base.Throwables;
 import lsfusion.base.ExceptionUtils;
-import lsfusion.base.file.IOUtils;
 import lsfusion.base.file.RawFileData;
 import lsfusion.server.base.controller.manager.MonitorServer;
 import lsfusion.server.base.controller.stack.ExecutionStackAspect;
@@ -98,7 +97,7 @@ public class UDPServer extends MonitorServer {
     private ServerSocket serverTCPSocket;
     protected ExecutorService daemonTasksExecutor;
 
-    private List<Socket> tcpSockets = new ArrayList<>();
+    private List<TCPSocket> tcpSockets = new ArrayList<>();
     protected ExecutorService tcpTasksExecutor;
     protected ScheduledExecutorService scheduledTasksExecutor;
     protected ExecutorService importTasksExecutor;
@@ -142,7 +141,7 @@ public class UDPServer extends MonitorServer {
         cMeasuring = deviceId + ";" + temp + ";" + humidity + ';' + batt;
     }
 
-    private void sendTsync(DatagramPacket udpPacket, Socket tcpSocket, long serialId) throws IOException {
+    private void sendTsync(DatagramPacket udpPacket, TCPSocket tcpSocket, long serialId) throws IOException {
         JSONObject out = new JSONObject();
 //        ByteBuffer out = ByteBuffer.allocate(2+4+4+7+4);
 //        writeUnsignedShort(out, 0xEA01);
@@ -159,7 +158,7 @@ public class UDPServer extends MonitorServer {
 
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm:ss");
 
-    private void sendAck(DatagramPacket udpPacket, Socket tcpSocket, long serialId) throws IOException {
+    private void sendAck(DatagramPacket udpPacket, TCPSocket tcpSocket, long serialId) throws IOException {
         JSONObject out = new JSONObject();
 //        ByteBuffer out = ByteBuffer.allocate(2+4+4+4);
 //        writeUnsignedShort(out, 0xAC01);
@@ -196,14 +195,14 @@ public class UDPServer extends MonitorServer {
 
     private static AtomicLong responseIndex = new AtomicLong();
 
-    private void sendResponseWithCRC(DatagramPacket udpPacket, Socket tcpSocket, JSONObject out) throws IOException {
+    private void sendResponseWithCRC(DatagramPacket udpPacket, TCPSocket tcpSocket, JSONObject out) throws IOException {
 //        writeCRC32(out);
 
         InetAddress address;
         int port;
         if (tcp) {
-            address = tcpSocket.getInetAddress();
-            port = tcpSocket.getPort();
+            address = tcpSocket.socket.getInetAddress();
+            port = tcpSocket.socket.getPort();
         } else {
             address = udpPacket.getAddress();
             port = udpPacket.getPort();
@@ -213,13 +212,12 @@ public class UDPServer extends MonitorServer {
             String outString = out.toString();
             long index = responseIndex.getAndIncrement();
             print("RESPONSE SENDING " + address + " " + port + " " + outString + " INDEX: " + index);
-            byte[] bytes = outString.getBytes(); //out.array();
             try {
                 if(tcp) {
-                    OutputStream outputStream = tcpSocket.getOutputStream();
-                    outputStream.write(bytes);
-                    outputStream.flush();
+                    tcpSocket.dout.writeUTF(outString);
+                    tcpSocket.dout.flush();
                 } else {
+                    byte[] bytes = outString.getBytes(); //out.array();
                     DatagramPacket sendPacket = new DatagramPacket(bytes, bytes.length, address, port);
                     serverUDPSocket.send(sendPacket);
                 }
@@ -260,7 +258,7 @@ public class UDPServer extends MonitorServer {
         byteBuffer.putInt((int) value);
     }
 
-    private boolean receiveNewPacket(DatagramPacket udpPacket, Socket tcpSocket, String receivedString) throws IOException {
+    private boolean receiveNewPacket(DatagramPacket udpPacket, TCPSocket tcpSocket, String receivedString) throws IOException {
         JSONObject jsonObject = new JSONObject(receivedString);
 //        ByteBuffer byteBuffer = ByteBuffer.wrap(receiveData).order(ByteOrder.LITTLE_ENDIAN);
 
@@ -317,7 +315,25 @@ public class UDPServer extends MonitorServer {
         daemonTasksExecutor.submit(() -> receivePacket(null));
     }
 
-    private synchronized void receivePacket(Socket tcpSocket) {
+    private class TCPSocket {
+        public final Socket socket;
+        public final DataInputStream din;
+        public final DataOutputStream dout;
+
+        public TCPSocket(Socket socket) throws IOException {
+            this.socket = socket;
+            din = new DataInputStream(socket.getInputStream());
+            dout = new DataOutputStream(socket.getOutputStream());
+        }
+
+        public void close() throws IOException {
+            din.close();
+            dout.close();
+            socket.close();
+        }
+    }
+
+    private synchronized void receivePacket(TCPSocket tcpSocket) {
         //                byte[] receiveData = new byte[1024];
         nQps = 0;
         lastTimeStamp = System.currentTimeMillis();
@@ -330,12 +346,13 @@ public class UDPServer extends MonitorServer {
 
                 if(tcp) {
                     if(tcpSocket != null) {
-                        receivedString = IOUtils.readStreamToString(tcpSocket.getInputStream());
+                        receivedString = tcpSocket.din.readUTF();
                     } else {
-                        final Socket fTcpSocket = serverTCPSocket.accept();
-                        print("TCP CONNECTED : " + fTcpSocket.getInetAddress());
-                        tcpSockets.add(fTcpSocket);
-                        tcpTasksExecutor.submit(() -> receivePacket(fTcpSocket));
+                        final Socket socket = serverTCPSocket.accept();
+                        print("TCP CONNECTED : " + socket.getInetAddress());
+                        TCPSocket rtcpSocket = new TCPSocket(socket);
+                        tcpSockets.add(rtcpSocket);
+                        tcpTasksExecutor.submit(() -> receivePacket(rtcpSocket));
                         continue;
                     }
                 } else {
@@ -447,7 +464,7 @@ public class UDPServer extends MonitorServer {
         try {
             if(tcp) {
                 try {
-                    for (Socket tcpSocket : tcpSockets)
+                    for (TCPSocket tcpSocket : tcpSockets)
                         tcpSocket.close();
                     serverTCPSocket.close();
                 } catch (IOException e) {
