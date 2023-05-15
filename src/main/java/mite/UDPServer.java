@@ -321,12 +321,12 @@ public class UDPServer extends MonitorServer {
 
     private class TCPSocket {
         public final Socket socket;
-        public final DataInputStream din;
+        public final BufferedReader din;
         public final DataOutputStream dout;
 
         public TCPSocket(Socket socket) throws IOException {
             this.socket = socket;
-            din = new DataInputStream(socket.getInputStream());
+            din = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             dout = new DataOutputStream(socket.getOutputStream());
         }
 
@@ -347,7 +347,7 @@ public class UDPServer extends MonitorServer {
 
                 if(tcp) {
                     if(tcpSocket != null) {
-                        receivedString = tcpSocket.din.readUTF();
+                        receivedString = tcpSocket.din.readLine();
                     } else {
                         final Socket socket = serverTCPSocket.accept();
                         print("TCP CONNECTED : " + socket.getInetAddress());
