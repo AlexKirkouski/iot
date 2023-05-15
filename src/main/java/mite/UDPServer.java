@@ -303,6 +303,10 @@ public class UDPServer extends MonitorServer {
 //    private final Set<Long> immediateIds = BaseUtils.toSet(1210000022L, 1210000028L, 1210000112L, 1210000115L, 1210000109L);
 
     public void start() throws IOException {
+        nQps = 0;
+        lastTimeStamp = System.currentTimeMillis();
+        lRead = true;
+
         if(tcp)
             serverTCPSocket = new ServerSocket(port);
         else
@@ -333,16 +337,13 @@ public class UDPServer extends MonitorServer {
         }
     }
 
-    private synchronized void receivePacket(TCPSocket tcpSocket) {
+    private void receivePacket(TCPSocket tcpSocket) {
         //                byte[] receiveData = new byte[1024];
-        nQps = 0;
-        lastTimeStamp = System.currentTimeMillis();
-        lRead = true;
         while(lRead)
         {
-            String receivedString;
             try {
                 DatagramPacket udpPacket = null;
+                String receivedString;
 
                 if(tcp) {
                     if(tcpSocket != null) {
@@ -361,46 +362,55 @@ public class UDPServer extends MonitorServer {
                     serverUDPSocket.receive(udpPacket);
                     receivedString = new String(udpPacket.getData()).trim();
                 }
-                if(receivedString.startsWith("{")) {
-                    print("JSON PACKET: " + receivedString);
-                    if(!receiveNewPacket(udpPacket, tcpSocket, receivedString)) continue;
-                } else {
-                    int nb = 0;
-                    if (receivedString.startsWith("b'")) {
-                        print("OLD PACKET: " + receivedString);
-                        nb = 2;
-                    } else if (receivedString.startsWith("b\"b'")) {
-                        print("NEW PACKET: " + receivedString);
-                        nb = 4;
-                    } else {
-                        print("??? PACKET: " + receivedString);
-                        continue;
-                    }
-                    receivedString = receivedString.substring(nb);
-                    receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
-                    if (receivedString.startsWith(";"))
-                        receivedString = receivedString.substring(1);
-                    if (!parsePacket(receivedString, nb)) continue;
-                }
-
-                DataObject deviceType = getDeviceType(deviceId);
-                StringBuilder text = texts.get(deviceType);
-                // дозаполняем текст импорта по своему устройству
-                if(text == null) {
-                    text = new StringBuilder();
-                    texts.put(deviceType, text);
-                }
-
-                if(text.length() > 0) text.append('\n');
-                text.append(cDt);
-                text.append(';');
-                text.append(cMeasuring);
-
-                nQps += 1;
-                checkAndFlushPackets();
+                receivePacket(udpPacket, tcpSocket, receivedString);
             } catch (Throwable t) {
                 print("ERROR: " + "\n" + ExceptionUtils.getStackTrace(t));
             }
+        }
+    }
+
+    private synchronized void receivePacket(DatagramPacket udpPacket, TCPSocket tcpSocket, String receivedString) throws IOException {
+        boolean received = true;
+        if(receivedString.startsWith("{")) {
+            print("JSON PACKET: " + receivedString);
+            received = receiveNewPacket(udpPacket, tcpSocket, receivedString);
+        } else {
+            int nb = 0;
+            if (receivedString.startsWith("b'")) {
+                print("OLD PACKET: " + receivedString);
+                nb = 2;
+            } else if (receivedString.startsWith("b\"b'")) {
+                print("NEW PACKET: " + receivedString);
+                nb = 4;
+            } else {
+                print("??? PACKET: " + receivedString);
+                received = false;
+            }
+            if(received) {
+                receivedString = receivedString.substring(nb);
+                receivedString = receivedString.substring(0, receivedString.lastIndexOf(";") + 1);
+                if (receivedString.startsWith(";"))
+                    receivedString = receivedString.substring(1);
+                received = parsePacket(receivedString, nb);
+            }
+        }
+
+        if(received) {
+            DataObject deviceType = getDeviceType(deviceId);
+            StringBuilder text = texts.get(deviceType);
+            // дозаполняем текст импорта по своему устройству
+            if (text == null) {
+                text = new StringBuilder();
+                texts.put(deviceType, text);
+            }
+
+            if (text.length() > 0) text.append('\n');
+            text.append(cDt);
+            text.append(';');
+            text.append(cMeasuring);
+
+            nQps += 1;
+            checkAndFlushPackets();
         }
     }
 
