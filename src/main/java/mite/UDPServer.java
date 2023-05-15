@@ -367,6 +367,8 @@ public class UDPServer extends MonitorServer {
                     receivePacket(udpPacket, tcpSocket, receivedString);
             } catch (Throwable t) {
                 print("ERROR: " + t.getMessage() + "\n" + ExceptionUtils.getStackTrace(t));
+                if(t instanceof SocketException)
+                    return;
             }
         }
     }
