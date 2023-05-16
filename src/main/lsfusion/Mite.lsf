@@ -238,3 +238,7 @@ EXTEND FORM devices
 EXTEND FORM organizations
     PROPERTIES (o) printMeasurements TOOLBAR, emailMeasurements TOOLBAR
 ;
+
+getpackage(FILE file) {
+    printToLog('GETPACKAGE : ' + extension(file) + ' -> ' + STRING(RAWFILE(file)));
+}
