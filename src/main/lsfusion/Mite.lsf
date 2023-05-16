@@ -241,4 +241,4 @@ EXTEND FORM organizations
 
 getpackage(FILE file) {
     printToLog('GETPACKAGE : ' + extension(file) + ' -> ' + STRING(RAWFILE(file)));
-}
+} @@noauth;
