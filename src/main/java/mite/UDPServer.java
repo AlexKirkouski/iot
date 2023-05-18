@@ -347,7 +347,9 @@ public class UDPServer extends MonitorServer {
 
                 if(tcp) {
                     if(tcpSocket != null) {
-                        receivedString = tcpSocket.din.readLine();
+                        char[] buf = new char[1000];
+                        int read = tcpSocket.din.read(buf);
+                        receivedString = new String(buf, 0, read);
                     } else {
                         final Socket socket = serverTCPSocket.accept();
                         print("TCP CONNECTED : " + socket.getInetAddress());
