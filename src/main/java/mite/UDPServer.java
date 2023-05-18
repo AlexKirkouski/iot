@@ -349,6 +349,8 @@ public class UDPServer extends MonitorServer {
                     if(tcpSocket != null) {
                         byte[] buf = new byte[40];
                         int read = tcpSocket.din.read(buf, 0, 40);
+                        if(read < 0)
+                            return;
                         receivedString = "length : " + read + ", data : " + Arrays.toString(buf);
                     } else {
                         final Socket socket = serverTCPSocket.accept();
