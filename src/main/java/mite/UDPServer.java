@@ -337,6 +337,18 @@ public class UDPServer extends MonitorServer {
         }
     }
 
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        String result = "";
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            result += HEX_ARRAY[v >>> 4];
+            result += HEX_ARRAY[v & 0x0F];
+            result += ' ';
+        }
+        return result;
+    }
+
     private void receivePacket(TCPSocket tcpSocket) {
         //                byte[] receiveData = new byte[1024];
         while(lRead)
@@ -351,7 +363,7 @@ public class UDPServer extends MonitorServer {
                         int read = tcpSocket.din.read(buf, 0, 40);
                         if(read < 0)
                             return;
-                        receivedString = "length : " + read + ", data : " + Arrays.toString(buf);
+                        receivedString = "length : " + read + ", data : " + bytesToHex(buf);
                     } else {
                         final Socket socket = serverTCPSocket.accept();
                         print("TCP CONNECTED : " + socket.getInetAddress());
