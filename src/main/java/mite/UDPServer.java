@@ -366,7 +366,7 @@ public class UDPServer extends MonitorServer {
                         receivedString = "length : " + read + ", data : " + bytesToHex(buf);
                     } else {
                         final Socket socket = serverTCPSocket.accept();
-                        socket.setSoTimeout(60000);
+                        socket.setSoTimeout(600000);
                         print("TCP CONNECTED : " + socket.getInetAddress());
                         TCPSocket rtcpSocket = new TCPSocket(socket);
                         tcpSockets.add(rtcpSocket);
