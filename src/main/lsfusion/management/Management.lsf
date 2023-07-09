@@ -270,13 +270,13 @@ runOn(ControllerManager c) {
     IF controllerDevice(c) THEN
         runOn(controllerDevice(c));
     FOR in(ManagerTo ch, c) DO  
-        sendMessage(ch, OVERRIDE onMessage(c), (CONCAT ' ', name(c), 'ON'));
+        NEWSESSION sendMessage(ch, OVERRIDE onMessage(c), (CONCAT ' ', name(c), 'ON'));
 }
 runOff(ControllerManager c) {
     IF controllerDevice(c) THEN
         runOff(controllerDevice(c));
     FOR in(ManagerTo ch, c) DO  
-        sendMessage(ch, OVERRIDE offMessage(c), (CONCAT ' ', name(c), 'OFF'));
+        NEWSESSION sendMessage(ch, OVERRIDE offMessage(c), (CONCAT ' ', name(c), 'OFF'));
 }
 
 FORM controllerManager 'Управление'
