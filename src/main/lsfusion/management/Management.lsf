@@ -6,6 +6,8 @@ NAMESPACE ControllerManagement;
 
 CLASS Management 'Управление';
 name 'Название' = DATA STRING (Management);
+schedule = DATA Schedule (Management);
+nameSchedule 'Расписание' (Management m) = name(schedule(m));
 
 CLASS ControllerManager 'Управление' : Management;
 
@@ -18,7 +20,9 @@ CLASS ForceMode {
     off 'Выключить принудительно'
 }
 mode = DATA ForceMode (ControllerManager);
-nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)) CHARWIDTH 10; 
+nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)) CHARWIDTH 10;
+
+active(ControllerManager m) = m IS ControllerManager AND (in(currentDateTimeSnapshot(), schedule(m)) OR NOT schedule(m));
 
 CLASS ConditionType {
     and 'И',
@@ -281,7 +285,7 @@ runOff(ControllerManager c) {
 
 FORM controllerManager 'Управление'
     OBJECTS c = Management PANEL
-    PROPERTIES (c) name, nameControllerDevice, nameDeviceType, nameChats ON CHANGE dialogChangeChats(c), isOn, shouldBeOn, nameMode //, nameOn, nameOff
+    PROPERTIES (c) name, nameControllerDevice, nameDeviceType, nameChats ON CHANGE dialogChangeChats(c), nameSchedule, isOn, shouldBeOn, nameMode //, nameOn, nameOff
     OBJECTS mc = ManagerCondition
     PROPERTIES (mc) order, name READONLY, nameType, isTrue
     PROPERTIES (c) newTimeCondition DRAW mc TOOLBAR 
@@ -309,6 +313,7 @@ DESIGN controllerManager {
                 MOVE PROPERTY (nameChats(c));
                 MOVE PROPERTY (onMessage(c));
                 MOVE PROPERTY (offMessage(c));
+                MOVE PROPERTY (nameSchedule(c));
                 fill = 3;
             }
             NEW params {
@@ -388,7 +393,7 @@ currentValue(StateConditionValue v) += 1 IF stateIsOn(manager(v));
 name(StateConditionValue v) += 'Включен: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'выкл.') + ' )';
 management(StateConditionValue v) += manager(v);
 
-WHEN GOAFTER shouldBeOn CHANGED(shouldBeOn(ControllerManager c)) DO {
+WHEN GOAFTER shouldBeOn (CHANGED(shouldBeOn(ControllerManager c)) AND active(c)) OR SET(active(c)) DO {
     checkWorking(c);
 }
 
@@ -606,6 +611,7 @@ copyNames(TemplateManagement manager, ControllerManager cp) {
     name(cp) <- name(manager) + ' : ' + deviceName(cp);
     onMessage(cp) <- onMessage(manager) + ' : ' + deviceName(cp);        
     offMessage(cp) <- offMessage(manager) + ' : ' + deviceName(cp);
+    schedule(cp) <- schedule(manager);
 } 
 copy(TemplateManagement manager, ControllerManager cp) {
     copyDevices(TemplateDevice td) <- NULL;
@@ -626,7 +632,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
     template(cp) <- manager;
 }
 
-changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
+changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR CHANGED(schedule(m));
 WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp AS ControllerManager) DO
     copyNames(template(cp), cp);
 
