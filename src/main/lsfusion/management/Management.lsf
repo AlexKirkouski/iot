@@ -480,8 +480,8 @@ DESIGN controllerManagers {
     }
 }
 
-copyDevices = DATA LOCAL Device (TemplateDevice);
-copyManagements = DATA LOCAL ControllerManager (TemplateManagement);
+copyDevices = DATA LOCAL ManagementDevice (TemplateDevice);
+copyManagements = DATA LOCAL Management (TemplateManagement);
 
 copiedConditionValue = DATA LOCAL ConditionValue ();
 copy ABSTRACT MULTI OVERRIDE (ConditionValue);
@@ -512,19 +512,19 @@ copy(StateConditionValue value) + {
         copiedConditionValue() <- value;
 }
 copy(MeasurementConditionValue value) +{
-    FOR Device sd = copyDevices(device(value)) DO
+    FOR ManagementDevice sd = copyDevices(device(value)) DO
         copiedConditionValue() <- measurementConditionValue(sd, measurementType(value));
     ELSE
         copiedConditionValue() <- value;
 }
 copy(DelayConditionValue value) +{
-    FOR Device sd = copyDevices(device(value)) DO
+    FOR ManagementDevice sd = copyDevices(device(value)) DO
         copiedConditionValue() <- delayConditionValue(sd);
     ELSE
         copiedConditionValue() <- value;
 }
 copy(AttributeLocationConditionValue value) +{
-    FOR Device sd = copyDevices(device(value)) DO
+    FOR ManagementDevice sd = copyDevices(device(value)) DO
         copiedConditionValue() <- attributeConditionValue(sd, attribute(value));
     ELSE
         copiedConditionValue() <- value;
@@ -532,7 +532,7 @@ copy(AttributeLocationConditionValue value) +{
 // copy of instanced condition values are in orgManagement, since we need an organization parameter and it can not be polymorphed
 overCopy ABSTRACT (InstancedConditionValue, Device);
 copy(InstancedConditionValue value) +{
-    FOR Device sd = copyDevices(device(value)) DO
+    FOR ManagementDevice sd = copyDevices(device(value)) DO
         overCopy(value, sd);
     ELSE
         copiedConditionValue() <- value;
@@ -607,30 +607,59 @@ DESIGN locations {
 
 deviceName (ControllerManager cp) = (CONCAT ' ', name(templateDevice(cp)), nameLocation(templateDevice(cp)));
 
-copyNames(TemplateManagement manager, ControllerManager cp) {
-    name(cp) <- name(manager) + ' : ' + deviceName(cp);
-    onMessage(cp) <- onMessage(manager) + ' : ' + deviceName(cp);        
-    offMessage(cp) <- offMessage(manager) + ' : ' + deviceName(cp);
+copyNames(Management manager, Management cp, STRING postfix) {
+    name(cp) <- name(manager) + postfix;
+    onMessage(cp) <- onMessage(manager) + postfix;
+    offMessage(cp) <- offMessage(manager) + postfix;
     schedule(cp) <- schedule(manager);
+}
+copy(Management manager, Management cp) {
+    FOR controller(ManagerCondition mcfrom) = manager DO {
+        copy(mcfrom);
+        FOR ManagerCondition mcto = copiedManagerCondition() DO {
+            controller(mcto) <- cp;
+            copy(mcfrom, mcto);
+        }
+    }
+
+    in(ManagerTo mto, cp) <- in(mto, manager);
+}
+copyNames(TemplateManagement manager, ControllerManager cp) {
+    copyNames(manager, cp, ' : ' + deviceName(cp));
 } 
 copy(TemplateManagement manager, ControllerManager cp) {
     copyDevices(TemplateDevice td) <- NULL;
     copyDevices(templateDevice(deviceType(manager))) <- templateDevice(cp);
     copyManagements(TemplateManagement mg) <- NULL;
     copyManagements(manager) <- cp;
-
-    FOR controller(ManagerCondition mcfrom) = manager DO {
-        copy(mcfrom);
-        FOR ManagerCondition mcto = copiedManagerCondition() DO {
-            controller(mcto) <- cp;
-            copy(mcfrom, mcto);
-        }             
-    }
-
-    in(ManagerTo mto, cp) <- in(mto, manager);
+    
+    copy[Management, Management](manager, cp);
     
     template(cp) <- manager;
 }
+overCopy ABSTRACT (Management, Management);
+copy 'Копировать' (TemplateManagement management) {
+    NEW cpy = TemplateManagement {
+        copyNames(management, cpy, '');
+        
+        deviceType(cpy) <- deviceType(management);
+
+        copyDevices(TemplateDevice td) <- NULL;
+        copyDevices(templateDevice(deviceType(cpy))) <- templateDevice(deviceType(management));
+        copyManagements(TemplateManagement mg) <- NULL;
+        copyManagements(cpy) <- management;
+        
+        copy(management, cpy);
+        overCopy(cpy, management);
+
+        APPLY;
+        
+        formEdit(cpy);
+    }
+}
+EXTEND FORM controllerManagers
+    PROPERTIES (cm) copy TOOLBAR
+;
 
 changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR CHANGED(schedule(m));
 WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp AS ControllerManager) DO
@@ -654,14 +683,13 @@ onChange(TemplateManagement m) + {
 } 
 WHEN changed(Management management) DO onChange(management);
 
-overCopy ABSTRACT (ControllerManager, Device);
 WHEN SET(in(Device device, TemplateManagement template)) DO
     NEW cm = ControllerManager {
         templateDevice(cm) <- device;
         template(cm) <- template;
         
         copy(template, cm);
-        overCopy(cm, device);
+        overCopy(cm, template);
     }
     
 WHEN DROPPED(in(templateDevice(ControllerManager cm), template(cm))) DO {
