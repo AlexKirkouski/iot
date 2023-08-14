@@ -639,7 +639,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
 }
 overCopy ABSTRACT (Management, Management);
 copy 'Копировать' (TemplateManagement management) {
-    NEW cpy = TemplateManagement {
+    NEWSESSION NEW cpy = TemplateManagement {
         copyNames(management, cpy, '');
         
         deviceType(cpy) <- deviceType(management);
