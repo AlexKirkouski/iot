@@ -359,8 +359,9 @@ dateTime 'Время' = DATA ZDATETIME (ManagerLog);
 isOn 'Вкл.' = DATA BOOLEAN (ManagerLog);
 INDEX manager(ManagerLog l), dateTime(l), l;
 lastLog = GROUP LAST ManagerLog l ORDER dateTime(l), l BY manager(l) MATERIALIZED;
+prevDateTimeLastLog(ControllerManager l) = PREV(dateTime(lastLog(l)));
 
-WHEN CHANGED(isOn(ControllerManager c)) DO NEW l=ManagerLog {
+WHEN GOAFTER isOn[ControllerManager] CHANGED(isOn(ControllerManager c)) DO NEW l=ManagerLog {
     manager(l) <- c;
     dateTime(l) <- currentZDateTimeSnapshot();
     isOn(l) <- isOn(c);
@@ -380,7 +381,7 @@ DESIGN controllerManager {
 
 CLASS LastChangeConditionValue 'Секунд с последнего изменения' : ConditionValue;
 lastChangeConditionValue = AGGR LastChangeConditionValue WHERE Management manager IS Management;
-currentValue(LastChangeConditionValue v) += subtractSeconds(dateTime(lastLog(manager(v))), currentZDateTimeSnapshot());
+currentValue(LastChangeConditionValue v) += subtractSeconds(prevDateTimeLastLog(manager(v)), currentZDateTimeSnapshot());
 name(LastChangeConditionValue v) += 'Секунд с последнего изменения: ' + name(manager(v)) + ' (тек. зн.: ' + (OVERRIDE currentValue(v)+'', 'отсутствует') + ' )';
 management(LastChangeConditionValue v) += manager(v); 
 
