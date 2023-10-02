@@ -1,0 +1,51 @@
+MODULE Modbus;
+
+REQUIRE Server;
+
+modbusServer 'Modbus server' = DATA STRING (Device);
+modbusPort 'Modbus port' = DATA INTEGER (Device);
+modbusId 'Modbus id' = DATA INTEGER (Device);
+
+CLASS Size {
+    x16 '16',
+    x32 '32',
+    x64 '64'
+} 
+CLASS Endian {
+    big 'Big',
+    little 'Little'
+}
+
+size = DATA Size (MeasurementType);
+nameSize (MeasurementType m) = staticName(size(m));
+captionSize 'Размер' (MeasurementType m) = staticCaption(size(m));
+
+endian = DATA Endian (MeasurementType);
+nameEndian (MeasurementType m) = staticName(endian(m));
+captionEndian 'Endian' (MeasurementType m) = staticCaption(endian(m));
+
+readModbusData INTERNAL 'mite.ReadModbusDataAction' (CSVFILE );
+
+FORM readModbusData
+    OBJECTS d = Device
+    PROPERTIES (d) id, modbusServer, modbusPort, modbusId, type
+    OBJECTS m = MeasurementType EXTID 'measurements'
+    PROPERTIES address = number(type(d), m)
+    PROPERTIES (m) size = nameSize, endian = nameEndian
+    FILTERS number(type(d), m)
+    ORDERS address
+;
+
+readModbusData 'Прочитать Modbus данные' (Device device) {
+    EXPORT readModbusData OBJECTS d = device;
+        
+    readModbusData(CSVFILE(exportFile()));
+}
+
+EXTEND FORM deviceTypes
+    PROPERTIES (d) modbusServer, modbusPort, modbusId, readModbusData SHOWIF modbusServer(d)
+;
+
+EXTEND FORM deviceTypes
+    PROPERTIES (mt) captionSize, captionEndian
+;

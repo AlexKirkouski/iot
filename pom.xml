@@ -30,6 +30,30 @@
           <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
           <version>1.2.1</version>
       </dependency>
+     <!-- https://mvnrepository.com/artifact/com.intelligt.modbus/jlibmodbus -->
+     <dependency>
+         <groupId>com.intelligt.modbus</groupId>
+         <artifactId>jlibmodbus</artifactId>
+         <version>1.2.9.4</version>
+     </dependency>
+     <!-- https://mvnrepository.com/artifact/net.solarnetwork.common/nifty-modbus-core -->
+     <dependency>
+         <groupId>net.solarnetwork.common</groupId>
+         <artifactId>nifty-modbus-core</artifactId>
+         <version>0.4.0</version>
+     </dependency>
+     <!-- https://mvnrepository.com/artifact/net.solarnetwork.common/nifty-modbus-tcp -->
+     <dependency>
+         <groupId>net.solarnetwork.common</groupId>
+         <artifactId>nifty-modbus-tcp</artifactId>
+         <version>0.4.0</version>
+     </dependency>
+
+     <dependency>
+         <groupId>com.digitalpetri.modbus</groupId>
+         <artifactId>modbus-master-tcp</artifactId>
+         <version>1.2.0</version>
+     </dependency>
  </dependencies>
 
     <groupId>com.mite</groupId>

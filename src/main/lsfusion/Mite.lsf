@@ -8,7 +8,7 @@ REQUIRE Options, Organization,
         GrafanaDevice,
         MqttServer, Server,
         Export, 
-        Telegram, Viber, Skype, Slack, Icon;
+        Telegram, Viber, Skype, Slack, Icon, Modbus;
 
 simID 'Sim ID' = DATA STRING (Device);
 EXTEND FORM deviceTypes

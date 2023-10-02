@@ -6,8 +6,6 @@ NAMESPACE ControllerManagement;
 
 CLASS Management 'Управление';
 name 'Название' = DATA STRING (Management);
-schedule = DATA Schedule (Management);
-nameSchedule 'Расписание' (Management m) = name(schedule(m));
 
 CLASS ControllerManager 'Управление' : Management;
 
@@ -21,8 +19,6 @@ CLASS ForceMode {
 }
 mode = DATA ForceMode (ControllerManager);
 nameMode 'Ручное управление' (ControllerManager c) = staticCaption(mode(c)) CHARWIDTH 10;
-
-active(ControllerManager m) = m IS ControllerManager AND (in(currentDateTimeSnapshot(), schedule(m)) OR NOT schedule(m));
 
 CLASS ConditionType {
     and 'И',
@@ -74,25 +70,41 @@ controller = DATA Management (ManagerCondition)
             AUTOSET;
 WHEN DROPPED (controller(ManagerCondition md)) DO
     DELETE md;
+
+activeness 'Условие активности' = DATA BOOLEAN (ManagerCondition);
+
+CLASS ManagerConditionType {
+    on 'Условие работы',
+    active 'Условие уведомления'
+}
+conditionType(ManagerCondition c) = IF activeness(c) THEN ManagerConditionType.active ELSE (ManagerConditionType.on IF c IS ManagerCondition) MATERIALIZED;
+
 order 'Порядок' = DATA INTEGER (ManagerCondition) CHARWIDTH 2;
 lastOrder = GROUP MAX order(ManagerCondition m) BY controller(m);
 WHEN LOCAL SETCHANGED(controller(ManagerCondition m)) DO 
     order(m) <- lastOrder(controller(m)) (+) 1;
-isLast (ManagerCondition c) = lastOrder(controller(c)) = order(c);
-nameType 'Условие' (ManagerCondition c) = IF isLast(c) THEN '' ELSE staticCaption(type(c)) CHARWIDTH 3 ON CHANGE {
-    IF NOT isLast(c) THEN
-        DIALOG LIST ConditionType = type(c) CHANGE;  
-}
+//isLast (ManagerCondition c) = lastOrder(controller(c)) = order(c);
+//nameType 'Операнд' (ManagerCondition c) = IF isLast(c) THEN '' ELSE staticCaption(type(c)) CHARWIDTH 3 ON CHANGE {
+//    IF NOT isLast(c) THEN
+//        DIALOG LIST ConditionType = type(c) CHANGE;  
+//}
+nameType 'Операнд' (ManagerCondition c) = staticCaption(type(c)) CHARWIDTH 3;
 
-conditionGroup (ManagerCondition m) = PARTITION SUM IF type(m) = ConditionType.or THEN 1 ELSE 0 ORDER DESC order(m), m BY controller(m) MATERIALIZED;
-cgCount = GROUP SUM 1 BY controller(ManagerCondition g), conditionGroup(g) MATERIALIZED;
+TABLE controllerManagerTypeGroup (ManagerConditionType, Management, INTEGER);
+TABLE controllerManagerType (ControllerManager, ManagerConditionType);
+conditionGroup (ManagerCondition m) = PARTITION SUM IF type(m) = ConditionType.or THEN 1 ELSE 0 ORDER DESC order(m), m BY controller(m), conditionType(m) MATERIALIZED;
+cgCount = GROUP SUM 1 BY conditionType(ManagerCondition g), controller(g), conditionGroup(g) MATERIALIZED;
+cgCount(ManagerConditionType type, ControllerManager mg) = GROUP SUM 1 IF cgCount(type, mg, INTEGER g) MATERIALIZED;
 isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
-isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY controller(m) AS ControllerManager, conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
-isAutoTrue(ControllerManager mg) = GROUP SUM 1 IF cgCount(mg, INTEGER g) = isTrue(mg, g) MATERIALIZED;
-shouldBeOn 'Должно быть включено' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(mg)) MATERIALIZED; // проверяет работает условие или нет
+isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY conditionType(m), controller(m) AS ControllerManager, conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
+isAutoTrue(ManagerConditionType type, ControllerManager mg) = GROUP SUM 1 IF cgCount(type, mg, INTEGER g) = isTrue(type, mg, g) MATERIALIZED;
+
+shouldBeOn 'Должно быть включено' (ControllerManager mg) = mode(mg) = ForceMode.on OR (NOT mode(mg) = ForceMode.off AND isAutoTrue(ManagerConditionType.on, mg)) MATERIALIZED; // проверяет работает условие или нет
 isOn 'Включено' (ControllerManager mg) = DATA BOOLEAN (ControllerManager);
 isNotWhatShould = shouldBeOn(ControllerManager mg) AND NOT isOn(mg) OR isOn(mg) AND NOT shouldBeOn(mg);
 backgroundIsNotWhatShould = RGB(255, 0, 0) IF isNotWhatShould(ControllerManager mg);
+
+active 'Активно сейчас' (ControllerManager m) = m IS ControllerManager AND (isAutoTrue(ManagerConditionType.active, m) OR NOT cgCount(ManagerConditionType.active, m)) MATERIALIZED;
 
 CLASS ABSTRACT ConditionValue 'Значение';
 name 'Имя' = ABSTRACT STRING (ConditionValue) IN id CHARWIDTH 50 MATERIALIZED;
@@ -285,9 +297,9 @@ runOff(ControllerManager c) {
 
 FORM controllerManager 'Управление'
     OBJECTS c = Management PANEL
-    PROPERTIES (c) name, nameControllerDevice, nameDeviceType, nameChats ON CHANGE dialogChangeChats(c), nameSchedule, isOn, shouldBeOn, nameMode //, nameOn, nameOff
+    PROPERTIES (c) name, nameControllerDevice, nameDeviceType, nameChats ON CHANGE dialogChangeChats(c), active, isOn, shouldBeOn, nameMode //, nameOn, nameOff
     OBJECTS mc = ManagerCondition
-    PROPERTIES (mc) order, name READONLY, nameType, isTrue
+    PROPERTIES (mc) order, activeness, name READONLY, nameType, isTrue
     PROPERTIES (c) newTimeCondition DRAW mc TOOLBAR 
     PROPERTIES (mc) 'Добавить условие' = NEWEDIT[ValuesCondition], EDIT, DELETE GRID
     PROPERTIES (c) onMessage, offMessage
@@ -313,7 +325,7 @@ DESIGN controllerManager {
                 MOVE PROPERTY (nameChats(c));
                 MOVE PROPERTY (onMessage(c));
                 MOVE PROPERTY (offMessage(c));
-                MOVE PROPERTY (nameSchedule(c));
+                MOVE PROPERTY (active(c));
                 fill = 3;
             }
             NEW params {
@@ -541,6 +553,7 @@ copy(InstancedConditionValue value) +{
 
 copy(ManagerCondition from, ManagerCondition to) {
     type(to) <- type(from);
+    activeness(to) <- activeness(from);
     order(to) <- order(from);
 }
 copiedManagerCondition = DATA LOCAL ManagerCondition ();
@@ -612,7 +625,6 @@ copyNames(Management manager, Management cp, STRING postfix) {
     name(cp) <- name(manager) + postfix;
     onMessage(cp) <- onMessage(manager) + postfix;
     offMessage(cp) <- offMessage(manager) + postfix;
-    schedule(cp) <- schedule(manager);
 }
 copy(Management manager, Management cp) {
     FOR controller(ManagerCondition mcfrom) = manager DO {
@@ -662,12 +674,12 @@ EXTEND FORM controllerManagers
     PROPERTIES (cm) copy TOOLBAR
 ;
 
-changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR CHANGED(schedule(m));
+changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
 WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp AS ControllerManager) DO
     copyNames(template(cp), cp);
 
 changed (Management m) = (GROUP SUM 1 IF CHANGED (in(ManagerTo mto, m))) OR
-                                    (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc)) AND controller(mc) = m); 
+                                    (GROUP SUM 1 IF (CHANGED(type(ManagerCondition mc)) OR CHANGED(order(mc)) OR changed(mc) OR CHANGED(activeness(mc))) AND controller(mc) = m); 
 
 onChange ABSTRACT (Management);
 onChange(ControllerManager cm) + {
