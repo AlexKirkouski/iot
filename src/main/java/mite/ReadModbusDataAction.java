@@ -203,8 +203,8 @@ public class ReadModbusDataAction extends InternalAction {
 //                    e.printStackTrace();
                     disconnectModbus(m);
 //                    master.disconnect();
-//                    connections.remove(params);
-                    Thread.sleep(5000);
+                    connections.remove(params);
+                    Thread.sleep(10000);
 //                    throw new RuntimeException(e);
                 } finally {
 //                    client.stop();
