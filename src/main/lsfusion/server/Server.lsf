@@ -66,8 +66,8 @@ adjustment (DeviceType type) = GROUP SUM 1 IF importAdjustmentOperand(type, Meas
 defaultImportAdjustmentValue 'Значение корр. (по умолч.)' (DeviceType dt, MeasurementType mt) = IF importAdjustmentOperand(dt, mt) = '/' OR importAdjustmentOperand(dt, mt) = '*' THEN '1.0' ELSE '0.0';  
 
 fieldImport(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt));
-fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt)); // + 
-                                                        //(OVERRIDE (importAdjustmentOperand(dt, mt) + ' (OVERRIDE importAdjustmentValue(device(id), id(mt)),'+defaultImportAdjustmentValue(dt, mt)+')'),'');
+fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=number(dt, mt)) +
+                                                        (OVERRIDE (importAdjustmentOperand(dt, mt) + ' (OVERRIDE importAdjustmentValue(device(id), id(mt)),' + defaultImportAdjustmentValue(dt, mt)+')'),'');
 
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
                                                 '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS ZDATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
