@@ -207,10 +207,10 @@ public class ReadModbusDataAction extends InternalAction {
 
 //                    e.printStackTrace();
                     ServerLoggers.sqlSuppLog(e);
-                    disconnectModbus(m);
+//                    disconnectModbus(m);
 //                    master.disconnect();
-                    connections.remove(params);
-                    Thread.sleep(10000);
+//                    connections.remove(params);
+//                    Thread.sleep(10000);
 //                    throw new RuntimeException(e);
                 } finally {
 //                    client.stop();
