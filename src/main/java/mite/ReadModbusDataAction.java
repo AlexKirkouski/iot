@@ -35,6 +35,7 @@ import lsfusion.server.logics.classes.data.file.CSVClass;
 import lsfusion.server.logics.classes.data.time.ZDateTimeClass;
 import lsfusion.server.logics.classes.user.ConcreteCustomClass;
 import lsfusion.server.logics.property.classes.ClassPropertyInterface;
+import lsfusion.server.physics.admin.log.ServerLoggers;
 import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 import net.solarnetwork.io.modbus.ModbusMessage;
 import net.solarnetwork.io.modbus.netty.msg.RegistersModbusMessage;
@@ -204,7 +205,7 @@ public class ReadModbusDataAction extends InternalAction {
                 } catch (Exception e) {
 
 //                    e.printStackTrace();
-                    e.printStackTrace();
+                    ServerLoggers.sqlSuppLog(e);
                     disconnectModbus(m);
 //                    master.disconnect();
                     connections.remove(params);
