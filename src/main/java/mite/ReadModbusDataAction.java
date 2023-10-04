@@ -253,7 +253,7 @@ public class ReadModbusDataAction extends InternalAction {
         //if you would like to set connection parameters separately,
         // you should use another method: createModbusMasterTCP(String host, int port, boolean keepAlive);
         ModbusMaster m = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
-        m.setResponseTimeout(5000);
+        m.setResponseTimeout(50000);
 
         Modbus.setAutoIncrementTransactionId(true);
         if (!m.isConnected()) {
