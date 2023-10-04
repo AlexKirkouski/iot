@@ -28,6 +28,7 @@ import lsfusion.server.data.value.ObjectValue;
 import lsfusion.server.language.ScriptingErrorLog;
 import lsfusion.server.language.ScriptingLogicsModule;
 import lsfusion.server.language.action.LA;
+import lsfusion.server.logics.BusinessLogicsBootstrap;
 import lsfusion.server.logics.action.controller.context.ExecutionContext;
 import lsfusion.server.logics.classes.ValueClass;
 import lsfusion.server.logics.classes.data.file.CSVClass;
@@ -101,8 +102,10 @@ public class ReadModbusDataAction extends InternalAction {
             boolean notRead = true;
             while(notRead) {
                 ModbusMaster m = connections.get(params);
-                if(m == null)
+                if(m == null) {
                     m = connectModbus(params.first, params.second);
+                    connections.put(params, m);
+                }
 
 //                NettyTcpModbusClientConfig config = new NettyTcpModbusClientConfig(modbusServer, modbusPort);
 //                config.setAutoReconnect(false);
@@ -152,10 +155,10 @@ public class ReadModbusDataAction extends InternalAction {
                         RegisterOrder order = RegisterOrder.HighLow;
                         switch (endian) {
                             case "Modbus_Endian.big":
-                                order = RegisterOrder.LowHigh;
+                                order = RegisterOrder.HighLow;
                                 break;
                             case "Modbus_Endian.little":
-                                order = RegisterOrder.HighLow;
+                                order = RegisterOrder.LowHigh;
                                 break;
                         }
 
@@ -234,7 +237,7 @@ public class ReadModbusDataAction extends InternalAction {
         }
     }
 
-    private static ModbusMaster connectModbus(String modbusHost, int modbusPort) {
+    public static ModbusMaster connectModbus(String modbusHost, int modbusPort) {
         TcpParameters tcpParameters = new TcpParameters();
         try {
             tcpParameters.setHost(InetAddress.getByName(modbusHost));
