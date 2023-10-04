@@ -204,6 +204,7 @@ public class ReadModbusDataAction extends InternalAction {
                 } catch (Exception e) {
 
 //                    e.printStackTrace();
+                    e.printStackTrace();
                     disconnectModbus(m);
 //                    master.disconnect();
                     connections.remove(params);
