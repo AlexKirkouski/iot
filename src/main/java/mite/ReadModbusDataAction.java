@@ -57,6 +57,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import static net.solarnetwork.io.modbus.netty.msg.RegistersModbusMessage.readHoldingsRequest;
@@ -75,7 +76,7 @@ public class ReadModbusDataAction extends InternalAction {
         deviceInfoInterface = getOrderInterfaces().get(0);
     }
 
-    private Map<Pair<String, Integer>, ModbusMaster> connections = new HashMap<>();
+    private Map<Pair<String, Integer>, ModbusMaster> connections = new ConcurrentHashMap<>();
 //    private Map<Pair<String, Integer>, ModbusTcpMaster> connections = new HashMap<>();
 
     @Override
