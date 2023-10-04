@@ -129,6 +129,7 @@ public class ReadModbusDataAction extends InternalAction {
 //                }
 
                 try {
+                    resultString = "";
 
                     //                int time = ConvertRegistersToInt(Arrays.copyOfRange(slotValues, 4, 6));
                     resultString += ZDateTimeClass.instance.formatString(Instant.now()) + ";";
@@ -253,7 +254,7 @@ public class ReadModbusDataAction extends InternalAction {
         //if you would like to set connection parameters separately,
         // you should use another method: createModbusMasterTCP(String host, int port, boolean keepAlive);
         ModbusMaster m = ModbusMasterFactory.createModbusMasterTCP(tcpParameters);
-        m.setResponseTimeout(50000);
+//        m.setResponseTimeout(5000);
 
         Modbus.setAutoIncrementTransactionId(true);
         if (!m.isConnected()) {
