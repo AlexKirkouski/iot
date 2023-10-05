@@ -42,6 +42,8 @@ updateDashBoards 'Обновить дэшборды' (Device d) {
             IF length(textAllPanels()) > 0 THEN {
                 textDashboard() <- replace(textDashboard(), '<<TITLE>>', grName(o) + '_' + TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+                textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));
+                textDashboard() <- replace(textDashboard(), '<<dsName>>', TEXT (dsName(o)));
     
                 EXEC setParam();
                 cmd() <- 3;
