@@ -71,12 +71,13 @@ fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=numbe
 
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
                                                 '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS ZDATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
-                                                '\t\t'+       'FOR Device dv = device(id) NEW m = Measurement \{\n' +
+                                                '\t\t'+       'FOR Device dv = device(id) NEW m = Measurement DO \{\n' +
                                                 '\t\t\t'+            'dateTime(m) <- dt;\n' +
                                                 '\t\t\t'+            'device(m) <- dv;\n' +
                                                 '\t\t\t'+            'idImport(m) <- id;\n' +
                                                 '\t\t\t'+            'server(m) <- server;\n' +
-                                      (OVERRIDE('\t\t\t'+            'unAdjustedValue(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImportValue(n, dt, mt),'' ORDER n) + ';\n'),'') + 
+                                      (GROUP CONCAT '\t\t\t'+            'unAdjustedValue(m, MeasurementType mt) <- ' + fieldImportValue(n, dt, MeasurementType mt) + ' WHERE LONG(mt)=' + LONG(mt) + ';\n','' ORDER n) + 
+//                                      (OVERRIDE('\t\t\t'+            'unAdjustedValue(m, MeasurementType mt) <- CASE EXCLUSIVE' + (GROUP CONCAT ' WHEN LONG(mt)=' + LONG(MeasurementType mt) + ' THEN ' + fieldImportValue(n, dt, mt),'' ORDER n) + ';\n'),'') + 
                                                 '\t\t'+       '\}\n' + 
                                                 '\t'+  '\}\n' +
                                                 '\}\n' CHARWIDTH 5;
