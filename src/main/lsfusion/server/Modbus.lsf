@@ -24,7 +24,8 @@ endian = DATA Endian (MeasurementType);
 nameEndian (MeasurementType m) = staticName(endian(m));
 captionEndian 'Endian' (MeasurementType m) = staticCaption(endian(m));
 
-readModbusData INTERNAL 'mite.ReadModbusDataAction' (CSVFILE );
+flushModbusData INTERNAL 'mite.FlushModbusDataAction' (DeviceType);
+addModbusData INTERNAL 'mite.AddModbusDataAction' (CSVFILE );
 
 FORM readModbusData
     OBJECTS d = Device
@@ -37,9 +38,13 @@ FORM readModbusData
 ;
 
 readModbusData 'Прочитать Modbus данные' (Device device) {
-    EXPORT readModbusData OBJECTS d = device;
-        
-    readModbusData(CSVFILE(exportFile()));
+    NEWSESSION {
+        EXPORT readModbusData OBJECTS d = device;
+
+        addModbusData(CSVFILE(exportFile()));
+        flushModbusData(type(device));
+        APPLY;
+    }
 }
 
 EXTEND FORM deviceTypes
