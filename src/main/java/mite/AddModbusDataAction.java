@@ -33,7 +33,7 @@ public class AddModbusDataAction extends InternalAction {
 
     // connecting to the modbus server
 
-    private static Map<Long, StringBuilder> devicesData = new HashMap<>();
+    private static final Map<Long, StringBuilder> devicesData = new HashMap<>();
     public static void addData(Long deviceType, String data) {
         synchronized (devicesData) {
             StringBuilder dataList = devicesData.get(deviceType);
@@ -48,7 +48,10 @@ public class AddModbusDataAction extends InternalAction {
     }
     public static String flushData(Long device) {
         synchronized (devicesData) {
-            return devicesData.remove(device).toString();
+            StringBuilder remove = devicesData.remove(device);
+            if(remove != null)
+                return remove.toString();
+            return null;
         }
     }
 

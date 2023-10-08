@@ -34,8 +34,8 @@ public class FlushModbusDataAction extends InternalAction {
             LA<?> importAction = findAction("importCSV[DeviceType,Server,CSVFILE]");
 
             String data = AddModbusDataAction.flushData((Long) deviceType.object);
-
-            importAction.execute(context, deviceType, NullValue.instance, new DataObject(new RawFileData(data.getBytes()), CSVClass.get()));
+            if(data != null)
+                importAction.execute(context, deviceType, NullValue.instance, new DataObject(new RawFileData(data.getBytes()), CSVClass.get()));
         } catch (Exception e) {
             throw Throwables.propagate(e);
         }
