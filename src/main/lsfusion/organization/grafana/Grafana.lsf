@@ -79,7 +79,6 @@ DESIGN organization {
         MOVE PROPERTY (grName(o));
         NEW cnt2 {
             fill = 1;
-            type = COLUMNS;
             NEW hp {
                 type = CONTAINERV;
                 caption = 'Пароли в Grafana'; 
