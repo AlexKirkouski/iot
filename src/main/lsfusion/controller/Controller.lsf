@@ -32,6 +32,7 @@ DESIGN controllerTypes {
             MOVE BOX (t);
             NEW tab {
                 tabbed = TRUE;
+                alignment = STRETCH;
             }
             fill = 1;
         }
@@ -89,6 +90,7 @@ DESIGN controllers {
             }
             NEW tab {
                 tabbed = TRUE;
+                alignment = STRETCH;
             }
             fill = 1;
         }

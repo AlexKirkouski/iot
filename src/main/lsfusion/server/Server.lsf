@@ -95,7 +95,7 @@ WHEN SETCHANGED (device(Measurement m)) AND Device cp = copyMeasurementsFrom(dev
     }
 
 EXTEND FORM deviceTypes
-    PROPERTIES (t) importCSVScript
+//    PROPERTIES (t) importCSVScript
     PROPERTIES (t, mt) importAdjustmentOperand
     PROPERTIES (d) idCopyMeasurementsFrom
 ;
