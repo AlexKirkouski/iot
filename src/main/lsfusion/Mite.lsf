@@ -59,7 +59,7 @@ DESIGN devices {
     tab {
         NEW settings {
             caption = 'Настройки'; 
-            MOVE GROUP (settings, d) { type = CONTAINERV; };
+            MOVE GROUP (settings, d) { horizontal = FALSE; };
         }
     }
 }

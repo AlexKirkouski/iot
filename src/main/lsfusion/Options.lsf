@@ -32,14 +32,14 @@ DESIGN options {
     pane {
         NEW h2 {
             caption = 'Grafana: доступ'; 
-            type = CONTAINERV;
+            horizontal = FALSE;
             MOVE PROPERTY(grafanaLogin());
             MOVE PROPERTY(grafanaPwd());
             MOVE PROPERTY(grafanaUrl());
         }
         NEW h3 AFTER h2 {
             caption = 'Grafana: доступ к PostgreSQL'; 
-            type = CONTAINERV;
+            horizontal = FALSE;
             MOVE PROPERTY(grafanaPsUrl());
             MOVE PROPERTY(grafanaPsDB());
             MOVE PROPERTY(grafanaPsLogin());
@@ -59,7 +59,7 @@ DESIGN options {
     pane {
         NEW h4 AFTER h3 {
             caption = 'Отладка'; 
-            type = CONTAINERV;
+            horizontal = FALSE;
             MOVE PROPERTY(udpPrnConsole());
             MOVE PROPERTY(mqttPrnConsole());
         }

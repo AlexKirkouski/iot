@@ -94,8 +94,8 @@ EXTEND FORM controllers
 
 DESIGN controllers {
     tab {
-        type = TABBED;
-        MOVE BOX (cm) {
+        tabbed = TRUE;
+        BOX (cm) {
             caption = 'Команды';
         }
         MOVE BOX (r) {

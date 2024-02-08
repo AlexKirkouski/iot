@@ -204,7 +204,7 @@ DESIGN conditionValues {
     OBJECTS {
         NEW add {
             caption = 'Добавить';
-            type = CONTAINERH;
+            horizontal = TRUE;
             MOVE PROPERTY (fixed);
             MOVE PROPERTY (average);
             MOVE PROPERTY (in);            
@@ -311,12 +311,12 @@ FORM controllerManager 'Управление'
 
 DESIGN controllerManager {
     GROUP (,c) {
-        type = CONTAINERV;
+        horizontal = FALSE;
         fill = 1;
     }
     OBJECTS {
         NEW boxC BEFORE BOX(mc) {
-            type = CONTAINERH;
+            horizontal = TRUE;
             MOVE BOX(c) {
                 fill = 1;
             }
@@ -343,7 +343,7 @@ DESIGN controllerManager {
 //            }
         }
         NEW tab {
-            type = TABBED;
+            tabbed = TRUE;
             fill = 1;
             MOVE BOX(mc);
         }       
@@ -443,7 +443,7 @@ DESIGN controllers {
     BOX (cd) {
         NEW manager {
             caption = 'Управление';
-            type = CONTAINERH;
+            horizontal = TRUE;
             MOVE PROPERTY (setManager(cd)) { fill = 1; }
             MOVE PROPERTY (dropManager(cd)) { fill = 1; };
             alignment = STRETCH;           
@@ -466,13 +466,13 @@ NAVIGATOR {
 DESIGN controllerManagers {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             NEW top {
                 MOVE BOX (cm);
                 fill = 1;
             }
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }
@@ -486,7 +486,7 @@ EXTEND FORM controllerManagers
 
 DESIGN controllerManagers {
     tab {
-        type = TABBED;
+        tabbed = TRUE;
         MOVE BOX (cv) {
             caption = 'Параметры управления';
         }

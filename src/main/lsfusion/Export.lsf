@@ -46,7 +46,6 @@ DESIGN organization {
     BOX (o) {
         NEW export {
             caption = 'Экспорт';
-            type = CONTAINERH;
             MOVE PROPERTY (url(o));
             MOVE PROPERTY (authToken(o));
             MOVE PROPERTY (exportDateFrom(o));

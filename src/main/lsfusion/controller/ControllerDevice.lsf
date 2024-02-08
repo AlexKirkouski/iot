@@ -57,7 +57,7 @@ EXTEND FORM controllers
 
 DESIGN controllers {
     tab {
-        type = TABBED;
+        tabbed = TRUE;
         MOVE BOX (cd) {
             caption = 'Устройства';
         }

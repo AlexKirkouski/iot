@@ -19,10 +19,10 @@ FORM deviceTypes 'Типы датчиков'
 DESIGN deviceTypes {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             MOVE BOX (t);
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }
@@ -70,13 +70,13 @@ FORM devices 'Датчики' AUTOREFRESH 60
 DESIGN devices {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             NEW top {
                 MOVE BOX (d);
                 fill = 1;
             }
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }

@@ -37,11 +37,14 @@ FORM readModbusData
     ORDERS address
 ;
 
+addModbusData(Device device) {
+    EXPORT readModbusData OBJECTS d = device;
+
+    addModbusData(CSVFILE(exportFile()));
+}
 readModbusData 'Прочитать Modbus данные' (Device device) {
     NEWSESSION {
-        EXPORT readModbusData OBJECTS d = device;
-
-        addModbusData(CSVFILE(exportFile()));
+        addModbusData(device);
         flushModbusData(type(device));
         APPLY;
     }

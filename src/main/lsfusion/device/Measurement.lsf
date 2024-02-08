@@ -167,10 +167,10 @@ EXTEND FORM devices
 DESIGN devices {
     tab {
         NEW limit {
-            type = CONTAINERV;
+            horizontal = FALSE;
             caption = 'Калибровка';
             NEW panel {
-                type = CONTAINERH ;
+                horizontal = TRUE;
                 MOVE BOX (amt);
                 MOVE GROUP (testAdjustment,amt);
             }

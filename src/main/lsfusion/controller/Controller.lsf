@@ -28,10 +28,10 @@ FORM controllerTypes 'Типы контроллеров'
 DESIGN controllerTypes {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             MOVE BOX (t);
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }
@@ -82,13 +82,13 @@ FORM controllers 'Контроллеры'
 DESIGN controllers {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             NEW top {
                 MOVE BOX (c);
                 fill = 1;
             }
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }

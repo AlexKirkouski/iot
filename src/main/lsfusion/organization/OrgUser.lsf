@@ -69,7 +69,7 @@ META addOrganization(form, object)
     DESIGN form {
         top {
             NEW paramBox FIRST {
-                type = CONTAINERH;
+                horizontal = TRUE;
                 MOVE BOX(o);
                 fill = 0;
             }
@@ -95,13 +95,13 @@ FORM organizationUsers 'Пользователи'
 DESIGN organizationUsers {
     OBJECTS {
         NEW split {
-            type = SPLITV;
+            horizontal = FALSE;
             NEW top {
                 MOVE BOX (c);
                 fill = 1;
             }
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
             }
             fill = 1;
         }

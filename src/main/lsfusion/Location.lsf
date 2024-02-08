@@ -41,14 +41,14 @@ DESIGN locations {
     }
     OBJECTS {
         NEW top {
-            type = CONTAINERV;
+            horizontal = FALSE;
             NEW tab {
-                type = TABBED;
+                tabbed = TRUE;
                 fill = 1;
                 
                 NEW tabl {
                     caption = 'Точки размещения';
-                    type = TABBED;
+                    tabbed = TRUE;
                     MOVE BOX(l) {
                         caption = 'Список';
                     }
@@ -121,7 +121,7 @@ EXTEND FORM locations
 DESIGN locations {
     tab {
         NEW areas {
-            type = SPLITV;
+            horizontal = FALSE;
             caption = 'Области размещения';
             
             MOVE BOX(a) {

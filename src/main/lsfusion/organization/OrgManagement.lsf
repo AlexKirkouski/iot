@@ -82,7 +82,7 @@ EXTEND FORM managementDevices
 DESIGN managementDevices {
     top {
         NEW paramBox FIRST {
-            type = CONTAINERH;
+            horizontal = TRUE;
             MOVE BOX(o);
             fill = 0;
         }

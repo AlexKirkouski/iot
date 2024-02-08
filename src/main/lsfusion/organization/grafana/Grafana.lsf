@@ -80,7 +80,7 @@ DESIGN organization {
         NEW cnt2 {
             fill = 1;
             NEW hp {
-                type = CONTAINERV;
+                horizontal = FALSE;
                 caption = 'Пароли в Grafana'; 
                 MOVE PROPERTY (admin(o));
                 MOVE PROPERTY (adminPassword(o));
@@ -88,7 +88,7 @@ DESIGN organization {
                 MOVE PROPERTY (userPassword(o));
             }
             NEW h2 AFTER hp {
-                type = CONTAINERV;
+                horizontal = FALSE;
                 caption = 'Связь с PostgreSQL'; 
                 MOVE PROPERTY (dsUrl(o));
                 MOVE PROPERTY (dsNameDB(o));
@@ -97,7 +97,7 @@ DESIGN organization {
                 MOVE PROPERTY (dsSSL(o));
             }
             NEW h3 AFTER h2 {
-                type = CONTAINERV;
+                horizontal = FALSE;
                 caption = 'Контроль созданных параметров';
                 MOVE PROPERTY (orgId(o));
                 MOVE PROPERTY (dsName(o));
