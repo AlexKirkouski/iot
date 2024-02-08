@@ -23,7 +23,7 @@ DESIGN deviceTypes {
             MOVE BOX (t);
             NEW tab {
                 tabbed = TRUE;
-                alignment = STRETCH;
+                fill = 1;
             }
             fill = 1;
         }
@@ -78,7 +78,7 @@ DESIGN devices {
             }
             NEW tab {
                 tabbed = TRUE;
-                alignment = STRETCH;
+                fill = 1;
             }
             fill = 1;
         }
