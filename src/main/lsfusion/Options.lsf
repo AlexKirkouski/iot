@@ -14,7 +14,7 @@ grafanaLogin 'Логин администратора Grafana' = DATA STRING[20]
 grafanaPwd   'Пароль администратора Grafana' = DATA STRING[20]();
 grafanaUrl   'Базовый URL для Grafana' = DATA STRING[100]();
 
-grafanaApiURL = 'http://${grafanaUrl()}/api';
+grafanaApiURL = '${grafanaUrl()}/api';
 fillGrafanaAuth() {
     encodeBase64(grafanaLogin() + ':' + grafanaPwd());
     headers('Authorization') <- 'Basic ' + encodedBase64();

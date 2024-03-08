@@ -17,7 +17,7 @@ setParam 'Начальная установка параметров' () {
     eCode() <- 0;
     eMessage() <- '';
     txtDashBoard() <- '';
-    grurl() <- 'http://' + grafanaUrl() + '/';
+    grurl() <- grafanaUrl() + '/';
     aut() <- grafanaLogin() + ':' + grafanaPwd();
 }
 
