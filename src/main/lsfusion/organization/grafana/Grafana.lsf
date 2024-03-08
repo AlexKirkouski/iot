@@ -37,6 +37,8 @@ user            'Логин пользователя'                = DATA STRI
 userPassword    'Пароль пользователя'               = DATA STRING[20]   (Organization) ;
 grName          'Название организации в Grafana'    = DATA STRING[60]   (Organization) ;
 
+dsUId(Organization o) = lpad(STRING(dsId(o)), 9, '0');
+
 // запрет наличия пробелов в названии организации для Графаны
 CONSTRAINT CHANGED(grName(Organization o)) AND strpos(grName(o), ' ') > 0
     MESSAGE 'В названии организации для Grafana должны отсутствовать пробелы !';
@@ -67,7 +69,7 @@ resetValues 'Сброс значений созданных параметров
 }
 
 EXTEND FORM organization
-    PROPERTIES(o) READONLY orgId,dsId,dsName,adminId,userId
+    PROPERTIES(o) orgId,dsId,dsName,adminId,userId
     PROPERTIES(o) grName,dsUrl,dsNameDB,dsLogin,dsPassword,dsSSL,admin,adminPassword,user,userPassword
     PROPERTIES(o) resetValues
 ;

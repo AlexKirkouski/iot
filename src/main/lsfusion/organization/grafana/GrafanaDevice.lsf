@@ -30,9 +30,10 @@ updateDashBoards 'Обновить дэшборд' (Device d) {
                     fileToString(filePanel(mt));
                     resultString() <- replace(resultString(), '<<ID_PANEL>>', TEXT (id(mt)));
                     resultString() <- replace(resultString(), '<<NAME_PANEL>>', name(mt));
-                    resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
                     resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
-                    resultString() <- replace(resultString(), '<<dsName>>', TEXT (dsName(o)));
+                    
+                    resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
+                    textDashboard() <- replace(textDashboard(), '<<dsName>>', dsUId(o));
                     
                     IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
                     textAllPanels() <- textAllPanels() + resultString();
@@ -42,8 +43,9 @@ updateDashBoards 'Обновить дэшборд' (Device d) {
             IF length(textAllPanels()) > 0 THEN {
                 textDashboard() <- replace(textDashboard(), '<<TITLE>>', grName(o) + '_' + TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
-                textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));
-                textDashboard() <- replace(textDashboard(), '<<dsName>>', TEXT (dsName(o)));
+                
+                textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));                
+                textDashboard() <- replace(textDashboard(), '<<dsName>>', dsUId(o));
     
                 fillGrafanaOrgAndAuth(orgId(o));
                 EXTERNAL HTTP POST '${grafanaApiURL()}/dashboards/import' HEADERS headers PARAMS
@@ -87,7 +89,7 @@ getUIDByID(INTEGER id) {
 
 // PUBLIC DASHBOARDS
 
-publicToken = DATA STRING (Device); 
+publicToken 'ID Public' = DATA STRING (Device); 
 
 makeDashboardPublic 'Встроить дэшборд' (Device d) {    
     getUIDByID(dbId(d));
