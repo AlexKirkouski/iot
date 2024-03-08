@@ -62,11 +62,13 @@ EXTEND FORM deviceTypes
     PROPERTIES (t) fileDashboard
 ;
 
-
-EXTEND FORM devices
-    PROPERTIES (d) GRID updateDashBoards
-    PROPERTIES (d) dbId
-;
+DESIGN devices {
+    tab {
+        NEW settings {
+            caption = 'Настройки';
+        }
+    }
+}
 
 getUID = DATA LOCAL STRING();
 getUIDByID(INTEGER id) {
@@ -116,9 +118,9 @@ makeDashboardPublic 'Встроить дэшборд' (Device d) {
 
 
 EXTEND FORM devices    
-    PROPERTIES dashboard = HTML('<iframe src="${grafanaUrl()}/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) PANEL
+    PROPERTIES dashboard = HTML('<iframe src="${grafanaUrl()}/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) AND dbId(d) PANEL
     PROPERTIES makeDashboardPublic(d) SHOWIF NOT publicToken(d) AND dbId(d) PANEL
-    PROPERTIES updateDB = updateDashBoards(d) SHOWIF NOT dbId(d) PANEL
+    PROPERTIES updateDashBoards(d) SHOWIF NOT dbId(d) PANEL
 ;
 
 DESIGN devices {
@@ -131,10 +133,24 @@ DESIGN devices {
             MOVE PROPERTY(makeDashboardPublic(d)) {
                 alignment = CENTER;
             }
-            MOVE PROPERTY(updateDB) {
+            MOVE PROPERTY(updateDashBoards(d)) {
                 alignment = CENTER;
             }
             childrenAlignment = CENTER;
         }
     }
 }
+
+EXTEND FORM devices
+    PROPERTIES (d) PANEL updateDBPanel = updateDashBoards, dbId, makeDBPublicPanel = makeDashboardPublic, publicToken 
+;
+
+DESIGN devices {
+    settings {
+        MOVE PROPERTY (updateDBPanel);
+        MOVE PROPERTY (dbId(d));
+        MOVE PROPERTY (makeDBPublicPanel);
+        MOVE PROPERTY (publicToken(d));
+    }
+}
+

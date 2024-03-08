@@ -56,11 +56,8 @@ EXTEND FORM devices
 ;
 
 DESIGN devices {
-    tab {
-        NEW settings {
-            caption = 'Настройки'; 
-            MOVE GROUP (settings, d) { horizontal = FALSE; };
-        }
+    settings {
+        MOVE GROUP (settings, d) { horizontal = FALSE; };
     }
 }
 
