@@ -74,7 +74,7 @@ public class HttpQueryProcessor {
             if (cMethod.equals("GET")) {
                 response = httpclient.execute(ob_get);
             } else {
-                StringEntity entity = new StringEntity(cData, ContentType.create(mimeType, Consts.UTF_8));
+                StringEntity entity = new StringEntity(cData, mimeType, "UTF-8");
                 entity.setChunked(true);
                 switch (cMethod) {
                     case "POST"  :
