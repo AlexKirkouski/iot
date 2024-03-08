@@ -10,7 +10,7 @@ dbId 'ID DashBoard' = DATA INTEGER (Device) CHARWIDTH 7;
 fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) CHARWIDTH 7 IN id;
 
 dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
-updateDashBoards 'Обновить дэшборды' (Device d) {
+updateDashBoards 'Обновить дэшборд' (Device d) {
     
     FOR Organization o = organization(d) DO {
         
@@ -45,34 +45,97 @@ updateDashBoards 'Обновить дэшборды' (Device d) {
                 textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<dsName>>', TEXT (dsName(o)));
     
-                EXEC setParam();
-                cmd() <- 3;
-                txtDashBoard() <- textDashboard();
-                // вызываем обработку типа INTERNAL
-                dsGrafana(o, d);
-            
-                IF eCode() > 0 THEN {
-                    ASK 'Устройство  '+ id(d) + '  Ошибка: \n' + eMessage() +'\n\n Продолжить ?' yes = YESNO DO {
-                        IF NOT yes THEN eCode() <- -1;
-                    }
-                }
-                IF eCode() < 0 THEN BREAK; 
-            
+                fillGrafanaOrgAndAuth(orgId(o));
+                EXTERNAL HTTP POST '${grafanaApiURL()}/dashboards/import' HEADERS headers PARAMS
+                    JSONFILE(textDashboard())
+                    TO exportJSON;
+                IMPORT FROM exportJSON() FIELDS () INTEGER dashboardId DO
+                    dbId(d) <- dashboardId;
             } ELSE {
                 MESSAGE 'Не заполнены файлы шаблонов для типов измерений для устройства ' + id(d) NOWAIT ;
             }
-            
         }
     }
-    APPLY ;
-    MESSAGE 'Обновление DashBoards завершено.' NOWAIT;
+    APPLY;
 }
 
 EXTEND FORM deviceTypes
     PROPERTIES (t) fileDashboard
 ;
 
+
 EXTEND FORM devices
     PROPERTIES (d) GRID updateDashBoards
     PROPERTIES (d) dbId
-; 
+;
+
+getUID = DATA LOCAL STRING();
+getUIDByID(INTEGER id) {
+    fillGrafanaAuth();
+
+    EXTERNAL HTTP GET '${grafanaApiURL()}/search?dashboardIds=${id}' HEADERS headers TO exportJSON;
+
+    LOCAL uid = STRING (INTEGER);
+    IMPORT FROM exportJSON() TO uid;
+
+    IF NOT imported(0) THEN
+        throwException('Not found');
+    ELSE
+        getUID() <- uid(0);
+}
+
+// PUBLIC DASHBOARDS
+
+publicToken = DATA STRING (Device); 
+
+makeDashboardPublic 'Встроить дэшборд' (Device d) {    
+    getUIDByID(dbId(d));
+
+    fillGrafanaAuth();
+    TRY
+        EXTERNAL HTTP POST '${grafanaApiURL()}/dashboards/uid/${getUID()}/public-dashboards/' HEADERS headers PARAMS 
+            JSON FROM timeSelectionEnabled = TRUE, isEnabled = TRUE, annotationsEnabled = TRUE  
+            TO exportJSON;
+    CATCH {
+        IMPORT FROM exportJSON() FIELDS () STRING message DO {
+            IF message = 'Dashboard is already public' THEN {
+                EXTERNAL HTTP GET '${grafanaApiURL()}/dashboards/uid/${getUID()}/public-dashboards/' HEADERS headers
+                    TO exportJSON;
+            } ELSE             
+                throwException(message);
+        } ELSE
+            throwException(messageCaughtException());
+    }
+    
+    IMPORT FROM exportJSON() FIELDS () STRING accessToken DO {
+        publicToken(d) <- accessToken;
+        RETURN;
+    }
+    
+    throwException('Something went wrong');
+}
+
+
+EXTEND FORM devices    
+    PROPERTIES dashboard = HTML('<iframe src="http://monitoring.mite.club/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) PANEL
+    PROPERTIES makeDashboardPublic(d) SHOWIF NOT publicToken(d) AND dbId(d) PANEL
+    PROPERTIES updateDB = updateDashBoards(d) SHOWIF NOT dbId(d) PANEL
+;
+
+DESIGN devices {
+    tab {
+        NEW dashboard {
+            caption = 'Дэшборд';
+            MOVE PROPERTY(dashboard) {
+                fill = 1;
+            }
+            MOVE PROPERTY(makeDashboardPublic(d)) {
+                alignment = CENTER;
+            }
+            MOVE PROPERTY(updateDB) {
+                alignment = CENTER;
+            }
+            childrenAlignment = CENTER;
+        }
+    }
+}
