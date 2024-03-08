@@ -50,13 +50,12 @@ updateDashBoards 'Обновить дэшборд' (Device d) {
                     JSONFILE(textDashboard())
                     TO exportJSON;
                 IMPORT FROM exportJSON() FIELDS () INTEGER dashboardId DO
-                    dbId(d) <- dashboardId;
+                    APPLY dbId(d) <- dashboardId;
             } ELSE {
                 MESSAGE 'Не заполнены файлы шаблонов для типов измерений для устройства ' + id(d) NOWAIT ;
             }
         }
     }
-    APPLY;
 }
 
 EXTEND FORM deviceTypes
@@ -108,7 +107,7 @@ makeDashboardPublic 'Встроить дэшборд' (Device d) {
     }
     
     IMPORT FROM exportJSON() FIELDS () STRING accessToken DO {
-        publicToken(d) <- accessToken;
+        APPLY publicToken(d) <- accessToken;
         RETURN;
     }
     
@@ -117,7 +116,7 @@ makeDashboardPublic 'Встроить дэшборд' (Device d) {
 
 
 EXTEND FORM devices    
-    PROPERTIES dashboard = HTML('<iframe src="http://monitoring.mite.club/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) PANEL
+    PROPERTIES dashboard = HTML('<iframe src="${grafanaUrl()}/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) PANEL
     PROPERTIES makeDashboardPublic(d) SHOWIF NOT publicToken(d) AND dbId(d) PANEL
     PROPERTIES updateDB = updateDashBoards(d) SHOWIF NOT dbId(d) PANEL
 ;
