@@ -196,10 +196,10 @@ DESIGN dashboards {
             MOVE GROUP (sync, d) {
                 horizontal = TRUE;
                 lines = 1;
-                fill = 1;
             }
             NEW mainSettings {
                 horizontal = TRUE;
+                height = 0;
                 fill = 1;
                 MOVE PROPERTY (scheme(d)) {
                     fill = 1;
@@ -208,7 +208,13 @@ DESIGN dashboards {
                 NEW grids {
                     fill = 1;
                     MOVE BOX(p);
+                    GRID(p) {
+                        lineHeight = 1;
+                    }
                     MOVE BOX(mm);
+                    GRID(mm) {
+                        lineHeight = 1;
+                    }
                 }
                 MOVE PROPERTY (scheme(p)) {
                     fill = 1;
@@ -234,6 +240,7 @@ DESIGN dashboards {
         NEW dashboard BEFORE settings {
             caption = 'Дэшборд';
             MOVE PROPERTY(dashboard) {
+                height = 0;
                 fill = 1;
             }
             MOVE PROPERTY(dashMD) {
