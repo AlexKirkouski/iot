@@ -5,7 +5,7 @@ REQUIRE Options, Organization,
         OrgController, OrgControllerDevice,
         OrgManagement,
         ProcessMonitor, SQLUtils, ProcessUtils, Backup, Eval,
-        GrafanaDevice,
+        GrafanaDashboard,
         MqttServer, Server,
         Export, 
         Telegram, Viber, Skype, Slack, Icon, Modbus;

@@ -8,7 +8,7 @@ CLASS MeasurementType 'Тип измерения';
 TABLE measurementType (MeasurementType);
 
 id 'ID панели' = DATA LONG (MeasurementType);
-name 'Название' = DATA STRING[100] (MeasurementType) CHARWIDTH 70 IN id;
+name 'Название' = DATA STRING[100] (MeasurementType) CHARWIDTH 10 IN id;
 
 FORM measurementTypes
     OBJECTS m = MeasurementType

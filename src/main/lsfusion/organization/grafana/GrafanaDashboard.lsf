@@ -1,0 +1,248 @@
+MODULE GrafanaDashboard;
+
+REQUIRE GrafanaDevice;
+
+CLASS Dashboard;
+name 'Название' = DATA STRING (Dashboard);
+scheme 'JSON дэшборда' = DATA TEXT (Dashboard);
+
+GROUP sync 'Синхронизация с Grafana';
+dbUId 'ID дэшборда' = DATA STRING (Dashboard) IN sync;
+publicDbUId 'Публичный ID' = DATA STRING (Dashboard) IN sync;
+
+organization = DATA Organization (Dashboard) INDEXED;
+nameOrganization 'Название' (Dashboard d) = name(organization(d));
+
+CLASS Panel;
+name 'Название' = DATA STRING (Panel);
+dashboard = DATA Dashboard (Panel) NONULL DELETE;
+index 'Индекс Panel' = DATA INTEGER (Panel);
+scheme 'JSON панели' = DATA TEXT (Panel);
+targetScheme 'JSON измерения' = DATA TEXT (Panel);
+
+in 'Вкл.' = DATA BOOLEAN (Panel, Device, MeasurementType);
+
+updateDashBoard 'Обновить дэшборд' (Dashboard d) {
+    FOR Organization o = organization(d) AND TEXT ds = scheme(d) DO {
+        LOCAL textDashboard = TEXT ();
+        textDashboard() <- ds;
+
+        LOCAL textAllPanels = TEXT ();
+        textAllPanels() <- '';
+        FOR TEXT ps = scheme(Panel p) AND dashboard(p) = d ORDER index(p) DO {
+            LOCAL textPanel = TEXT();
+            textPanel() <- ps;
+
+            LOCAL textAllTargets = TEXT ();
+            textAllTargets() <- '';
+            FOR TEXT ts = targetScheme(p) AND in(p, Device dv, MeasurementType mt) DO {
+                LOCAL textTarget = TEXT();
+                textTarget() <- ts;
+
+                textTarget() <- replace(textTarget(), '<<ID_MEASUREMENTTYPE>>', TEXT (id(mt)));
+                textTarget() <- replace(textTarget(), '<<ID_DEVICE>>', TEXT (id(dv)));
+
+                textTarget() <- replace(textTarget(), '<<NAME_MEASUREMENTTYPE>>', TEXT (name(mt)));
+
+                IF textAllTargets() != '' THEN textAllTargets() <- textAllTargets() + ',';
+                textAllTargets() <- textAllTargets() + textTarget();
+            }
+
+            textPanel() <- replace(textPanel(), '<<TARGETS>>', textAllTargets());
+
+            textPanel() <- replace(textPanel(), '<<ID_PANEL>>', TEXT (p));
+            textPanel() <- replace(textPanel(), '<<NAME_PANEL>>', name(p));
+    
+            IF textAllPanels() != '' THEN  textAllPanels() <- textAllPanels() + ',';
+            textAllPanels() <- textAllPanels() + textPanel();
+        }
+
+        textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
+
+        textDashboard() <- replace(textDashboard(), '<<NAME_DASHBOARD>>', name(d));
+        textDashboard() <- replace(textDashboard(), '<<ID_DATASOURCE>>', dsUId(o));
+
+        fillGrafanaOrgAndAuth(orgId(o));
+        EXTERNAL HTTP POST '${grafanaApiURL()}/dashboards/import' HEADERS headers PARAMS
+            JSONFILE(textDashboard())
+            TO exportJSON;
+        IMPORT FROM exportJSON() FIELDS () STRING uid DO
+            APPLY dbUId(d) <- uid;
+    }
+} IN sync;
+
+makeDashboardPublic 'Встроить дэшборд' (Dashboard d) {
+    fillGrafanaAuth();
+    TRY
+        EXTERNAL HTTP POST '${grafanaApiURL()}/dashboards/uid/${dbUId(d)}/public-dashboards/' HEADERS headers PARAMS
+            JSON FROM timeSelectionEnabled = TRUE, isEnabled = TRUE, annotationsEnabled = TRUE
+            TO exportJSON;
+        CATCH {
+        IMPORT FROM exportJSON() FIELDS () STRING message DO {
+            IF message = 'Dashboard is already public' THEN {
+                EXTERNAL HTTP GET '${grafanaApiURL()}/dashboards/uid/${dbUId(d)}/public-dashboards/' HEADERS headers
+                    TO exportJSON;
+            } ELSE
+                throwException(message);
+        } ELSE
+        throwException(messageCaughtException());
+    }
+
+    IMPORT FROM exportJSON() FIELDS () STRING accessToken DO {
+        APPLY publicDbUId(d) <- accessToken;
+        RETURN;
+    }
+
+    throwException('Something went wrong');
+} IN sync;
+
+deleteDashBoard 'Удалить дэшборд' (STRING uid) {
+    fillGrafanaAuth();
+
+    EXTERNAL HTTP DELETE '${grafanaApiURL()}/dashboards/uid/${uid}' HEADERS headers TO exportJSON;
+} IN sync;
+
+deleteDashBoard 'Удалить дэшборд' (Dashboard d) {
+    deleteDashBoard(dbUId(d));
+} IN sync;
+
+FORM dashboards 'Дэшборды'
+    OBJECTS d = Dashboard
+    PROPERTIES (d) name, NEW, DELETE
+    PROPERTIES (d) PANEL scheme, updateDashBoard, dbUId, makeDashboardPublic, publicDbUId, deleteDashBoard 
+    
+    OBJECTS p = Panel
+    PROPERTIES (p) name, scheme PANEL, targetScheme PANEL, NEW, DELETE
+    FILTERS dashboard(p) = d
+    
+    OBJECTS mm = (mt = MeasurementType, dv = Device)
+    PROPERTIES in(p, dv, mt), name(mt), id(dv), nameType(dv), nameLocation(dv)
+    FILTERGROUP active
+        FILTER 'Вкл.' in(p, dv, mt)
+;
+
+DESIGN dashboards {
+    OBJECTS {
+        NEW split {
+            NEW top {
+                MOVE BOX (d);
+                fill = 1;
+            }
+            GRID (d) {
+                lineHeight = 1;
+            }
+            NEW tab {
+                tabbed = TRUE;
+                fill = 10;
+            }
+            fill = 1;
+        }
+    }
+}
+
+@addOrganization(dashboards, d){
+    EXTEND FORM dashboards
+        OBJECTS o = Organization PANEL BEFORE d
+        PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
+        FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
+        
+        FILTERS organization(d) = o
+    ;
+    
+    DESIGN dashboards {
+        top {
+            NEW paramBox FIRST {
+                horizontal = TRUE;
+                MOVE BOX(o);
+                fill = 0;
+            }
+        } 
+    } 
+};
+//@addLocation(dashboards, d);
+EXTEND FORM dashboards
+    FILTERS organization(dv) = o
+;
+
+NAVIGATOR {
+    data {
+        NEW dashboards AFTER organizations;
+    }
+}
+
+WHEN LOCAL FORMS dashboards SET(Dashboard d IS Dashboard) DO {
+    name(d) <- 'Dashboard' + ' ${d}';
+    scheme(d) <- '$I{default_dashboard.json}';
+    NEW p = Panel {
+        dashboard(p) <- d;
+    }
+}
+WHEN LOCAL FORMS dashboards SET(Panel p IS Panel) DO {
+    name(p) <- 'Panel' + ' ${p}';
+
+    scheme(p) <- '$I{default_panel.json}';
+    targetScheme(p) <- '$I{default_target.json}';
+}
+
+WHEN DROPPED(Dashboard d IS Dashboard) DO {
+    TRY deleteDashBoard(PREV(dbUId(d)));
+}
+
+DESIGN dashboards {
+    tab {
+        NEW settings {
+            caption = 'Настройки';
+            showIf = d;
+            MOVE GROUP (sync, d) {
+                horizontal = TRUE;
+                lines = 1;
+                fill = 1;
+            }
+            NEW mainSettings {
+                horizontal = TRUE;
+                fill = 1;
+                MOVE PROPERTY (scheme(d)) {
+                    fill = 1;
+                    panelCaptionVertical = TRUE;
+                }
+                NEW grids {
+                    fill = 1;
+                    MOVE BOX(p);
+                    MOVE BOX(mm);
+                }
+                MOVE PROPERTY (scheme(p)) {
+                    fill = 1;
+                    panelCaptionVertical = TRUE;
+                }
+                MOVE PROPERTY (targetScheme(p)) {
+                    fill = 1;
+                    panelCaptionVertical = TRUE;
+                }
+            }
+        }
+    }
+}
+
+EXTEND FORM dashboards
+    PROPERTIES dashU = updateDashBoard(d) SHOWIF NOT dbUId(d) PANEL
+    PROPERTIES dashMD = makeDashboardPublic(d) SHOWIF NOT publicDbUId(d) AND dbUId(d) PANEL
+    PROPERTIES dashboard = HTML('<iframe src="${grafanaUrl()}/public-dashboards/${publicDbUId(d)}" style="height:100%;width:100%"/>') SHOWIF publicDbUId(d) AND dbUId(d) PANEL
+;
+
+DESIGN dashboards {
+    tab {
+        NEW dashboard BEFORE settings {
+            caption = 'Дэшборд';
+            MOVE PROPERTY(dashboard) {
+                fill = 1;
+            }
+            MOVE PROPERTY(dashMD) {
+                alignment = CENTER;
+            }
+            MOVE PROPERTY(dashU) {
+                alignment = CENTER;
+            }
+            childrenAlignment = CENTER;
+        }
+    }
+}

@@ -10,7 +10,7 @@ dbId 'ID DashBoard' = DATA INTEGER (Device) CHARWIDTH 7;
 fileDashboard 'Файл шаблона Dashboard' = DATA FILE (DeviceType) CHARWIDTH 7 IN id;
 
 dsGrafana INTERNAL 'grafana.GrafanaAction' (Organization, Device);
-updateDashBoards 'Обновить дэшборд' (Device d) {
+updateDashBoard 'Обновить дэшборд' (Device d) {
     
     FOR Organization o = organization(d) DO {
         
@@ -33,7 +33,7 @@ updateDashBoards 'Обновить дэшборд' (Device d) {
                     resultString() <- replace(resultString(), '<<ID_MeasurementType>>', TEXT (id(mt)));
                     
                     resultString() <- replace(resultString(), '<<ID_DEVICE>>', TEXT (id(d)));
-                    textDashboard() <- replace(textDashboard(), '<<dsName>>', dsUId(o));
+                    resultString() <- replace(resultString(), '<<dsName>>', dsUId(o));
                     
                     IF length(textAllPanels()) > 0 THEN  textAllPanels() <- textAllPanels() + ',';
                     textAllPanels() <- textAllPanels() + resultString();
@@ -44,7 +44,7 @@ updateDashBoards 'Обновить дэшборд' (Device d) {
                 textDashboard() <- replace(textDashboard(), '<<TITLE>>', grName(o) + '_' + TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<PANELS>>', textAllPanels());
                 
-                textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));                
+                textDashboard() <- replace(textDashboard(), '<<ID_DEVICE>>', TEXT (id(d)));
                 textDashboard() <- replace(textDashboard(), '<<dsName>>', dsUId(o));
     
                 fillGrafanaOrgAndAuth(orgId(o));
@@ -122,7 +122,7 @@ makeDashboardPublic 'Встроить дэшборд' (Device d) {
 EXTEND FORM devices    
     PROPERTIES dashboard = HTML('<iframe src="${grafanaUrl()}/public-dashboards/${publicToken(d)}" style="height:100%;width:100%"/>') SHOWIF publicToken(d) AND dbId(d) PANEL
     PROPERTIES makeDashboardPublic(d) SHOWIF NOT publicToken(d) AND dbId(d) PANEL
-    PROPERTIES updateDashBoards(d) SHOWIF NOT dbId(d) PANEL
+    PROPERTIES updateDashBoard(d) SHOWIF NOT dbId(d) PANEL
 ;
 
 DESIGN devices {
@@ -135,7 +135,7 @@ DESIGN devices {
             MOVE PROPERTY(makeDashboardPublic(d)) {
                 alignment = CENTER;
             }
-            MOVE PROPERTY(updateDashBoards(d)) {
+            MOVE PROPERTY(updateDashBoard(d)) {
                 alignment = CENTER;
             }
             childrenAlignment = CENTER;
@@ -144,7 +144,7 @@ DESIGN devices {
 }
 
 EXTEND FORM devices
-    PROPERTIES (d) PANEL updateDBPanel = updateDashBoards, dbId, makeDBPublicPanel = makeDashboardPublic, publicToken 
+    PROPERTIES (d) PANEL updateDBPanel = updateDashBoard, dbId, makeDBPublicPanel = makeDashboardPublic, publicToken 
 ;
 
 DESIGN devices {

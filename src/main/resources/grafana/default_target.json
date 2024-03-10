@@ -1,0 +1,12 @@
+{
+  "format": "time_series",
+  "group": [],
+  "metricColumn": "<<NAME_MEASUREMENTTYPE>> <<ID_DEVICE>>",
+  "rawQuery": true,
+  "rawSql": "SELECT measurement_datetime_measurement_measurementtype AS time, measurement_value_measurement_measurementtype AS \"<<NAME_MEASUREMENTTYPE>> <<ID_DEVICE>>\" FROM measurement_values WHERE  $__timeFilter(measurement_datetime_measurement_measurementtype) AND  measurement_id_measurement_measurementtype=<<ID_DEVICE>> AND measurement_id_MeasurementType_measurement_measurementtype=<<ID_MEASUREMENTTYPE>> ORDER BY 1",
+  "refId": "<<ID_DEVICE>>_<<ID_MEASUREMENTTYPE>>",
+  "table": "measurement_values",
+  "timeColumn": "time",
+  "timeColumnType": "timestamp",
+  "where": []
+}

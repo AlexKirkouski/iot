@@ -1,0 +1,76 @@
+{
+  "id": <<ID_PANEL>>,
+  "title": "<<NAME_PANEL>>",
+  "datasource": {"type": "postgres", "uid": "<<ID_DATASOURCE>>"},
+  "legend": {
+    "avg": false,
+    "current": false,
+    "max": false,
+    "min": false,
+    "show": false,
+    "total": false,
+    "values": false
+  },
+  "lines": true,
+  "linewidth": 2,
+  "links": [],
+  "nullPointMode": "null",
+  "paceLength": 10,
+  "percentage": false,
+  "pointradius": 2,
+  "points": true,
+  "renderer": "flot",
+  "seriesOverrides": [],
+  "stack": false,
+  "steppedLine": false,
+  "targets": [
+    <<TARGETS>>
+  ],
+  "thresholds": [],
+  "gridPos": {
+    "h": 6,
+    "w": 24,
+    "x": 0,
+    "y": 15
+  },
+  "timeFrom": null,
+  "timeRegions": [],
+  "timeShift": null,
+  "tooltip": {
+    "shared": true,
+    "sort": 0,
+    "value_type": "individual"
+  },
+  "type": "graph",
+  "xaxis": {
+    "buckets": null,
+    "mode": "time",
+    "name": null,
+    "show": true,
+    "values": []
+  },
+  "yaxes": [
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "decimals": 1,
+      "show": true
+    },
+    {
+      "format": "short",
+      "label": null,
+      "logBase": 1,
+      "max": null,
+      "min": null,
+      "decimals": 1,
+      "show": true
+    }
+  ],
+  "yaxis": {
+    "align": false,
+    "alignLevel": null
+  }
+}
