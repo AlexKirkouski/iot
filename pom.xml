@@ -48,7 +48,22 @@
          <artifactId>nifty-modbus-tcp</artifactId>
          <version>0.4.0</version>
      </dependency>
-
+     <dependency>
+         <groupId>org.apache.httpcomponents</groupId>
+         <artifactId>httpmime</artifactId>
+         <version>4.5.7</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.5.7</version>
+    </dependency>
+    <!--Приходится подключать, так как возникает какая-то вилка с зависимостями из silvertunnel-->
+    <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient-android</artifactId>
+        <version>4.3.5.1</version>
+    </dependency>
      <dependency>
          <groupId>com.digitalpetri.modbus</groupId>
          <artifactId>modbus-master-tcp</artifactId>
