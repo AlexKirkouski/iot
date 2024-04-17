@@ -19,7 +19,6 @@ import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.spongycastle.util.Arrays;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -175,9 +174,44 @@ public class AddModbusDataAction extends InternalAction {
         return m;
     }
 
+    public static byte[] reverse(byte[] a)
+    {
+        if (a == null)
+        {
+            return null;
+        }
+
+        int p1 = 0, p2 = a.length;
+        byte[] result = new byte[p2];
+
+        while (--p2 >= 0)
+        {
+            result[p2] = a[p1++];
+        }
+
+        return result;
+    }
+
+    public static int[] reverse(int[] a)
+    {
+        if (a == null)
+        {
+            return null;
+        }
+
+        int p1 = 0, p2 = a.length;
+        int[] result = new int[p2];
+
+        while (--p2 >= 0)
+        {
+            result[p2] = a[p1++];
+        }
+
+        return result;
+    }
     public static int ConvertRegisters(int[] registers, RegisterOrder registerOrder) {
         if(registerOrder == RegisterOrder.HighLow)
-            registers = Arrays.reverse(registers);
+            registers = reverse(registers);
         return ConvertRegisters(registers);
     }
 
@@ -194,7 +228,7 @@ public class AddModbusDataAction extends InternalAction {
 
     public static int ConvertRegisters(byte[] registers, RegisterOrder registerOrder) {
         if(registerOrder == RegisterOrder.HighLow)
-            registers = Arrays.reverse(registers);
+            registers = reverse(registers);
         return ConvertRegisters(registers);
     }
 
