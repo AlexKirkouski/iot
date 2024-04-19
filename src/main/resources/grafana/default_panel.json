@@ -1,76 +1,105 @@
 {
-  "id": <<ID_PANEL>>,
-  "title": "<<NAME_PANEL>>",
-  "datasource": {"type": "postgres", "uid": "<<ID_DATASOURCE>>"},
-  "legend": {
-    "avg": false,
-    "current": false,
-    "max": false,
-    "min": false,
-    "show": false,
-    "total": false,
-    "values": false
-  },
-  "lines": true,
-  "linewidth": 2,
-  "links": [],
-  "nullPointMode": "null",
-  "paceLength": 10,
-  "percentage": false,
-  "pointradius": 2,
-  "points": true,
-  "renderer": "flot",
-  "seriesOverrides": [],
-  "stack": false,
-  "steppedLine": false,
-  "targets": [
-    <<TARGETS>>
-  ],
-  "thresholds": [],
-  "gridPos": {
-    "h": 6,
-    "w": 24,
-    "x": 0,
-    "y": 15
-  },
-  "timeFrom": null,
-  "timeRegions": [],
-  "timeShift": null,
+  "type": "timeseries",
+"options": {
   "tooltip": {
-    "shared": true,
-    "sort": 0,
-    "value_type": "individual"
+    "mode": "multi",
+    "sort": "none"
   },
-  "type": "graph",
-  "xaxis": {
-    "buckets": null,
-    "mode": "time",
-    "name": null,
-    "show": true,
-    "values": []
-  },
-  "yaxes": [
-    {
-      "format": "short",
-      "label": null,
-      "logBase": 1,
-      "max": null,
-      "min": null,
-      "decimals": 1,
-      "show": true
-    },
-    {
-      "format": "short",
-      "label": null,
-      "logBase": 1,
-      "max": null,
-      "min": null,
-      "decimals": 1,
-      "show": true
-    }
-  ],
-  "yaxis": {
-    "align": false,
-    "alignLevel": null
+  "legend": {
+    "showLegend": true,
+    "displayMode": "list",
+    "placement": "right",
+    "calcs": [
+      "last",
+      "min",
+      "max"
+    ]
   }
+},
+"fieldConfig": {
+  "defaults": {
+    "custom": {
+      "drawStyle": "line",
+      "lineInterpolation": "linear",
+      "barAlignment": 0,
+      "lineWidth": 2,
+      "fillOpacity": 10,
+      "gradientMode": "none",
+      "spanNulls": true,
+      "insertNulls": false,
+      "showPoints": "always",
+      "pointSize": 6,
+      "stacking": {
+        "mode": "none",
+        "group": "A"
+      },
+      "axisPlacement": "auto",
+      "axisLabel": "",
+      "axisColorMode": "text",
+      "axisBorderShow": false,
+      "scaleDistribution": {
+        "type": "linear"
+      },
+      "axisCenteredZero": false,
+      "hideFrom": {
+        "tooltip": false,
+        "viz": false,
+        "legend": false
+      },
+      "thresholdsStyle": {
+        "mode": "off"
+      },
+      "lineStyle": {
+        "fill": "dash",
+        "dash": [
+          10,
+          10
+        ]
+      }
+    },
+    "color": {
+      "mode": "continuous-YlBl"
+    },
+    "mappings": [],
+    "thresholds": {
+      "mode": "absolute",
+      "steps": [
+        {
+          "color": "green",
+          "value": null
+        },
+        {
+          "value": -10,
+          "color": "#E24D42"
+        },
+        {
+          "value": 0,
+          "color": "#EF843C"
+        },
+        {
+          "value": 10,
+          "color": "#6ED0E0"
+        },
+        {
+          "value": 20,
+          "color": "#EAB839"
+        },
+        {
+          "color": "red",
+          "value": 30
+        },
+        {
+          "value": 40,
+          "color": "#1F78C1"
+        }
+      ]
+    },
+    "unit": "short",
+    "decimals": 1
+  },
+  "overrides": []
+},
+"pluginVersion": "10.4.0",
+"timeFrom": null,
+"timeShift": null
 }
