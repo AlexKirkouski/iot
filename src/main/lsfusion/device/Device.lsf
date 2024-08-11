@@ -63,9 +63,11 @@ DESIGN deviceTypes {
     }
 }
 
-FORM devices 'Датчики' AUTOREFRESH 60
+FORM devices 'Датчики'
     OBJECTS d = Device
     PROPERTIES (d) id, nameType
+    
+    EVENTS ON SCHEDULE PERIOD 60 formRefresh()
 ;
 
 DESIGN devices {
