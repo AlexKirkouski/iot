@@ -137,11 +137,11 @@ importFTPMeasurements (STRING path) {
 //        RETURN;
 //    }
     
-    LOCAL eui64 = STRING (INTEGER);
-    LOCAL tmmeasure = LONG (INTEGER);
-    LOCAL temperatur = DOUBLE (INTEGER);
-    LOCAL humidity = DOUBLE (INTEGER);
-    LOCAL battery = DOUBLE (INTEGER);
+    LOCAL NESTED eui64 = STRING (INTEGER);
+    LOCAL NESTED tmmeasure = LONG (INTEGER);
+    LOCAL NESTED temperatur = DOUBLE (INTEGER);
+    LOCAL NESTED humidity = DOUBLE (INTEGER);
+    LOCAL NESTED battery = DOUBLE (INTEGER);
     IMPORT DBF FROM exportFile() TO eui64, tmmeasure, temperatur, humidity, battery 
     
     LOCAL missingEui64 = STRING ();
@@ -151,17 +151,18 @@ importFTPMeasurements (STRING path) {
         RETURN;
     }
     
-    FOR Device dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) NOINLINE (dv) DO {
-        NEW m = Measurement { 
-            dateTime(m) <- tz; 
-            device(m) <- dv; 
-//            idImport(m) <- LONG(eui64(row)); 
-            unAdjustedValue(m, temperatureType()) <- DOUBLE(temperatur(row)); 
-            unAdjustedValue(m, humidityType()) <- DOUBLE(humidity(row)); 
-            unAdjustedValue(m, batteryType()) <- DOUBLE(battery(row)); 
+    FOR [GROUP SUM 1 IF ZDATETIME tz = toZDateTime(tmmeasure(INTEGER row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) BY deviceBySimID(eui64(row))](Device dv) DO {
+        APPLY FOR dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) INLINE NEW m = Measurement DO {
+            dateTime(m) <- tz;
+            device(m) <- dv;
+            //            idImport(m) <- LONG(eui64(row)); 
+            unAdjustedValue(m, temperatureType()) <- DOUBLE(temperatur(row));
+            unAdjustedValue(m, humidityType()) <- DOUBLE(humidity(row));
+            unAdjustedValue(m, batteryType()) <- DOUBLE(battery(row));
         }
+        IF canceled() THEN
+            BREAK;
     }
-    APPLY;
     IF NOT canceled() THEN 
         delete(path);
 }
