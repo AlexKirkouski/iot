@@ -437,6 +437,7 @@ public class UDPServer extends MonitorServer {
 
     public synchronized void checkAndFlushPackets() {
         long timestamp = System.currentTimeMillis();
+        print("\n--- CHECK: " + nQps + " " + qps + " " + timestamp + " " + lastTimeStamp + " " + maxDelay);
         if (nQps >= qps || timestamp - lastTimeStamp > maxDelay * 1000) {
             nQps = 0;
             lastTimeStamp = timestamp;
@@ -448,15 +449,14 @@ public class UDPServer extends MonitorServer {
     private void importCSV() {
         for (final DataObject deviceType : texts.keySet() ) {
             final String textToProceed = texts.get(deviceType).toString();
-            importTasksExecutor.submit(new Runnable() {
-                public void run() {
-                    print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
-                    try(DataSession session = createSession()){
-                        importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
-                        session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
-                    } catch (Throwable t) {
-                        print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
-                    }
+            print("\n--- SUBMIT: " + deviceType.toString() + ":\n" + textToProceed);
+            importTasksExecutor.submit(() -> {
+                print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
+                try(DataSession session = createSession()){
+                    importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
+                    session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
+                } catch (Throwable t) {
+                    print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                 }
             });
         }
