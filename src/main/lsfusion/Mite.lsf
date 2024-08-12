@@ -151,7 +151,7 @@ importFTPMeasurements (STRING path) {
         RETURN;
     }
     
-    FOR [GROUP SUM 1 IF ZDATETIME tz = toZDateTime(tmmeasure(INTEGER row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) BY deviceBySimID(eui64(row))](Device dv) DO {
+    FOR [GROUP SUM 1 IF Device dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) BY dv](Device dv) DO {
         APPLY FOR dv = deviceBySimID(eui64(INTEGER row)) AND ZDATETIME tz = toZDateTime(tmmeasure(row)) AND (tz > dateTime(lastMeasurement(dv)) OR NOT lastMeasurement(dv)) INLINE NEW m = Measurement DO {
             dateTime(m) <- tz;
             device(m) <- dv;
