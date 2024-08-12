@@ -451,12 +451,14 @@ public class UDPServer extends MonitorServer {
             final String textToProceed = texts.get(deviceType).toString();
             print("\n--- SUBMIT: " + deviceType.toString() + ":\n" + textToProceed);
             importTasksExecutor.submit(() -> {
-                print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
-                try(DataSession session = createSession()){
-                    importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
-                    session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
+                try {
+                    print("\n--- IMPORT: " + deviceType.toString() + ":\n" + textToProceed);
+                    try (DataSession session = createSession()) {
+                        importAction.execute(session, getStack(), deviceType, serverObject, new DataObject(new RawFileData(textToProceed.getBytes()), CSVClass.get()));
+                        session.applyException(getLogicsInstance().getBusinessLogics(), getStack());
+                    }
                 } catch (Throwable t) {
-                    print("ERROR, IMPORT: "+ textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
+                    print("ERROR, IMPORT: " + textToProceed + "\n" + t.getMessage() + "\n" + ExceptionUtils.getExStackTrace(ExceptionUtils.getStackTrace(t), ExecutionStackAspect.getExceptionStackTrace()));
                 }
             });
         }
