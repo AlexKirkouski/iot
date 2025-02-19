@@ -1,0 +1,25 @@
+MODULE OrgManagementReport;
+
+REQUIRE OrgUser, ManagementReport, OrgManagement;
+
+organization(ManagerLog ml) = organization(manager(ml));
+
+@addOrganization(managerLogs, ml){
+    EXTEND FORM managerLogs
+        OBJECTS o = Organization PANEL BEFORE ml
+        PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
+        FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
+        
+        FILTERS organization(ml) = o
+    ;
+    
+    DESIGN managerLogs {
+        top {
+            NEW paramBox FIRST {
+                horizontal = TRUE;
+                MOVE BOX(o);
+                fill = 0;
+            }
+        } 
+    } 
+};

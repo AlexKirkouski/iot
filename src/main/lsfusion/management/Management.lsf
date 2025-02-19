@@ -367,11 +367,17 @@ checkWorking(ControllerManager c) {
 
 CLASS ManagerLog 'Лог управления';
 manager = DATA ControllerManager (ManagerLog);
+nameManager 'Управление' (ManagerLog ml) = name(manager(ml));
 dateTime 'Время' = DATA ZDATETIME (ManagerLog);
 isOn 'Вкл.' = DATA BOOLEAN (ManagerLog);
 INDEX manager(ManagerLog l), dateTime(l), l;
 lastLog = GROUP LAST ManagerLog l ORDER dateTime(l), l BY manager(l) MATERIALIZED;
 prevDateTimeLastLog(ControllerManager l) = PREV(dateTime(lastLog(l)));
+
+prevManagerLog (ControllerManager m, ZDATETIME dt) = GROUP LAST ManagerLog pl ORDER dateTime(pl), pl WHERE manager(pl) = m AND dateTime(pl) < dt;
+prevManagerLog (ManagerLog ml) = prevManagerLog(manager(ml), dateTime(ml));
+nextManagerLog (ControllerManager m, ZDATETIME dt) = GROUP LAST ManagerLog pl ORDER DESC dateTime(pl), pl WHERE manager(pl) = m AND dateTime(pl) > dt;
+nextManagerLog (ManagerLog ml) = nextManagerLog(manager(ml), dateTime(ml));
 
 WHEN GOAFTER isOn[ControllerManager] CHANGED(isOn(ControllerManager c)) DO NEW l=ManagerLog {
     manager(l) <- c;

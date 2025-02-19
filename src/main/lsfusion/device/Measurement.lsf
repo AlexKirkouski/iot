@@ -69,7 +69,7 @@ idImport 'ИД импортируемое' = DATA LONG (Measurement);
 value 'Значение (raw)' = DATA DOUBLE (Measurement, MeasurementType);
 
 // denormalized data for quick access
-dateTime (Measurement m, MeasurementType mt) = dateTime(m) IF value(m, mt) MATERIALIZED ; // needed also for grafana
+dateTime 'Время' (Measurement m, MeasurementType mt) = dateTime(m) IF value(m, mt) MATERIALIZED ; // needed also for grafana
 device (Measurement m, MeasurementType mt) = device(m) IF value(m, mt) MATERIALIZED;
 INDEX device(Measurement m, MeasurementType mt), dateTime(m, mt); 
 

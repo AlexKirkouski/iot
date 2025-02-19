@@ -1,0 +1,156 @@
+MODULE ManagementReport;
+
+REQUIRE Management;
+
+CLASS Employee;
+name 'ФИО' = DATA STRING (Employee) IN base;
+position 'Должность' = DATA STRING (Employee) IN base;
+
+CLASS DeviationType {
+    planned 'Планируемое',
+    detected 'Выявленное'
+}
+
+CLASS DeviationStatus {
+    planned 'Планируемое',
+    detected 'Выявленное'
+}
+
+proceeded 'Обработанное' = DATA BOOLEAN (ManagerLog);
+
+deviationType = DATA DeviationType (ManagerLog);
+nameDeviationType 'Тип отклонения' (ManagerLog ml) = staticCaption(deviationType(ml));
+deviationStatus = DATA DeviationStatus (ManagerLog);
+nameDeviationStatus 'Статус отклонения' (ManagerLog ml) = staticCaption(deviationType(ml));
+
+deviationDescription 'Описание отклонения' = DATA TEXT (ManagerLog);
+causeExplanation 'Причина неисправности' = DATA TEXT (ManagerLog);
+decision 'Решение' = DATA TEXT (ManagerLog);
+
+responsible = DATA Employee (ManagerLog);
+nameResponsible 'ФИО ответственного' (ManagerLog ml) = name(responsible(ml));
+positionResponsible 'Должность ответственного' (ManagerLog ml) = position(responsible(ml));
+approver = DATA Employee (ManagerLog);
+nameApprover 'ФИО согласовавшего' (ManagerLog ml) = name(approver(ml));
+positionApprover 'Должность согласовавшего' (ManagerLog ml) = position(approver(ml));
+registrant = DATA Employee (ManagerLog);
+nameRegistrant 'ФИО зарегистрировавшего' (ManagerLog ml) = name(registrant(ml));
+positionRegistrant 'Должность зарегистрировавшего' (ManagerLog ml) = position(registrant(ml));
+
+registrationNumber 'Регистрационный номер' = DATA STRING (ManagerLog);
+reportName 'Название отчета' = DATA STRING (ManagerLog);
+
+// device'ы + пороги
+in 'Макс. фикс. значение' (Management mg) = GROUP MAX TRUE IF (device(right(ValuesCondition cv)) OR device(left(cv))) AND controller(cv) = mg;
+
+used (ConditionValue cv, Device d, MeasurementType mt) = device(cv) = d AND measurementType(cv) = mt;
+value (ConditionValue cv, Device d, MeasurementType mt) = value(cv) IF used(cv, d, mt);
+
+used (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (used(right(ManagerCondition cv), d, mt) OR used(left(cv), d, mt)) AND controller(cv) = mg;
+minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg;
+maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg;
+
+used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
+used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt);
+
+used (ManagerLog ml, Measurement m, MeasurementType mt) = used(manager(ml), m, mt);
+minValue 'Мин. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = minValue(manager(ml), device(m, mt), mt);
+maxValue 'Макс. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = maxValue(manager(ml), device(m, mt), mt);
+used (ManagerLog ml, MeasurementType mt) = used(manager(ml), mt);
+
+endDateTime 'Время оконч.' (ManagerLog ml) = dateTime(nextManagerLog(ml));
+
+FORM printManagerLog
+    OBJECTS ml = ManagerLog
+    PROPERTIES (ml) nameManager, 'Время нач.' = dateTime, 'Время оконч.' = endDateTime
+    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, decision,
+        nameResponsible, positionResponsible, nameApprover, positionApprover, nameRegistrant, positionRegistrant,
+        registrationNumber, reportName
+
+    OBJECTS mt = MeasurementType
+    PROPERTIES name(mt)
+    FILTERS used(ml, mt)
+
+    OBJECTS m = Measurement
+    FILTERS used(ml, m, mt) AND dateTime(m, mt) >= dateTime(ml) AND dateTime(m, mt) <= dateTime(nextManagerLog(ml))
+    PROPERTIES value(m, mt), minValue(ml, m, mt), maxValue(ml, m, mt)
+;
+
+print 'Распечатать' (ManagerLog ml) {
+    PRINT printManagerLog OBJECTS ml = ml;
+}
+
+FORM managerLogs 'Обработка инцидентов'
+    OBJECTS ml = ManagerLog
+    PROPERTIES (ml) proceeded, nameManager, 'Время нач.' = dateTime, 'Время оконч.' = endDateTime
+    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, decision,
+                    nameResponsible, positionResponsible, nameApprover, positionApprover, nameRegistrant, positionRegistrant,
+                    registrationNumber, reportName,
+                    print TOOLBAR
+    FILTERS isOn(ml)
+    FILTERGROUP notProceeded
+        FILTER 'Не обработанные' NOT proceeded(ml) 'F11' DEFAULT 
+
+    OBJECTS mm = (mt = MeasurementType, m = Measurement)
+    FILTERS used(ml, m, mt) AND dateTime(m, mt) >= dateTime(ml) AND dateTime(m, mt) <= dateTime(nextManagerLog(ml))
+    PROPERTIES value(m, mt), dateTime(m, mt),  minValue(ml, m, mt), maxValue(ml, m, mt)
+;
+
+DESIGN managerLogs {
+    OBJECTS {
+        NEW split {
+            horizontal = FALSE;
+            NEW top {
+                MOVE BOX (ml);
+                fill = 1;
+            }
+            NEW tab {
+//                tabbed = TRUE;
+                horizontal = TRUE;
+                NEW params {
+                    NEW id {
+                        caption = 'ИД';
+                        lines = 2;
+                        fill = 1;
+                        MOVE PROPERTY (registrationNumber(ml));
+                        MOVE PROPERTY (reportName(ml));
+                    }
+
+                    NEW about {
+                        caption = 'Описание';
+                        lines = 2;
+                        fill = 1;
+                        MOVE PROPERTY (nameDeviationType(ml));
+                        MOVE PROPERTY (nameDeviationStatus(ml));
+                        MOVE PROPERTY (deviationDescription(ml));
+                        MOVE PROPERTY (causeExplanation(ml));
+                        MOVE PROPERTY (decision(ml));
+                    }
+
+                    NEW persons {
+                        caption = 'Исполнители';
+                        lines = 2;
+                        fill = 1;
+                        MOVE PROPERTY (nameResponsible(ml));
+                        MOVE PROPERTY (positionResponsible(ml));
+                        MOVE PROPERTY (nameApprover(ml));
+                        MOVE PROPERTY (positionApprover(ml));
+                        MOVE PROPERTY (nameRegistrant(ml));
+                        MOVE PROPERTY (positionRegistrant(ml));
+                    }
+                }
+                MOVE BOX(mm) {
+                    caption = 'Измерения';
+                }
+                fill = 1;
+            }
+            fill = 1;
+        }
+    }
+}
+
+NAVIGATOR {
+    equipment {
+        NEW managerLogs;
+    }
+}
