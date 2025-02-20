@@ -50,8 +50,8 @@ usedValue (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (use
 usedValue (Management mg, Device d) = GROUP MAX usedValue(mg, d, MeasurementType mt);
 fixed = ABSTRACT BOOLEAN (MeasurementType);
 used (Management mg, Device d, MeasurementType mt) = usedValue(mg, d, mt) OR (usedValue(mg, d) AND fixed(mt)) MATERIALIZED;
-minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg;
-maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg;
+minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
+maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
 
 used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
 used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt) MATERIALIZED;
@@ -78,7 +78,7 @@ FORM printManagerLog
 
     OBJECTS m = Measurement
     FILTERS used(ml, m, mt) AND inLogPeriod(m, mt, ml)
-    PROPERTIES value(m, mt), dateTime(m, mt), minValue(ml, m, mt), maxValue(ml, m, mt)
+    PROPERTIES value(m, mt), dateTime(m, mt) ORDER, minValue(ml, m, mt), maxValue(ml, m, mt)
 ;
 
 print 'Распечатать' (ManagerLog ml) {
@@ -98,7 +98,7 @@ FORM managerLogs 'Обработка инцидентов'
 
     OBJECTS mm = (mt = MeasurementType, m = Measurement)
     FILTERS used(ml, m, mt) AND inLogPeriod(m, mt, ml)
-    PROPERTIES name(mt), value(m, mt), dateTime(m, mt),  minValue(ml, m, mt), maxValue(ml, m, mt)
+    PROPERTIES name(mt), value(m, mt), dateTime(m, mt) ORDER,  minValue(ml, m, mt), maxValue(ml, m, mt)
 ;
 
 DESIGN managerLogs {
