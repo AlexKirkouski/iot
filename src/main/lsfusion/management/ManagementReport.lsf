@@ -45,14 +45,13 @@ reportName 'Название отчета' = DATA STRING (ManagerLog);
 in 'Макс. фикс. значение' (Management mg) = GROUP MAX TRUE IF (device(right(ValuesCondition cv)) OR device(left(cv))) AND controller(cv) = mg;
 
 used (ConditionValue cv, Device d, MeasurementType mt) = device(cv) = d AND measurementType(cv) = mt;
-value (ConditionValue cv, Device d, MeasurementType mt) = value(cv) IF used(cv, d, mt);
 
 usedValue (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (used(right(ManagerCondition cv), d, mt) OR used(left(cv), d, mt)) AND controller(cv) = mg;
 usedValue (Management mg, Device d) = GROUP MAX usedValue(mg, d, MeasurementType mt);
 fixed = ABSTRACT BOOLEAN (MeasurementType);
 used (Management mg, Device d, MeasurementType mt) = usedValue(mg, d, mt) OR (usedValue(mg, d) AND fixed(mt)) MATERIALIZED;
-minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
-maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
+minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg;
+maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv)) IF used(left(cv), d, mt), value(left(cv)) IF used(right(cv), d, mt)) IF controller(cv) = mg;
 
 used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
 used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt) MATERIALIZED;
