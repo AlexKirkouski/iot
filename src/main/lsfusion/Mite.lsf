@@ -29,6 +29,8 @@ temperatureType = GROUP AGGR MeasurementType type WHERE name(type) = 'Темпе
 humidityType = GROUP AGGR MeasurementType type WHERE name(type) = 'Влажность';
 batteryType = GROUP AGGR MeasurementType type WHERE name(type) = 'Батарея';
 
+fixed(MeasurementType mt) += mt = batteryType(); 
+
 maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
                                                                    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
 minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,

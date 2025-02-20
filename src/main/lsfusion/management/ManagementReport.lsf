@@ -24,6 +24,7 @@ deviationStatus = DATA DeviationStatus (ManagerLog);
 nameDeviationStatus 'Статус отклонения' (ManagerLog ml) = staticCaption(deviationType(ml));
 
 deviationDescription 'Описание отклонения' = DATA TEXT (ManagerLog);
+actionsDone 'Предпринятые действия' = DATA TEXT (ManagerLog);
 causeExplanation 'Причина неисправности' = DATA TEXT (ManagerLog);
 decision 'Решение' = DATA TEXT (ManagerLog);
 
@@ -46,12 +47,15 @@ in 'Макс. фикс. значение' (Management mg) = GROUP MAX TRUE IF (d
 used (ConditionValue cv, Device d, MeasurementType mt) = device(cv) = d AND measurementType(cv) = mt;
 value (ConditionValue cv, Device d, MeasurementType mt) = value(cv) IF used(cv, d, mt);
 
-used (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (used(right(ManagerCondition cv), d, mt) OR used(left(cv), d, mt)) AND controller(cv) = mg;
-minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg;
-maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg;
+usedValue (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (used(right(ManagerCondition cv), d, mt) OR used(left(cv), d, mt)) AND controller(cv) = mg;
+usedValue (Management mg, Device d) = GROUP MAX usedValue(mg, d, MeasurementType mt);
+fixed = ABSTRACT BOOLEAN (MeasurementType);
+used (Management mg, Device d, MeasurementType mt) = usedValue(mg, d, mt) OR (usedValue(mg, d) AND fixed(mt)) MATERIALIZED;
+minValue (Management mg, Device d, MeasurementType mt) = GROUP MIN (MIN value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
+maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(right(ValuesCondition cv), d, mt), value(left(cv), d, mt)) IF controller(cv) = mg MATERIALIZED;
 
 used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
-used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt);
+used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt) MATERIALIZED;
 
 used (ManagerLog ml, Measurement m, MeasurementType mt) = used(manager(ml), m, mt);
 minValue 'Мин. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = minValue(manager(ml), device(m, mt), mt);
@@ -60,10 +64,12 @@ used (ManagerLog ml, MeasurementType mt) = used(manager(ml), mt);
 
 endDateTime 'Время оконч.' (ManagerLog ml) = dateTime(nextManagerLog(ml));
 
+inLogPeriod(Measurement m, MeasurementType mt, ManagerLog ml) = dateTime(m, mt) >= subtractSeconds(dateTime(ml), 60 * 60 * 3) AND dateTime(m, mt) <= sumSeconds(dateTime(nextManagerLog(ml)), 60 * 60 * 3);
+
 FORM printManagerLog
     OBJECTS ml = ManagerLog
     PROPERTIES (ml) nameManager, 'Время нач.' = dateTime, 'Время оконч.' = endDateTime
-    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, decision,
+    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, actionsDone, decision,
         nameResponsible, positionResponsible, nameApprover, positionApprover, nameRegistrant, positionRegistrant,
         registrationNumber, reportName
 
@@ -72,8 +78,8 @@ FORM printManagerLog
     FILTERS used(ml, mt)
 
     OBJECTS m = Measurement
-    FILTERS used(ml, m, mt) AND dateTime(m, mt) >= dateTime(ml) AND dateTime(m, mt) <= dateTime(nextManagerLog(ml))
-    PROPERTIES value(m, mt), minValue(ml, m, mt), maxValue(ml, m, mt)
+    FILTERS used(ml, m, mt) AND inLogPeriod(m, mt, ml)
+    PROPERTIES value(m, mt), dateTime(m, mt), minValue(ml, m, mt), maxValue(ml, m, mt)
 ;
 
 print 'Распечатать' (ManagerLog ml) {
@@ -83,7 +89,7 @@ print 'Распечатать' (ManagerLog ml) {
 FORM managerLogs 'Обработка инцидентов'
     OBJECTS ml = ManagerLog
     PROPERTIES (ml) proceeded, nameManager, 'Время нач.' = dateTime, 'Время оконч.' = endDateTime
-    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, decision,
+    PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, actionsDone, decision,
                     nameResponsible, positionResponsible, nameApprover, positionApprover, nameRegistrant, positionRegistrant,
                     registrationNumber, reportName,
                     print TOOLBAR
@@ -92,8 +98,8 @@ FORM managerLogs 'Обработка инцидентов'
         FILTER 'Не обработанные' NOT proceeded(ml) 'F11' DEFAULT 
 
     OBJECTS mm = (mt = MeasurementType, m = Measurement)
-    FILTERS used(ml, m, mt) AND dateTime(m, mt) >= dateTime(ml) AND dateTime(m, mt) <= dateTime(nextManagerLog(ml))
-    PROPERTIES value(m, mt), dateTime(m, mt),  minValue(ml, m, mt), maxValue(ml, m, mt)
+    FILTERS used(ml, m, mt) AND inLogPeriod(m, mt, ml)
+    PROPERTIES name(mt), value(m, mt), dateTime(m, mt),  minValue(ml, m, mt), maxValue(ml, m, mt)
 ;
 
 DESIGN managerLogs {
