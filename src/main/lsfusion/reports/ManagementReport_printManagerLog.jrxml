@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://jasperreports.sourceforge.net/jasperreports" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ManagementReport.printManagerLog" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="1c62e2b1-cf87-4e90-b47f-10510784512a">
+<jasperReport xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://jasperreports.sourceforge.net/jasperreports" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ManagementReport.printManagerLog" pageWidth="842" pageHeight="842" orientation="Portrait" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="6afeefe9-d1a6-48b6-a8a5-d10f0f16919a">
 	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
-	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="842"/>
 	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="DejaVu Sans" fontSize="10">
 		<box>
 			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -32,6 +32,9 @@
 		</box>
 		<paragraph leftIndent="2" rightIndent="2"/>
 	</style>
+	<parameter name="m_report" class="net.sf.jasperreports.engine.JasperReport"/>
+	<parameter name="m_source" class="net.sf.jasperreports.engine.JRDataSource"/>
+	<parameter name="m_params" class="java.util.Map"/>
 	<field name="ml.object" class="java.lang.Long"/>
 	<field name="nameManager(ml)" class="java.lang.String"/>
 	<field name="dateTime(ml)" class="java.time.Instant"/>
@@ -52,253 +55,755 @@
 	<field name="reportName(ml)" class="java.lang.String"/>
 	<field name="mt.object" class="java.lang.Long"/>
 	<field name="name(mt)" class="java.lang.String"/>
-	<field name="m.object" class="java.lang.Long"/>
-	<field name="value(m,mt)" class="java.lang.Double"/>
-	<field name="dateTime(m,mt)" class="java.time.Instant"/>
-	<field name="minValue(ml,m,mt)" class="java.lang.Double"/>
-	<field name="maxValue(ml,m,mt)" class="java.lang.Double"/>
-	<group name="designGroup19324">
+	<group name="managerLog">
 		<groupExpression><![CDATA[String.valueOf($F{ml.object})]]></groupExpression>
 		<groupHeader>
-			<band height="18" splitType="Prevent">
+			<band height="550" splitType="Stretch">
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="0" y="0" width="42" height="18" uuid="a3528208-6691-4bce-856d-a7415862a7b0"/>
+					<reportElement style="GroupCellStyle0" stretchType="ContainerHeight" x="186" y="0" width="185" height="18" uuid="0c7984f5-ac33-47ae-a5a0-be2b838f5d31">
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
 					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Controlling"]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$F{nameDeviationType(ml)}]]></textFieldExpression>
 				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="42" y="0" width="80" height="18" uuid="d5fa5ab3-96b5-4d92-bac5-877c066ec80b"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Время нач."]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="122" y="0" width="80" height="18" uuid="8a8367ba-431e-4737-9584-82559a48d77c"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Время оконч."]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="202" y="0" width="42" height="18" uuid="18340e6e-818a-4ad8-84e4-b54edc60874a"/>
-					<textElement textAlignment="Center"/>
+				<textField>
+					<reportElement x="0" y="0" width="186" height="18" uuid="dab2d1f4-34b5-4935-99bd-60af951bc953">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
 					<textFieldExpression><![CDATA["Тип отклонения"]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="244" y="0" width="42" height="18" uuid="1267c615-e8c9-4d92-93ec-030f40327cfb"/>
+					<reportElement mode="Transparent" x="143" y="18" width="135" height="30" uuid="e45cf2fa-b8be-4fa5-919a-cea12c50ede9">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
 					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Статус отклонения"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="286" y="0" width="42" height="18" uuid="c823277b-7759-4436-b6df-3ddb971a5194"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Описание отклонения"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="328" y="0" width="42" height="18" uuid="07f432a7-be65-4eee-aee0-7388eca26dac"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Причина неисправности"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="370" y="0" width="42" height="18" uuid="c02f3357-8337-4ce6-bde8-4a6dfd64aa8c"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Предпринятые действия"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="412" y="0" width="42" height="18" uuid="afad6655-7c7f-414d-996d-aa8b05b58791"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Решение"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="454" y="0" width="42" height="18" uuid="88a8baee-2f8d-48c1-8c70-9706a3391e57"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["ФИО ответственного"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="496" y="0" width="42" height="18" uuid="82e9b658-2fd5-42d8-ad37-81e5b5f3df16"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Должность ответственного"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="538" y="0" width="42" height="18" uuid="63151c0c-b44d-4866-bff8-caa7d43ab74a"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["ФИО согласовавшего"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="580" y="0" width="42" height="18" uuid="fccf3a0b-e7e6-40de-bd58-c2baaea24db9"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Должность согласовавшего"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="622" y="0" width="42" height="18" uuid="a20aa85f-283a-4d90-a5e9-d623f6794707"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["ФИО зарегистрировавшего"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="664" y="0" width="42" height="18" uuid="34da7d16-6719-4a25-9b38-263cedb27d33"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Должность зарегистрировавшего"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="706" y="0" width="42" height="18" uuid="587a6cb0-6d23-48a5-acce-55190c7275ac"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Регистрационный номер"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" stretchType="RelativeToBandHeight" x="748" y="0" width="54" height="18" uuid="8b736766-5489-476a-b582-a5793ef7be28"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Название отчета"]]></textFieldExpression>
-				</textField>
-			</band>
-			<band height="18" splitType="Prevent">
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="42" height="18" uuid="5cff6917-2aa0-4b8a-bc37-f8743a3ce6e2"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{nameManager(ml)}]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" pattern="dd/MM/yy HH:mm" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="42" y="0" width="80" height="18" uuid="94ba0449-3757-4021-9944-3991d9568c05"/>
-					<textElement textAlignment="Right"/>
-					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" pattern="dd/MM/yy HH:mm" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="122" y="0" width="80" height="18" uuid="0f5c220a-0e1e-48a0-9820-bb6559b579b6"/>
-					<textElement textAlignment="Right"/>
-					<textFieldExpression><![CDATA[$F{endDateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="202" y="0" width="42" height="18" uuid="4e21bb1d-abe5-4ce8-9882-d932a1c42e25"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{nameDeviationType(ml)}]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="244" y="0" width="42" height="18" uuid="471b6bb5-3803-4338-a04b-f4735595bbf3"/>
-					<textElement textAlignment="Left"/>
 					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="286" y="0" width="42" height="18" uuid="2f240dea-3159-465f-a710-4e4e87c836fe"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{deviationDescription(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="419" y="19" width="135" height="30" uuid="40957e87-b826-4c80-a390-fc580d9096dd">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="328" y="0" width="42" height="18" uuid="6661b052-75b7-4075-af96-e4150f1a82e1"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{causeExplanation(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="282" y="18" width="135" height="30" uuid="4f19d77a-dc26-481c-9334-67fba41001fb">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="370" y="0" width="42" height="18" uuid="5888424f-a315-4d43-b775-144674acb617"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{actionsDone(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="143" y="48" width="135" height="30" uuid="eb4b031c-1fc5-4f52-b845-a429feab8c18">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="412" y="0" width="42" height="18" uuid="16480a06-b6df-460f-9e86-fd630eb4f56d"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{decision(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="419" y="48" width="135" height="30" uuid="e4921a14-3312-460c-a824-2d4c03e3fe76">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="48" width="140" height="30" uuid="dbf96f11-e42b-4e1a-8a96-9e1947265058">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Время фиксации отклонения"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="78" width="555" height="30" uuid="5838e7ef-b5be-4547-83a4-8f50a75729dd">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Описание отклонения "+$F{deviationDescription(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="108" width="555" height="18" uuid="87a6b929-eb27-41ad-93a1-45afc32cbc5f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Причина/пояснение/предложения: "+$F{causeExplanation(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="2" y="446" width="140" height="12" uuid="72d32ddd-a9fa-474a-a8af-d40ab1cb8c34">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Должность"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="143" y="446" width="135" height="12" uuid="61461c80-5557-413e-b697-8088c12565ee">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Дата"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="282" y="390" width="136" height="12" uuid="1a4e1174-9651-4683-92b4-a970602469fa">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Подпись"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="422" y="446" width="135" height="12" uuid="571941cc-3e35-4077-a149-7abee271f1df">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Ф. И. О."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="139" width="555" height="18" uuid="508c5e66-b2ef-49d0-9dec-5c09cf9c654a">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Уведомление составил: "]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="454" y="0" width="42" height="18" uuid="722ce8af-3a5c-4f51-8be0-efbcce8e42a5"/>
-					<textElement textAlignment="Left"/>
+					<reportElement mode="Transparent" x="281" y="230" width="135" height="18" uuid="00929e32-a6dc-4289-bca6-7e3a42257e05">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="157" width="135" height="18" uuid="3726afe1-93d2-4ec3-9ba3-fc19d571fbb2">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
 					<textFieldExpression><![CDATA[$F{nameResponsible(ml)}]]></textFieldExpression>
 				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="496" y="0" width="42" height="18" uuid="e650fde9-0dfc-4087-8603-12c2be1a5902"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{positionResponsible(ml)}]]></textFieldExpression>
+				<textField>
+					<reportElement x="0" y="175" width="555" height="18" uuid="c2067d12-7fde-4dd8-84fc-57e2357a5029">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Уведомление согласовал: "]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="538" y="0" width="42" height="18" uuid="464097f1-89b3-4c2b-9023-9b8230e3c402"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{nameApprover(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="143" y="193" width="135" height="18" uuid="e50767ec-24da-4a16-ac33-13145a750a09">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
 				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="580" y="0" width="42" height="18" uuid="399d0a75-1484-47b1-8cae-33adc1aa31bb"/>
-					<textElement textAlignment="Left"/>
+				<textField>
+					<reportElement x="1" y="193" width="140" height="18" uuid="fc5367ad-e34a-4b49-995e-f26ad6356022">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
 					<textFieldExpression><![CDATA[$F{positionApprover(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="622" y="0" width="42" height="18" uuid="a9abf8ab-48fe-4e4a-8fc6-89b38f6fb34b"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{nameRegistrant(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="282" y="193" width="135" height="18" uuid="5b3fb3d0-f3bd-416b-b17d-033a7c9348d2">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="664" y="0" width="42" height="18" uuid="b1ac6c64-a685-429b-af65-1567746759d6"/>
-					<textElement textAlignment="Left"/>
+					<reportElement mode="Transparent" x="419" y="193" width="135" height="18" uuid="be4c871b-927b-4248-a905-7eb88fad9b5c">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameApprover(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="211" width="555" height="18" uuid="47c08159-84cf-4850-a371-d6a38b3a36a1">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Уведомление получил и зарегистрировал: "]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="143" y="230" width="135" height="18" uuid="fe43058f-901d-4fb7-8c6c-975666b71cce">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="282" y="157" width="135" height="18" uuid="4900e79b-7798-46b1-8920-fb366db11a33">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="0" y="230" width="140" height="18" uuid="8e13ccfc-f32a-4c4e-a8cb-290bac29261d">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center">
+						<font isBold="true"/>
+					</textElement>
 					<textFieldExpression><![CDATA[$F{positionRegistrant(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="706" y="0" width="42" height="18" uuid="da1d134e-7a7a-43ce-b41c-73eed2f67b66"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{registrationNumber(ml)}]]></textFieldExpression>
+					<reportElement style="GroupCellStyle0" stretchType="ContainerHeight" x="369" y="0" width="185" height="18" uuid="12273da8-5911-4785-a5ca-dafb6fdff9df">
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationType(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="18" width="140" height="30" uuid="c2a80566-7cfa-41e1-a94b-1a00db27e27b">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Статус отклонения (предварительная оценка)"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="250" width="555" height="20" uuid="4305cfea-8002-4e8c-967e-352b04f707f3">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineWidth="0.25" lineColor="#B0ACAC"/>
+						<topPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="DejaVu Sans" size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[                                 Регистрация отклонения Ответственным лицом]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="419" y="126" width="135" height="12" uuid="c72785eb-d16b-4471-a0f0-ce3d4a3c7bf0">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Ф. И. О."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="282" y="126" width="135" height="12" uuid="44189442-6afa-4fd3-945e-b0bd751c79b9">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Подпись"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="143" y="126" width="135" height="12" uuid="edb3e684-a74f-4756-888e-ff8e2752215c">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Дата"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="126" width="140" height="12" uuid="6c6dc413-6223-45dc-a91d-a59e4266ceab">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Должность"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="419" y="390" width="135" height="12" uuid="2e857b67-fbfa-473b-b982-63284ccf2785">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Ф. И. О."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="143" y="390" width="135" height="12" uuid="33fd5e87-537f-493b-adc9-f89fcc46467c">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Дата"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="391" width="140" height="12" uuid="220155db-64ac-4cf3-97dc-5d59d60686a8">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Должность"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="157" width="140" height="18" uuid="89bf41df-87ad-4331-8f19-3d2a718c907a">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{positionResponsible(ml)}]]></textFieldExpression>
 				</textField>
 				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle2" positionType="Float" stretchType="RelativeToBandHeight" x="748" y="0" width="54" height="18" uuid="fe2f546b-302b-4083-9dd6-f2fce7d614e7"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{reportName(ml)}]]></textFieldExpression>
+					<reportElement mode="Transparent" x="282" y="403" width="135" height="18" uuid="c7918ab4-91ed-4bb1-812e-cfd39edf3a1f">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="403" width="135" height="18" uuid="013ff776-70ed-4553-9c2e-d72f8ec2fd7e">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameResponsible(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="143" y="157" width="135" height="18" uuid="5a1ec7d7-c39a-4b68-a0a1-b3a4606433b4">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="419" width="555" height="26" uuid="fc82ec7e-336b-4a34-a642-c24ac43e81c6">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Проверка выполнения мероприятий в отношении лекарственного препарата "]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="230" width="135" height="18" uuid="ef80fefe-d479-4d62-b669-97704f02e065">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameRegistrant(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="460" width="555" height="18" uuid="f4c7cba8-dfd3-4008-b230-bace5e576540">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Проверил: "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="360" width="555" height="30" uuid="f111d5e6-460f-459f-ac41-dd1ebc850094">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Решение  "+$F{decision(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="300" width="140" height="30" uuid="e149ec64-8d21-4441-9e79-493c98f602ec">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Классификация отклонения"]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="282" y="270" width="135" height="30" uuid="a759e7e0-3f10-47d6-a30e-8e992a888e50">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Должность: "
++$F{positionResponsible(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="270" width="135" height="30" uuid="39dcdb17-6c0f-4786-ac75-e0ff894cbcb2">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Ф. И. О., подпись "+$F{nameResponsible(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="270" width="140" height="30" uuid="7be219d5-61b7-4e39-af91-9a7333e81204">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Регистрационный Номер "+$F{registrationNumber(ml)}+"/"+$F{nameDeviationStatus(ml)}.substring(0,1)]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="282" y="48" width="135" height="30" uuid="99eacd34-5d8a-4740-913e-75d6bf13d069">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Ориентировочное время и дата возникновения"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="283" y="448" width="136" height="12" uuid="fd25d351-77ab-4ea2-8dd2-9d7826a9a7fe">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Подпись"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="330" width="555" height="30" uuid="195ee0be-a8e6-4fa5-86f0-0ddc1acd32e2">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textFieldExpression><![CDATA["Предпринятые действия, комментарии  "+$F{actionsDone(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="143" y="300" width="135" height="30" uuid="cbafa6e6-3365-45c4-9512-c68a7b47f467">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="282" y="300" width="135" height="30" uuid="0971f750-7c6c-40f8-8891-222df84a19dd">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="300" width="135" height="30" uuid="c3ae1bd5-f021-4cc8-8de1-a0cf3726477c">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameDeviationStatus(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="403" width="140" height="18" uuid="38874322-5647-40a8-a697-883b92d055a1">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{positionResponsible(ml)}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="2" y="480" width="140" height="18" uuid="c3a4eb81-bbe3-4195-800c-79b641fcd942">
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement>
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{positionApprover(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="143" y="480" width="135" height="18" uuid="e0309f9a-131e-45b8-813b-4faeb00153a3">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="282" y="480" width="135" height="18" uuid="8073cb1e-06df-4db8-945b-8ad979464af7">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="419" y="480" width="135" height="18" uuid="a5c28af9-e0c2-498f-acbe-df7464b50d8d">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{nameApprover(ml)}]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="146" y="403" width="135" height="18" uuid="fef26c82-ccfe-4777-8612-e3a6f5f618fd">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA[$F{dateTime(ml)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="143" y="270" width="135" height="30" uuid="f56b128e-2696-41b2-8f69-5c32a8ed550e">
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineColor="#B0ACAC"/>
+					</box>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Дата: "
++$F{dateTime(ml)}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>
 	</group>
-	<group name="designGroup19350">
+	<group name="measurementType">
 		<groupExpression><![CDATA[String.valueOf($F{mt.object})]]></groupExpression>
 		<groupHeader>
-			<band height="18" splitType="Prevent">
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="32" height="18" uuid="50fe3607-bb29-427a-9b21-06137b862de0"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Name"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="32" y="0" width="770" height="18" uuid="1caae74a-9a13-4ed7-89fc-0fcedb13b152"/>
-					<textElement textAlignment="Left"/>
-					<textFieldExpression><![CDATA[$F{name(mt)}]]></textFieldExpression>
-				</textField>
+			<band height="0" splitType="Prevent">
 			</band>
 		</groupHeader>
 	</group>
-	<pageHeader>
-		<band height="18">
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="240" height="18" uuid="ca79b4af-99e8-44b4-8e26-d550f49ce146"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Value (raw)"]]></textFieldExpression>
+	<title>
+		<band height="49" splitType="Stretch">
+			<textField>
+				<reportElement x="455" y="-19" width="120" height="19" uuid="7cf16721-e7ea-4bc5-b2c9-e1fb7a96ee67"/>
+				<box>
+					<pen lineColor="#FFFFFF"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="DejaVu Sans"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{reportName(ml)}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="240" y="0" width="80" height="18" uuid="87268d25-b036-4f76-934d-6873e47228ca"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Time"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="320" y="0" width="240" height="18" uuid="91805d6f-8d7d-4d70-b495-43975f11c68f"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Min. fix. value"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="560" y="0" width="242" height="18" uuid="b790761d-59ad-4416-87c2-8921c8050526"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Max. fix. value"]]></textFieldExpression>
-			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="555" height="30" uuid="515eea27-fd00-453a-905e-3641df1ecac6">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.25" lineColor="#B0ACAC"/>
+					<topPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.25" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement>
+					<font fontName="DejaVu Sans" size="12" isBold="true"/>
+				</textElement>
+				<text><![CDATA[				     Уведомление об отклонении]]></text>
+			</staticText>
 		</band>
-	</pageHeader>
+	</title>
 	<detail>
-		<band height="18">
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="240" height="18" uuid="bc9a5a2c-b181-4d16-8727-b810db87acbf"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{value(m,mt)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" pattern="dd/MM/yy HH:mm" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="240" y="0" width="80" height="18" uuid="27a47d21-3390-40d7-a31e-3f8109f2e74e"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{dateTime(m,mt)}.atZone(java.util.TimeZone.getDefault().toZoneId()).format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yy HH:mm"))]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="320" y="0" width="240" height="18" uuid="4a66d8d1-bf58-4931-89f4-bee73b947b81"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{minValue(ml,m,mt)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="560" y="0" width="242" height="18" uuid="7f1f4b2b-f29b-402a-be9e-3657052473b0"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{maxValue(ml,m,mt)}]]></textFieldExpression>
-			</textField>
+		<band>
+			<subreport>
+				<reportElement stretchType="RelativeToBandHeight" x="0" y="0" width="0" height="0" uuid="51b5b1f0-a3be-4e7b-80f2-a6ef771dd25d"/>
+				<parametersMapExpression><![CDATA[$P{m_params}]]></parametersMapExpression>
+				<dataSourceExpression><![CDATA[$P{m_source}]]></dataSourceExpression>
+				<subreportExpression><![CDATA[$P{m_report}]]></subreportExpression>
+			</subreport>
 		</band>
 	</detail>
 </jasperReport>

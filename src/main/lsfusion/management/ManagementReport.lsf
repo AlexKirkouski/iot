@@ -76,7 +76,7 @@ FORM printManagerLog
     PROPERTIES name(mt)
     FILTERS used(ml, mt)
 
-    OBJECTS m = Measurement
+    OBJECTS m = Measurement SUBREPORT
     FILTERS used(ml, m, mt) AND inLogPeriod(m, mt, ml)
     PROPERTIES value(m, mt), dateTime(m, mt) ORDER, minValue(ml, m, mt), maxValue(ml, m, mt)
 ;
