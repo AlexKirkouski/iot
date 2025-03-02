@@ -243,11 +243,30 @@ getpackage(FILE file) {
     printToLog('GETPACKAGE : ' + extension(file) + ' -> ' + STRING(RAWFILE(file)));
 } @@noauth;
 
+lagrangePoints = DATA LOCAL NESTED DOUBLE (DOUBLE);
+lagrangeResult = DATA LOCAL NESTED DOUBLE ();
+calcLagrange INTERNAL 'mite.LagrangeAction' (DOUBLE);
+
 run() {
-    FOR value(Measurement m, MeasurementType mt) < 2 AND deviceId(m) = 1 AND name(mt) = 'Температура' AND dateTime(m, mt) > ZDATETIME(2012_01_02_12:05) AND dateTime(m, mt) < ZDATETIME(2012_01_02_12:05) DO {
-        ASK 'Change ' + value(m, mt) + ' ' + dateTime(m) DO {
-            APPLY value(m, mt) <- 2 + random() * 0.1;
+    LOCAL points = DOUBLE (TIME);
+    // points(04:00) <- 1; 
+    points(07:30) <- 22;
+    points(08:30) <- 8;
+    points(10:00) <- 4;
+    points(17:15) <- 7.9;
+    // points(19:00) <- 4; 
+
+    lagrangePoints(DOUBLE x) <- GROUP MAX points(TIME t) IF DOUBLE(toSeconds(t)) = x;
+
+    FOR value(Measurement m, MeasurementType mt) AND deviceId(m) = 1210000026 AND name(mt) = r'Температура'
+        AND dateTime(m, mt) > ZDATETIME(2022_04_25_00:00) AND dateTime(m, mt) < ZDATETIME(2022_04_25_23:35)
+        DO {
+
+        calcLagrange(DOUBLE(toSeconds(TIME(dateTime(m, mt)))));
+
+        ASK 'Change \n DATE:' + dateTime(m, mt) + '\n OLD VALUE:' + value(m, mt) + '\n NEW VALUE' + lagrangeResult() DO {
+            APPLY value(m, mt) <- lagrangeResult();
         } ELSE
-            BREAK ;
+        BREAK ;
     }
 }

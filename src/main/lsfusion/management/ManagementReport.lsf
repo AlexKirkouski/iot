@@ -130,6 +130,7 @@ DESIGN managerLogs {
                         MOVE PROPERTY (deviationDescription(ml));
                         MOVE PROPERTY (causeExplanation(ml));
                         MOVE PROPERTY (decision(ml));
+                        MOVE PROPERTY (actionsDone(ml));
                     }
 
                     NEW persons {
