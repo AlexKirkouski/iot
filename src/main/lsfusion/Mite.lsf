@@ -258,7 +258,7 @@ run() {
 
     lagrangePoints(DOUBLE x) <- GROUP MAX points(TIME t) IF DOUBLE(toSeconds(t)) = x;
 
-    FOR value(Measurement m, MeasurementType mt) AND deviceId(m, mt) = 1210000026 AND name(mt) = r'Температура'
+    FOR value(Measurement m, MeasurementType mt) AND deviceId(m) = 1210000026 AND name(mt) = r'Температура'
         AND dateTime(m, mt) > ZDATETIME(2022_04_25_00:00) AND dateTime(m, mt) < ZDATETIME(2022_04_25_23:35)
         DO {
 

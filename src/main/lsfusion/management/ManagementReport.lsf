@@ -21,7 +21,7 @@ proceeded 'Обработанное' = DATA BOOLEAN (ManagerLog);
 deviationType = DATA DeviationType (ManagerLog);
 nameDeviationType 'Тип отклонения' (ManagerLog ml) = staticCaption(deviationType(ml));
 deviationStatus = DATA DeviationStatus (ManagerLog);
-nameDeviationStatus 'Статус отклонения' (ManagerLog ml) = staticCaption(deviationType(ml));
+nameDeviationStatus 'Статус отклонения' (ManagerLog ml) = staticCaption(deviationStatus(ml));
 
 deviationDescription 'Описание отклонения' = DATA TEXT (ManagerLog);
 actionsDone 'Предпринятые действия' = DATA TEXT (ManagerLog);
@@ -56,10 +56,14 @@ maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(ri
 used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
 used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt) MATERIALIZED;
 
+usedIdDevices(Management mg) = GROUP CONCAT id(Device d) IF usedValue(mg, d) ORDER d;
+
 used (ManagerLog ml, Measurement m, MeasurementType mt) = used(manager(ml), m, mt);
 minValue 'Мин. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = minValue(manager(ml), device(m, mt), mt);
 maxValue 'Макс. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = maxValue(manager(ml), device(m, mt), mt);
 used (ManagerLog ml, MeasurementType mt) = used(manager(ml), mt);
+
+usedIdDevices (ManagerLog ml) = usedIdDevices(manager(ml));
 
 endDateTime 'Время оконч.' (ManagerLog ml) = dateTime(nextManagerLog(ml));
 
@@ -70,7 +74,7 @@ FORM printManagerLog
     PROPERTIES (ml) nameManager, 'Время нач.' = dateTime, 'Время оконч.' = endDateTime
     PROPERTIES (ml) PANEL nameDeviationType, nameDeviationStatus, deviationDescription, causeExplanation, actionsDone, decision,
         nameResponsible, positionResponsible, nameApprover, positionApprover, nameRegistrant, positionRegistrant,
-        registrationNumber, reportName
+        registrationNumber, reportName, usedIdDevices
 
     OBJECTS mt = MeasurementType
     PROPERTIES name(mt)
