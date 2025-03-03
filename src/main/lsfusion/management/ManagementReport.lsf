@@ -12,8 +12,9 @@ CLASS DeviationType {
 }
 
 CLASS DeviationStatus {
-    planned 'Планируемое',
-    detected 'Выявленное'
+    insignificant 'Незначительное',
+    significant 'Значительное',
+    critical 'Критическое'
 }
 
 proceeded 'Обработанное' = DATA BOOLEAN (ManagerLog);
