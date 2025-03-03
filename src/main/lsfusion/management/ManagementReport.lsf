@@ -56,7 +56,7 @@ maxValue (Management mg, Device d, MeasurementType mt) = GROUP MAX (MAX value(ri
 used (Management mg, Measurement m, MeasurementType mt) = used(mg, device(m, mt), mt);
 used (Management mg, MeasurementType mt) = GROUP MAX used(mg, Device d, mt) MATERIALIZED;
 
-usedIdDevices(Management mg) = GROUP CONCAT id(Device d), ',' IF usedValue(mg, d) ORDER d;
+usedIdDevices(Management mg) = GROUP CONCAT STRING(id(Device d)) IF usedValue(mg, d), ','  ORDER d;
 
 used (ManagerLog ml, Measurement m, MeasurementType mt) = used(manager(ml), m, mt);
 minValue 'Мин. фикс. значение' (ManagerLog ml, Measurement m, MeasurementType mt) = minValue(manager(ml), device(m, mt), mt);
