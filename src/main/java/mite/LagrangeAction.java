@@ -13,6 +13,10 @@ import lsfusion.server.logics.classes.ValueClass;
 import lsfusion.server.logics.classes.user.ConcreteCustomClass;
 import lsfusion.server.logics.property.classes.ClassPropertyInterface;
 import lsfusion.server.physics.dev.integration.internal.to.InternalAction;
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.interpolation.AkimaSplineInterpolator;
+import org.apache.commons.math3.analysis.interpolation.LoessInterpolator;
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunctionLagrangeForm;
 
 import java.sql.SQLException;
@@ -20,17 +24,20 @@ import java.sql.SQLException;
 public class LagrangeAction extends InternalAction {
 
     private final ClassPropertyInterface xInterface;
+    private final ClassPropertyInterface typeInterface;
 
     public LagrangeAction(ScriptingLogicsModule LM, ValueClass... classes) {
         super(LM, classes);
 
         xInterface = getOrderInterfaces().get(0);
+        typeInterface = getOrderInterfaces().get(1);
 
     }
 
     @Override
     protected void executeInternal(ExecutionContext<ClassPropertyInterface> executionContext) throws SQLException, SQLHandledException {
         Double x = (Double)executionContext.getKeyObject(xInterface);
+        int type = (Integer)executionContext.getKeyObject(typeInterface);
 
         try {
             ImMap<ImList<Object>, Object> points = findProperty("lagrangePoints[DOUBLE]").readAll(executionContext);
@@ -44,9 +51,26 @@ public class LagrangeAction extends InternalAction {
             }
 
             // Строим полином Лагранжа:
-            PolynomialFunctionLagrangeForm lagrangePoly = new PolynomialFunctionLagrangeForm(t, y);
+            UnivariateFunction f = null;
+            switch (type) {
+                case 0:
+                    f = new PolynomialFunctionLagrangeForm(t, y);
+                    break;
+                case 1:
+                    SplineInterpolator interpolator = new SplineInterpolator();
+                    f = interpolator.interpolate(t, y);
+                    break;
+                case 2:
+                    AkimaSplineInterpolator akimaInterpolator = new AkimaSplineInterpolator();
+                    f = akimaInterpolator.interpolate(t, y);
+                    break;
+                case 3:
+                    LoessInterpolator loessInterpolator = new LoessInterpolator();
+                    f = loessInterpolator.interpolate(t, y);
+                    break;
+            }
 
-            findProperty("lagrangeResult[]").change(lagrangePoly.value(x), executionContext);
+            findProperty("lagrangeResult[]").change(f.value(x), executionContext);
         } catch (Throwable e) {
             executionContext.requestUserInteraction(new MessageClientAction(e.getMessage(), "Error"));
             throw Throwables.propagate(e);
