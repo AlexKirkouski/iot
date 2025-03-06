@@ -24,10 +24,10 @@ nameDeviationType 'Тип отклонения' (ManagerLog ml) = staticCaption(
 deviationStatus = DATA DeviationStatus (ManagerLog);
 nameDeviationStatus 'Статус отклонения' (ManagerLog ml) = staticCaption(deviationStatus(ml));
 
-deviationDescription 'Описание отклонения' = DATA TEXT (ManagerLog);
-actionsDone 'Предпринятые действия' = DATA TEXT (ManagerLog);
-causeExplanation 'Причина неисправности' = DATA TEXT (ManagerLog);
-decision 'Решение' = DATA TEXT (ManagerLog);
+deviationDescription 'Описание отклонения' = DATA TEXT (ManagerLog) INDEXED MATCH @@inputlist;
+actionsDone 'Предпринятые действия' = DATA TEXT (ManagerLog) INDEXED MATCH @@inputlist;
+causeExplanation 'Причина неисправности' = DATA TEXT (ManagerLog) INDEXED MATCH @@inputlist;
+decision 'Решение' = DATA TEXT (ManagerLog) INDEXED MATCH @@inputlist;
 
 responsible = DATA Employee (ManagerLog);
 nameResponsible 'ФИО ответственного' (ManagerLog ml) = name(responsible(ml));
@@ -39,8 +39,8 @@ registrant = DATA Employee (ManagerLog);
 nameRegistrant 'ФИО зарегистрировавшего' (ManagerLog ml) = name(registrant(ml));
 positionRegistrant 'Должность зарегистрировавшего' (ManagerLog ml) = position(registrant(ml));
 
-registrationNumber 'Регистрационный номер' = DATA STRING (ManagerLog);
-reportName 'Название отчета' = DATA STRING (ManagerLog);
+registrationNumber 'Регистрационный номер' = DATA STRING (ManagerLog) INDEXED MATCH @@inputlist;
+reportName 'Название отчета' = DATA STRING (ManagerLog)  INDEXED MATCH @@inputlist;
 
 // device'ы + пороги
 in 'Макс. фикс. значение' (Management mg) = GROUP MAX TRUE IF (device(right(ValuesCondition cv)) OR device(left(cv))) AND controller(cv) = mg;
