@@ -3,6 +3,7 @@ package mite;
 import com.google.common.base.Throwables;
 import lsfusion.base.col.interfaces.immutable.ImList;
 import lsfusion.base.col.interfaces.immutable.ImMap;
+import lsfusion.base.col.interfaces.immutable.ImOrderMap;
 import lsfusion.interop.action.MessageClientAction;
 import lsfusion.server.base.task.TaskRunner;
 import lsfusion.server.data.sql.exception.SQLHandledException;
@@ -20,6 +21,7 @@ import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialFunctionLagrangeForm;
 
 import java.sql.SQLException;
+import java.util.Comparator;
 
 public class LagrangeAction extends InternalAction {
 
@@ -40,7 +42,8 @@ public class LagrangeAction extends InternalAction {
         int type = (Integer)executionContext.getKeyObject(typeInterface);
 
         try {
-            ImMap<ImList<Object>, Object> points = findProperty("lagrangePoints[DOUBLE]").readAll(executionContext);
+            ImMap<ImList<Object>, Object> rawPoints = findProperty("lagrangePoints[DOUBLE]").readAll(executionContext);
+            ImOrderMap<ImList<Object>, Object> points = rawPoints.sort(Comparator.comparingDouble(o -> (double) o.single()));
 
             int size = points.size();
             double[] t = new double[size];
