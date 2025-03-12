@@ -45,7 +45,7 @@ reportName 'Название отчета' = DATA STRING (ManagerLog)  INDEXED M
 // device'ы + пороги
 in 'Макс. фикс. значение' (Management mg) = GROUP MAX TRUE IF (device(right(ValuesCondition cv)) OR device(left(cv))) AND controller(cv) = mg;
 
-used (ConditionValue cv, Device d, MeasurementType mt) = device(cv) = d AND measurementType(cv) = mt;
+used (ConditionValue cv, Device d, MeasurementType mt) = d IS Device AND device(cv) = d AND measurementType(cv) = mt;
 
 usedValue (Management mg, Device d, MeasurementType mt) = GROUP MAX TRUE IF (used(right(ManagerCondition cv), d, mt) OR used(left(cv), d, mt)) AND controller(cv) = mg;
 usedValue (Management mg, Device d) = GROUP MAX usedValue(mg, d, MeasurementType mt);
