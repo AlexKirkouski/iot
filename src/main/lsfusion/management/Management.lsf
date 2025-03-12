@@ -94,7 +94,7 @@ TABLE controllerManagerTypeGroup (ManagerConditionType, Management, INTEGER);
 TABLE controllerManagerType (ControllerManager, ManagerConditionType);
 conditionGroup (ManagerCondition m) = PARTITION SUM IF type(m) = ConditionType.or THEN 1 ELSE 0 ORDER DESC order(m), m BY controller(m), conditionType(m) MATERIALIZED;
 cgCount = GROUP SUM 1 BY conditionType(ManagerCondition g), controller(g), conditionGroup(g) MATERIALIZED;
-cgCount(ManagerConditionType type, ControllerManager mg) = GROUP SUM 1 IF cgCount(type, mg, INTEGER g) MATERIALIZED;
+cgCount(ManagerConditionType type, ControllerManager mg) = GROUP SUM 1 IF cgCount(type, mg AS ControllerManager, INTEGER g) MATERIALIZED;
 isTrue 'Работает сейчас' = ABSTRACT BOOLEAN (ManagerCondition) MATERIALIZED;
 isTrue = GROUP SUM 1 IF isTrue(ManagerCondition m) BY conditionType(m), controller(m) AS ControllerManager, conditionGroup(m) MATERIALIZED; // количество выполняющихся условий в группе условий
 isAutoTrue(ManagerConditionType type, ControllerManager mg) = GROUP SUM 1 IF cgCount(type, mg, INTEGER g) = isTrue(type, mg, g) MATERIALIZED;
