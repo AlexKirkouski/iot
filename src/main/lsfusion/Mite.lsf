@@ -1,6 +1,6 @@
 MODULE Mite;
 
-REQUIRE Options, Organization, 
+REQUIRE Options, Country, Organization, 
         OrgDevice, OrgMeasurement, 
         OrgController, OrgControllerDevice,
         OrgManagement, OrgManagementReport,
@@ -25,10 +25,11 @@ EXTEND FORM controllerTypes
     PROPERTIES (c) simID
 ;
 
-temperatureType = GROUP AGGR MeasurementType type WHERE name(type) = 'Температура';
-humidityType = GROUP AGGR MeasurementType type WHERE name(type) = 'Влажность';
-batteryType = GROUP AGGR MeasurementType type WHERE name(type) = 'Батарея';
+temperatureType = GROUP AGGR MeasurementType type WHERE name(type) = r'Температура';
+humidityType = GROUP AGGR MeasurementType type WHERE name(type) = r'Влажность';
+batteryType = GROUP AGGR MeasurementType type WHERE name(type) = r'Батарея';
 
+isDayOff(DATE d) += isDayOff(defaultCountry(), d);
 fixed(MeasurementType mt) += mt = batteryType(); 
 
 maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
