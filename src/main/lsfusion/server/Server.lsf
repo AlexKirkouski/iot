@@ -101,6 +101,7 @@ EXTEND FORM deviceTypes
 ;
 
 EXTEND FORM devices
+    PROPERTIES (d) idCopyMeasurementsFrom
     PROPERTIES COLUMNS (cmt) importAdjustmentValue(d, cmt) HEADER 'Корр. : ' + name(cmt) SHOWIF importAdjustmentOperand(type(d), cmt), 
                              adjv = value(m, cmt) HEADER name(cmt) + ' (raw)' SHOWIF importAdjustmentOperand(type(d), cmt) AND NOT hasDisplay(cmt)
     PROPERTIES (m) SHOWIF adjustment(type(d)) dateraw 'Дата (raw)' = dateTime, NEW, DELETE GRID
