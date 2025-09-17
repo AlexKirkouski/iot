@@ -97,7 +97,11 @@ background = ABSTRACT COLOR (Device, MeasurementType);
 displayValue 'Значение' (Measurement m, MeasurementType mt) = display(mt, value(m, mt));
 lastDisplayValue 'Тек. значение' (Device d, MeasurementType m) = display(m, lastValue(d, m));
 
+disableImport 'Отключить прием' (Device d) = DATA BOOLEAN;
+
 EXTEND FORM devices 
+    PROPERTIES (d) disableImport
+    
     OBJECTS cmt = MeasurementType
     FILTERS number(type(d),cmt)
     

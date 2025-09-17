@@ -71,7 +71,7 @@ fieldImportValue(n, DeviceType dt, MeasurementType mt) = 'field' + (n IF n=numbe
 
 importCSVScript 'Скрипт импорта' (DeviceType dt) = 'run(Server server, CSVFILE file) \{\n'+
                                                 '\t'+  'IMPORT CSV NOHEADER FROM file FIELDS ZDATETIME dt, LONG id' + (OVERRIDE (GROUP CONCAT ', DOUBLE '+fieldImport(n, dt, MeasurementType mt), '' ORDER n),'') + ' DO \{\n' +
-                                                '\t\t'+       'FOR Device dv = device(id) NEW m = Measurement DO \{\n' +
+                                                '\t\t'+       'FOR Device dv = device(id) AND NOT disableImport(dv) NEW m = Measurement DO \{\n' +
                                                 '\t\t\t'+            'dateTime(m) <- dt;\n' +
                                                 '\t\t\t'+            'device(m) <- dv;\n' +
                                                 '\t\t\t'+            'idImport(m) <- id;\n' +
