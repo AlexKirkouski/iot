@@ -68,6 +68,7 @@ DESIGN devices {
 
 // Единый класс расписания
 CLASS AdjustSchedule 'Расписание корр.';
+organization 'Организация' = DATA Organization (AdjustSchedule);
 name 'Название' = DATA STRING[100] (AdjustSchedule) NONULL IN id;
 timeFrom 'Начало' = DATA TIME (AdjustSchedule) NONULL;
 timeTo 'Окончание' = DATA TIME (AdjustSchedule) NONULL;
@@ -78,7 +79,12 @@ dayOffAdjustSchedule = DATA AdjustSchedule (Organization);
 nameWorkdayAdjustSchedule 'Расписание (раб. дни)' (Organization o) = name(workdayAdjustSchedule(o));
 nameDayOffAdjustSchedule 'Расписание (вых.)' (Organization o) = name(dayOffAdjustSchedule(o));
 
-dataScheduleFor = DATA AdjustSchedule (Location, DATE);  
+dataScheduleFor = DATA AdjustSchedule (Location, DATE);
+
+CONSTRAINT organization(dataScheduleFor(Location l, DATE d)) != organization(l) CHECKED BY dataScheduleFor MESSAGE 'Организация расписания должна совпадать с организацией точки размещения'; 
+CONSTRAINT organization(workdayAdjustSchedule(Organization o)) != o CHECKED BY workdayAdjustSchedule MESSAGE 'Организация расписания должна совпадать с организацией, для которой это расписание задается'; 
+CONSTRAINT organization(dayOffAdjustSchedule(Organization o)) != o CHECKED BY dayOffAdjustSchedule MESSAGE 'Организация расписания должна совпадать с организацией, для которой это расписание задается'; 
+    
 // Выбор расписания на дату для организации
 scheduleFor(Location l, DATE d) = 
     OVERRIDE dataScheduleFor(l, d),
@@ -113,6 +119,7 @@ EXTEND FORM locations
 
     PROPERTIES (o) nameWorkdayAdjustSchedule, nameDayOffAdjustSchedule
     OBJECTS as = AdjustSchedule
+    FILTERS organization(as) = o
     PROPERTIES (as) name, timeFrom, timeTo, NEW, DELETE
 ;
 
