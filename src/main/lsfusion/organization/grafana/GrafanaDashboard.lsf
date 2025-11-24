@@ -140,25 +140,7 @@ DESIGN dashboards {
     }
 }
 
-@addOrganization(dashboards, d){
-    EXTEND FORM dashboards
-        OBJECTS o = Organization PANEL BEFORE d
-        PROPERTIES (o) SHOWIF NOT organization(currentUser()) name SELECTOR
-        FILTERS o = organization(currentUser()) OR NOT organization(currentUser()) 
-        
-        FILTERS organization(d) = o
-    ;
-    
-    DESIGN dashboards {
-        top {
-            NEW paramBox FIRST {
-                horizontal = TRUE;
-                MOVE BOX(o);
-                fill = 0;
-            }
-        } 
-    } 
-};
+@addOrganization(dashboards, d);
 //@addLocation(dashboards, d);
 EXTEND FORM dashboards
     FILTERS organization(dv) = o

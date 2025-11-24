@@ -64,6 +64,87 @@ DESIGN devices {
     }
 }
 
+///// РАСПИСАНИЕ КОРРЕКТИРОВКИ /////
+
+// Единый класс расписания
+CLASS AdjustSchedule 'Расписание корр.';
+name 'Название' = DATA STRING[100] (AdjustSchedule) NONULL IN id;
+timeFrom 'Начало' = DATA TIME (AdjustSchedule) NONULL;
+timeTo 'Окончание' = DATA TIME (AdjustSchedule) NONULL;
+
+// Дефолтные расписания задаются целиком для организации: для рабочих и для выходных
+workdayAdjustSchedule = DATA AdjustSchedule (Organization);
+dayOffAdjustSchedule = DATA AdjustSchedule (Organization);
+nameWorkdayAdjustSchedule 'Расписание (раб. дни)' (Organization o) = name(workdayAdjustSchedule(o));
+nameDayOffAdjustSchedule 'Расписание (вых.)' (Organization o) = name(dayOffAdjustSchedule(o));
+
+dataScheduleFor = DATA AdjustSchedule (Location, DATE);  
+// Выбор расписания на дату для организации
+scheduleFor(Location l, DATE d) = 
+    OVERRIDE dataScheduleFor(l, d),
+        IF isDayOff(d) THEN dayOffAdjustSchedule(organization(l)) ELSE workdayAdjustSchedule(organization(l));
+nameScheduleFor 'Расписание' (Location l, DATE d) = name(scheduleFor(l, d));
+dataTimeFrom 'Начало' = DATA TIME (Location, DATE);
+dataTimeTo 'Окончание' = DATA TIME (Location, DATE);
+timeFrom(Location l, DATE d) = OVERRIDE dataTimeFrom(l, d), timeFrom(scheduleFor(l, d));  
+timeTo(Location l, DATE d) = OVERRIDE dataTimeTo(l, d), timeTo(scheduleFor(l, d));  
+
+// Активно ли расписание в конкретный момент
+adjustActive(Location l, ZDATETIME zdt) = 
+    TIME(zdt) >= timeFrom(l, DATE(zdt)) AND TIME(zdt) <= timeTo(l, DATE(zdt));
+
+// Вспомогательный clamp в диапазон [min, max] если границы заданы
+clampToFixedRange(Device d, MeasurementType mt, DOUBLE v) = 
+        IF v > maxFixedValue(d, mt) THEN maxFixedValue(d, mt) - random() ELSE
+        IF v < minFixedValue(d, mt) THEN minFixedValue(d, mt) + random() ELSE
+        v;
+
+// Применяем зажатие по расписанию во время финальной корректировки измерений
+finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += IF adjustActive(location(device(m)), dateTime(m)) THEN clampToFixedRange(device(m), mt, v);
+
+// UI (точка размещения): все настройки расписания переносим в форму точек размещения
+// - дефолтные расписания для организации (выводим селекторы, организация берётся из organization(l))
+// - локальное переопределение на конкретную дату (редактируемое свойство dataScheduleFor)
+// - справочник расписаний AdjustSchedule (NEW/DELETE)
+EXTEND FORM locations
+    OBJECTS ds = DATE
+    FILTERS iterate(ds, currentDate(), sum(currentDate(), 60)) OR dataScheduleFor(l, ds)     
+    PROPERTIES VALUE(ds), nameScheduleFor(l, ds), timeFrom(l, ds), timeTo(l, ds)
+
+    PROPERTIES (o) nameWorkdayAdjustSchedule, nameDayOffAdjustSchedule
+    OBJECTS as = AdjustSchedule
+    PROPERTIES (as) name, timeFrom, timeTo, NEW, DELETE
+;
+
+DESIGN locations {
+    tab {
+        NEW adjustPanel {
+            caption = 'Расписания корректировки';
+            NEW orgRow {
+                horizontal = TRUE;
+                caption = 'По умолчанию для организации';
+                MOVE PROPERTY(nameWorkdayAdjustSchedule(o));
+                MOVE PROPERTY(nameDayOffAdjustSchedule(o));
+            }
+            MOVE BOX (as) { caption = 'Справочник расписаний'; fill = 1; }
+        }
+    }
+    BOX(l) {
+        NEW tabll {
+            fill = 1;
+            tabbed = TRUE;
+            NEW dateRow {
+                caption = 'Расписания корректировки';
+                MOVE BOX(ds);
+            }
+            NEW templates {
+                caption = 'Шаблоны управления';
+                MOVE BOX(tm);
+            }
+        }
+    }
+}
+
 GROUP root;
 GROUP result : root;
 

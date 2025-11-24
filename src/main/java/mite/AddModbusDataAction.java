@@ -73,7 +73,7 @@ public class AddModbusDataAction extends InternalAction {
 
         JSONObject deviceData;
         try {
-            deviceData = (JSONObject) readJSON(dataObject);
+            deviceData = (JSONObject) readJSON(dataObject, null);
 
             long id = deviceData.getLong("id");
             String modbusServer = deviceData.getString("modbusServer");

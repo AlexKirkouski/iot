@@ -147,12 +147,14 @@ valueAdjustDelta(Device d, MeasurementType t, DOUBLE value) = valueAdjustUp(d, t
 adjustDelta(Device d, MeasurementType t, DOUBLE value) = delta(adjustUp(d, t, value)) * (value - valueAdjustDown(d, t, value)) / valueAdjustDelta(d, t, value) +
                                                                           delta(adjustDown(d, t, value)) * (valueAdjustUp(d, t, value) - value) / valueAdjustDelta(d, t, value);
 unAdjustedValue = DATA DOUBLE (Measurement, MeasurementType);
-adjustValue(Device d, MeasurementType mt, DOUBLE v) = v (+) adjustDelta(d, mt, v);
+finalAdjustValue = ABSTRACT VALUE DOUBLE (Measurement, MeasurementType, DOUBLE);
+finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += v AS DOUBLE; 
 WHEN CHANGED (unAdjustedValue(Measurement m, MeasurementType mt)) DO 
-    value(m, mt) <- unAdjustedValue(m, mt) (+) adjustDelta(device(m), mt, unAdjustedValue(m, mt));
+    value(m, mt) <- finalAdjustValue(m, mt, unAdjustedValue(m, mt) (+) adjustDelta(device(m), mt, unAdjustedValue(m, mt)));
 
 GROUP testAdjustment 'Тест корректировки';
 testUnAdjustedValue 'До' = DATA DOUBLE () IN testAdjustment;
+adjustValue(Device d, MeasurementType mt, DOUBLE v) = v (+) adjustDelta(d, mt, v);
 testAdjustedValue 'После' (Device d, MeasurementType mt)  = adjustValue(d, mt, testUnAdjustedValue()) IN testAdjustment;
 
 EXTEND FORM devices
