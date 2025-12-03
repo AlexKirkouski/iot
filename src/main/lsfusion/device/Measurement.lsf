@@ -80,6 +80,8 @@ measurement(Device d, ZDATETIME dt) = GROUP LAST Measurement m IF dateTime(m) <=
 lastValue 'Тек. значение (raw)' (Device d, MeasurementType m) = value(lastMeasurement(d), m) MATERIALIZED;
 value 'Значение (raw)' (Device d, MeasurementType m, ZDATETIME dt) = value(measurement(d, dt), m);
 
+prevLastValue (Device d, MeasurementType m) = PREV(lastValue(d, m));
+
 // подсчет среднего
 // дольше стартует но быстрее на добавление работает, с изменениями все равно смотрит для всех записей
 //prevMeasurement (Device d, ZDATETIME dt, Measurement m) = GROUP LAST Measurement mt IF device(mt) = d AND (dateTime(mt) < dt OR (dateTime(mt) = dt AND mt < m)) ORDER dateTime(mt), mt;
@@ -136,7 +138,9 @@ device = DATA Device (MeasurementAdjustment);
 type = DATA MeasurementType (MeasurementAdjustment);
 value 'Значение' = DATA DOUBLE (MeasurementAdjustment);
 delta 'Дельта (+)' = DATA DOUBLE (MeasurementAdjustment);
+showAdjustment (Device d, MeasurementType mt) = ABSTRACT VALUE INTEGER;
 countAdjustments = GROUP SUM 1 BY device(MeasurementAdjustment a), type(a) MATERIALIZED;
+showAdjustment (Device d, MeasurementType mt) += countAdjustments(d, mt);
 adjustDown(Device d, MeasurementType type, DOUBLE value) = GROUP LAST MeasurementAdjustment a ORDER value(a), a 
                                                                                     WHERE value(a) <= value BY device(a), type(a);
 adjustUp(Device d, MeasurementType type, DOUBLE value) = GROUP LAST MeasurementAdjustment a ORDER DESC value(a) , a 
@@ -167,7 +171,7 @@ EXTEND FORM devices
     PROPERTIES (ma) value, delta, NEW, DELETE
     FILTERS type(ma) = amt, device(ma) = d
 
-    PROPERTIES COLUMNS (cmt) unAdjustedValue(m, cmt) HEADER 'Имп. : ' + name(cmt) SHOWIF countAdjustments(d, cmt)
+    PROPERTIES COLUMNS (cmt) unAdjustedValue(m, cmt) HEADER 'Имп. : ' + name(cmt) SHOWIF showAdjustment(d, cmt)
 ;
 
 DESIGN devices {
