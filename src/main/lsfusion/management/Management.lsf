@@ -632,7 +632,6 @@ copyNames(Management manager, Management cp, STRING postfix) {
     onMessage(cp) <- onMessage(manager) + postfix;
     offMessage(cp) <- offMessage(manager) + postfix;
 }
-overCopy ABSTRACT LIST (Management, Management);
 copy(Management manager, Management cp) {
     FOR controller(ManagerCondition mcfrom) = manager DO {
         copy(mcfrom);
@@ -643,7 +642,6 @@ copy(Management manager, Management cp) {
     }
 
     in(ManagerTo mto, cp) <- in(mto, manager);
-    overCopy(cp, manager);
 }
 copyNames(TemplateManagement manager, ControllerManager cp) {
     copyNames(manager, cp, ' : ' + deviceName(cp));
@@ -658,6 +656,7 @@ copy(TemplateManagement manager, ControllerManager cp) {
     
     template(cp) <- manager;
 }
+overCopy ABSTRACT (Management, Management);
 copy 'Копировать' (TemplateManagement management) {
     NEWSESSION NEW cpy = TemplateManagement {
         copyNames(management, cpy, '');
@@ -670,6 +669,7 @@ copy 'Копировать' (TemplateManagement management) {
         copyManagements(cpy) <- management;
         
         copy(management, cpy);
+        overCopy(cpy, management);
 
         APPLY;
         
