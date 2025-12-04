@@ -30,10 +30,12 @@ humidityType = GROUP AGGR MeasurementType type WHERE name(type) = r'Влажно
 batteryType = GROUP AGGR MeasurementType type WHERE name(type) = r'Батарея';
 
 isDayOff(DATE d) += isDayOff(defaultCountry(), d);
-fixed(MeasurementType mt) += mt = batteryType(); 
+fixed(MeasurementType mt) += mt = batteryType();
 
-maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
-minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt;
+maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
+minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
                                                                    
 GROUP settings 'Настройки' : public;                                                   
 measurementPeriod 'Период измерений' = DATA NUMERIC (Device) IN settings;
@@ -101,16 +103,18 @@ EXTEND FORM controllerManager
     PROPERTIES (c) adjustValues
 ;
 
-maxAdjustFixedValue (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
-minAdjustFixedValue (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(left(ValuesCondition cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
+maxAdjFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)),
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
+minAdjFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)),
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
 
 noise 'Отклонение значения (0..1)' = DATA DOUBLE (Organization);
 periodMinutes 'Отклонение периода (мин.)' = DATA DOUBLE (Organization);
 noise(Device d, MeasurementType mt) = noise(organization(d)) IF mt IS MeasurementType;
 periodMinutes(Device d, MeasurementType mt) = periodMinutes(organization(d)) IF mt IS MeasurementType; // minutes
-showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt) AND (maxAdjustFixedValue(d, mt) OR minAdjustFixedValue(d, mt));
+showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt) AND (maxAdjFixedValue(d, mt) OR minAdjFixedValue(d, mt));
 
-noiseValue (Device d, MeasurementType mt) = (maxAdjustFixedValue(d, mt) - minAdjustFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
+noiseValue (Device d, MeasurementType mt) = (maxAdjFixedValue(d, mt) - minAdjFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
 
 timeFrom(Device d, ZDATETIME zdt) = timeFrom(location(d), DATE(zdt));
 timeTo(Device d, ZDATETIME zdt) = timeTo(location(d), DATE(zdt));
@@ -126,8 +130,8 @@ adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsTo
 adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
         IF TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt) AND v IS DOUBLE THEN
             CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(adjustTimeTo(d, mt, zdt), TIME(zdt))) // we're coming back
-                 WHEN v > maxAdjustFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjustFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v)
-                 WHEN v < minAdjustFixedValue(d, mt) THEN max(adjustTargetValue(minAdjustFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v) 
+                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v)
+                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(minAdjFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v) 
                  ELSE v;
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
