@@ -32,10 +32,8 @@ batteryType = GROUP AGGR MeasurementType type WHERE name(type) = r'Батаре�
 isDayOff(DATE d) += isDayOff(defaultCountry(), d);
 fixed(MeasurementType mt) += mt = batteryType(); 
 
-maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
-                                                                   value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
-minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt,
-                                                                   value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
+maxFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt;
+minFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt;
                                                                    
 GROUP settings 'Настройки' : public;                                                   
 measurementPeriod 'Период измерений' = DATA NUMERIC (Device) IN settings;
@@ -93,20 +91,47 @@ nameScheduleFor 'Расписание' (Location l, DATE d) = name(scheduleFor(l
 dataTimeFrom = DATA TIME (Location, DATE);
 dataTimeTo = DATA TIME (Location, DATE);
 timeFrom 'Начало' (Location l, DATE d) = OVERRIDE dataTimeFrom(l, d), timeFrom(scheduleFor(l, d));  
-timeTo 'Окончание' (Location l, DATE d) = OVERRIDE dataTimeTo(l, d), timeTo(scheduleFor(l, d));  
+timeTo 'Окончание' (Location l, DATE d) = OVERRIDE dataTimeTo(l, d), timeTo(scheduleFor(l, d));
 
-// Активно ли расписание в конкретный момент
-adjustActive(Location l, ZDATETIME zdt) = 
-    TIME(zdt) >= timeFrom(l, DATE(zdt)) AND TIME(zdt) <= timeTo(l, DATE(zdt));
+adjustValues 'Учавствует в корректировке' = DATA BOOLEAN (Management);
+overCopy (Management cm, Management d) +{
+    adjustValues(cm) <- adjustValues(d);
+}
+EXTEND FORM controllerManager
+    PROPERTIES (c) adjustValues
+;
+
+maxAdjustFixedValue (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
+minAdjustFixedValue (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(left(ValuesCondition cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
+
+noise 'Отклонение значения (0..1)' = DATA DOUBLE (Organization);
+periodMinutes 'Отклонение периода (мин.)' = DATA DOUBLE (Organization);
+noise(Device d, MeasurementType mt) = noise(organization(d)) IF mt IS MeasurementType;
+periodMinutes(Device d, MeasurementType mt) = periodMinutes(organization(d)) IF mt IS MeasurementType; // minutes
+showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt);
+
+noiseValue (Device d, MeasurementType mt) = (maxAdjustFixedValue(d, mt) - minAdjustFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
+
+timeFrom(Device d, ZDATETIME zdt) = timeFrom(location(d), DATE(zdt));
+timeTo(Device d, ZDATETIME zdt) = timeTo(location(d), DATE(zdt));
+adjustTimeFrom(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeFrom(d, zdt), -periodMinutes(d, mt)); 
+adjustTimeTo(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeTo(d,zdt), periodMinutes(d, mt)); 
+
+adjust(Device d, MeasurementType mt, DOUBLE prevValueToTarget, INTEGER secondsToTarget) =
+    IF secondsToTarget <= measurementPeriod(d) OR abs(prevValueToTarget) <= noiseValue(d, mt) THEN 0.0
+        ELSE exp(ln(noiseValue(d, mt) / abs(prevValueToTarget)) / round0(secondsToTarget / measurementPeriod(d))) * prevValueToTarget;
+adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsToTarget) = target - adjust(d, mt, target - prevLastValue(d, mt), secondsToTarget) + (random() - 0.5) * noiseValue(d, mt);
 
 // Вспомогательный clamp в диапазон [min, max] если границы заданы
-clampToFixedRange(Device d, MeasurementType mt, DOUBLE v) = 
-        IF v > maxFixedValue(d, mt) THEN maxFixedValue(d, mt) - random() ELSE
-        IF v < minFixedValue(d, mt) THEN minFixedValue(d, mt) + random() ELSE
-        v;
+adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
+        IF TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt) THEN
+            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(adjustTimeTo(d, mt, zdt), TIME(zdt))) // we're coming back
+                 WHEN v > maxAdjustFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjustFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v)
+                 WHEN v < minAdjustFixedValue(d, mt) THEN max(adjustTargetValue(minAdjustFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v) 
+                 ELSE v;
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
-finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += IF adjustActive(location(device(m)), dateTime(m)) THEN clampToFixedRange(device(m), mt, v);
+finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += adjustTargetValue(device(m), mt, dateTime(m), v);
 
 // UI (точка размещения): все настройки расписания переносим в форму точек размещения
 // - дефолтные расписания для организации (выводим селекторы, организация берётся из organization(l))
@@ -115,7 +140,7 @@ finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += IF adjustActive
 EXTEND FORM locations
     OBJECTS ds = DATE
     FILTERS iterate(ds, currentDate(), sum(currentDate(), 60)) OR dataScheduleFor(l, ds)     
-    PROPERTIES VALUE(ds), nameScheduleFor(l, ds), timeFrom(l, ds), timeTo(l, ds)
+    PROPERTIES VALUE(ds), nameScheduleFor(l, ds), timeFrom(l, ds), timeTo(l, ds), noise(o), periodMinutes(o) 
 
     PROPERTIES (l) nameWorkdayAdjustSchedule, nameDayOffAdjustSchedule
 
@@ -127,14 +152,14 @@ EXTEND FORM locations
 DESIGN locations {
     tab {
         NEW adjustPanel {
-            caption = 'Расписания корректировки';
-//            NEW orgRow {
-//                horizontal = TRUE;
-//                caption = 'По умолчанию для организации';
-//                MOVE PROPERTY(nameWorkdayAdjustSchedule(o));
-//                MOVE PROPERTY(nameDayOffAdjustSchedule(o));
-//            }
-            MOVE BOX (as) { caption = 'Справочник расписаний'; fill = 1; }
+            caption = 'Параметры корректировки';
+            NEW orgRow {
+                horizontal = TRUE;
+                caption = 'По умолчанию для организации';
+                MOVE PROPERTY(noise(o));
+                MOVE PROPERTY(periodMinutes(o));
+            }
+            MOVE BOX (as) { fill = 1; }
         }
     }
     BOX(l) {
