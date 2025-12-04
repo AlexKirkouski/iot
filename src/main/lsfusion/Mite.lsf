@@ -108,7 +108,7 @@ noise 'Отклонение значения (0..1)' = DATA DOUBLE (Organization
 periodMinutes 'Отклонение периода (мин.)' = DATA DOUBLE (Organization);
 noise(Device d, MeasurementType mt) = noise(organization(d)) IF mt IS MeasurementType;
 periodMinutes(Device d, MeasurementType mt) = periodMinutes(organization(d)) IF mt IS MeasurementType; // minutes
-showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt) AND (maxAdjustFixedValue(d, mt) OR minAdjustFixedValue(d, mt));
+showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt);
 
 noiseValue (Device d, MeasurementType mt) = (maxAdjustFixedValue(d, mt) - minAdjustFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
 
