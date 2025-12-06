@@ -96,7 +96,8 @@ timeFrom 'Начало' (Location l, DATE d) = OVERRIDE dataTimeFrom(l, d), time
 timeTo 'Окончание' (Location l, DATE d) = OVERRIDE dataTimeTo(l, d), timeTo(scheduleFor(l, d));
 
 adjustValues 'Учавствует в корректировке' = DATA BOOLEAN (Management);
-overCopy (Management cm, Management d) +{
+overChangedNames(Management cm) += CHANGED(adjustValues(cm));
+overCopyNames (Management cm, Management d) +{
     adjustValues(cm) <- adjustValues(d);
 }
 EXTEND FORM controllerManager

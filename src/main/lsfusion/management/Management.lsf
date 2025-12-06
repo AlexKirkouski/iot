@@ -627,10 +627,13 @@ DESIGN locations {
 
 deviceName (ControllerManager cp) = (CONCAT ' ', name(templateDevice(cp)), nameLocation(templateDevice(cp)));
 
+overCopyNames ABSTRACT LIST (Management, Management);
 copyNames(Management manager, Management cp, STRING postfix) {
     name(cp) <- name(manager) + postfix;
     onMessage(cp) <- onMessage(manager) + postfix;
     offMessage(cp) <- offMessage(manager) + postfix;
+    
+    overCopyNames(cp, manager);
 }
 overCopy ABSTRACT LIST (Management, Management);
 copy(Management manager, Management cp) {
@@ -680,7 +683,8 @@ EXTEND FORM controllerManagers
     PROPERTIES (cm) copy TOOLBAR
 ;
 
-changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m));
+overChangedNames = ABSTRACT VALUE BOOLEAN (Management);
+changedNames(Management m) = CHANGED (onMessage(m)) OR CHANGED (offMessage(m)) OR CHANGED(name(m)) OR overChangedNames(m);
 WHEN CHANGED (deviceName(ControllerManager cp)) OR changedNames(template(cp)) OR changedNames(cp AS ControllerManager) DO
     copyNames(template(cp), cp);
 
