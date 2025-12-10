@@ -130,9 +130,9 @@ adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsTo
 // Вспомогательный clamp в диапазон [min, max] если границы заданы
 adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
         IF TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt) AND v IS DOUBLE THEN
-            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(adjustTimeTo(d, mt, zdt), TIME(zdt))) // we're coming back
-                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v)
-                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(minAdjFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(timeFrom(d, zdt), TIME(zdt))), v) 
+            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(TIME(zdt), adjustTimeTo(d, mt, zdt))) // we're coming back
+                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt))), v)
+                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(minAdjFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt))), v) 
                  ELSE v;
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
