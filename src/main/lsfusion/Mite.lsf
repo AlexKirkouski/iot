@@ -124,6 +124,15 @@ timeTo(Device d, ZDATETIME zdt) = timeTo(location(d), DATE(zdt));
 adjustTimeFrom(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeFrom(d, zdt), -periodMinutes(d, mt)); 
 adjustTimeTo(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeTo(d,zdt), periodMinutes(d, mt)); 
 
+// Удобные функции «с учётом периода» по ДАТЕ (без ZDATETIME)
+adjustTimeFromByDate(Device d, MeasurementType mt, DATE ds) = sumMinutes(timeFrom(location(d), ds), -periodMinutes(d, mt));
+adjustTimeToByDate(Device d, MeasurementType mt, DATE ds) = sumMinutes(timeTo(location(d), ds), periodMinutes(d, mt));
+timeFromByDate(Device d, DATE ds) = timeFrom(location(d), ds);
+timeToByDate(Device d, DATE ds) = timeTo(location(d), ds);
+scheduleNameByDate(Device d, DATE ds) = nameScheduleFor(location(d), ds);
+scheduleNameAt(Device d, ZDATETIME zdt) = scheduleNameByDate(d, DATE(zdt));
+isDayOffAt(ZDATETIME zdt) = isDayOff(DATE(zdt));
+
 adjust(Device d, MeasurementType mt, DOUBLE prevValueToTarget, INTEGER secondsToTarget) =
     IF secondsToTarget <= measurementPeriod(d) OR abs(prevValueToTarget) <= noiseValue(d, mt) THEN 0.0
         ELSE exp(ln(noiseValue(d, mt) / abs(prevValueToTarget)) / round0(secondsToTarget / measurementPeriod(d))) * prevValueToTarget;
@@ -145,17 +154,23 @@ finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += adjustTargetVal
 // функции корректировки (finalAdjustValue -> adjustTargetValue)
 EXTEND FORM devices
     OBJECTS mt = MeasurementType PANEL, zdt = ZDATETIME PANEL, v = DOUBLE PANEL
+    OBJECTS ds = DATE
     
     // Входные значения
-    PROPERTIES VALUE(mt), VALUE(zdt), VALUE(v)
+    PROPERTIES VALUE(mt), VALUE(zdt), VALUE(v), name(mt)
     
     // Параметры корректировки
     PROPERTIES (d, mt) minAdjFixedValue, maxAdjFixedValue, noiseValue, noise, periodMinutes
     PROPERTIES (d, zdt) timeFrom, timeTo
     PROPERTIES (d, mt, zdt) adjustTimeFrom, adjustTimeTo
     
+    // Календарь расписания (по датам)
+    PROPERTIES VALUE(ds), scheduleNameByDate(d, ds), timeFromByDate(d, ds), timeToByDate(d, ds),
+               adjustTimeFromByDate(d, mt, ds), adjustTimeToByDate(d, mt, ds), isDayOff(ds)
+    FILTERS iterate(ds, DATE(zdt), sum(DATE(zdt), 14)) OR isDayOff(ds) OR dataScheduleFor(location(d), ds)
+    
     // Результат корректировки
-    PROPERTIES adjustTargetValue(d, mt, zdt, v)
+    PROPERTIES scheduleNameAt(d, zdt), isDayOffAt(zdt), adjustTargetValue(d, mt, zdt, v)
 ;
 
 DESIGN devices {
@@ -163,42 +178,65 @@ DESIGN devices {
         NEW adjustTab {
             caption = 'Корректировка';
             fill = 1;
-            NEW selectors {
-                caption = 'Входные параметры';
+            NEW topRow {
                 horizontal = TRUE;
-                MOVE BOX(mt);
-                MOVE BOX(zdt);
-                MOVE BOX(v);
-            }
-            NEW paramsRow {
-                caption = 'Параметры';
-                horizontal = TRUE;
-                NEW boundsParams {
-                    caption = 'Границы и шум';
-                    MOVE PROPERTY(minAdjFixedValue(d, mt));
-                    MOVE PROPERTY(maxAdjFixedValue(d, mt));
-                    MOVE PROPERTY(noise(d, mt));
-                    MOVE PROPERTY(periodMinutes(d, mt));
-                    MOVE PROPERTY(noiseValue(d, mt));
+                fill = 0;
+                NEW leftCol {
+                    caption = 'Параметры входа и расчёта';
+                    fill = 1;
+                    NEW selectors {
+                        caption = 'Входные параметры';
+                        horizontal = TRUE;
+                        MOVE BOX(mt);
+                        MOVE BOX(zdt);
+                        MOVE BOX(v);
+                    }
+                    NEW mtInfo {
+                        caption = 'Тип измерения';
+                        horizontal = TRUE;
+                        MOVE PROPERTY(name(mt));
+                    }
+                    NEW paramsRow {
+                        caption = 'Границы и шум';
+                        MOVE PROPERTY(minAdjFixedValue(d, mt));
+                        MOVE PROPERTY(maxAdjFixedValue(d, mt));
+                        MOVE PROPERTY(noise(d, mt));
+                        MOVE PROPERTY(periodMinutes(d, mt));
+                        MOVE PROPERTY(noiseValue(d, mt));
+                    }
+                }
+                NEW rightCol {
+                    caption = 'Результат и текущее расписание';
+                    fill = 1;
+                    NEW resultBox {
+                        caption = 'Результат корректировки';
+                        MOVE PROPERTY(adjustTargetValue(d, mt, zdt, v));
+                    }
+                    NEW scheduleRow {
+                        caption = 'Окно по расписанию';
+                        horizontal = TRUE;
+                        NEW baseTimes {
+                            caption = 'Базовые';
+                            MOVE PROPERTY(timeFrom(d, zdt));
+                            MOVE PROPERTY(timeTo(d, zdt));
+                        }
+                        NEW adjTimes {
+                            caption = 'С учётом периода';
+                            MOVE PROPERTY(adjustTimeFrom(d, mt, zdt));
+                            MOVE PROPERTY(adjustTimeTo(d, mt, zdt));
+                        }
+                    }
+                    NEW currentSchedule {
+                        caption = 'Текущее расписание (по дате)';
+                        MOVE PROPERTY(scheduleNameAt(d, zdt));
+                        MOVE PROPERTY(isDayOffAt(zdt));
+                    }
                 }
             }
-            NEW scheduleRow {
-                caption = 'Окно по расписанию';
-                horizontal = TRUE;
-                NEW baseTimes {
-                    caption = 'Базовые';
-                    MOVE PROPERTY(timeFrom(d, zdt));
-                    MOVE PROPERTY(timeTo(d, zdt));
-                }
-                NEW adjTimes {
-                    caption = 'С учётом периода';
-                    MOVE PROPERTY(adjustTimeFrom(d, mt, zdt));
-                    MOVE PROPERTY(adjustTimeTo(d, mt, zdt));
-                }
-            }
-            NEW resultBox {
-                caption = 'Результат корректировки';
-                MOVE PROPERTY(adjustTargetValue(d, mt, zdt, v));
+            NEW scheduleCalendar {
+                caption = 'Календарь расписания (следующие 14 дней)';
+                fill = 1;
+                MOVE BOX(ds) { fill = 1; };
             }
         }
     }
