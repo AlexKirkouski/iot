@@ -64,8 +64,6 @@ DESIGN devices {
     }
 }
 
-// (перенесено ниже, после объявлений функций корректировки)
-
 ///// РАСПИСАНИЕ КОРРЕКТИРОВКИ /////
 
 // Единый класс расписания
@@ -139,70 +137,6 @@ adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
 finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += adjustTargetValue(device(m), mt, dateTime(m), v);
-
-// Вкладка "Корректировка" на форме датчиков: позволяет выбрать тип измерения,
-// момент времени и исходное значение, и увидеть параметры и результат
-// функции корректировки (finalAdjustValue -> adjustTargetValue)
-EXTEND FORM devices
-    OBJECTS mt = MeasurementType PANEL, zdt = ZDATETIME PANEL, v = DOUBLE PANEL
-    
-    // Входные значения
-    PROPERTIES VALUE(mt), VALUE(zdt), VALUE(v)
-    
-    // Параметры корректировки
-    PROPERTIES (d, mt) minAdjFixedValue, maxAdjFixedValue, noiseValue, noise, periodMinutes
-    PROPERTIES (d, zdt) timeFrom, timeTo
-    PROPERTIES (d, mt, zdt) adjustTimeFrom, adjustTimeTo
-    
-    // Результат корректировки
-    PROPERTIES adjustTargetValue(d, mt, zdt, v)
-;
-
-DESIGN devices {
-    tab {
-        NEW adjustTab {
-            caption = 'Корректировка';
-            fill = 1;
-            NEW selectors {
-                caption = 'Входные параметры';
-                horizontal = TRUE;
-                MOVE BOX(mt);
-                MOVE BOX(zdt);
-                MOVE BOX(v);
-            }
-            NEW paramsRow {
-                caption = 'Параметры';
-                horizontal = TRUE;
-                NEW boundsParams {
-                    caption = 'Границы и шум';
-                    MOVE PROPERTY(minAdjFixedValue(d, mt));
-                    MOVE PROPERTY(maxAdjFixedValue(d, mt));
-                    MOVE PROPERTY(noise(d, mt));
-                    MOVE PROPERTY(periodMinutes(d, mt));
-                    MOVE PROPERTY(noiseValue(d, mt));
-                }
-            }
-            NEW scheduleRow {
-                caption = 'Окно по расписанию';
-                horizontal = TRUE;
-                NEW baseTimes {
-                    caption = 'Базовые';
-                    MOVE PROPERTY(timeFrom(d, zdt));
-                    MOVE PROPERTY(timeTo(d, zdt));
-                }
-                NEW adjTimes {
-                    caption = 'С учётом периода';
-                    MOVE PROPERTY(adjustTimeFrom(d, mt, zdt));
-                    MOVE PROPERTY(adjustTimeTo(d, mt, zdt));
-                }
-            }
-            NEW resultBox {
-                caption = 'Результат корректировки';
-                MOVE PROPERTY(adjustTargetValue(d, mt, zdt, v));
-            }
-        }
-    }
-}
 
 // UI (точка размещения): все настройки расписания переносим в форму точек размещения
 // - дефолтные расписания для организации (выводим селекторы, организация берётся из organization(l))
