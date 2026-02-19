@@ -198,13 +198,14 @@ retroDataMaxValue 'Макс. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
 retroDataMinValue 'Мин. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
 retroMaxValue 'Макс. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMaxValue(mt), maxAdjFixedValue(d, mt);
 retroMinValue 'Мин. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMinValue(mt), minAdjFixedValue(d, mt);
+retroNoiseValue (Device d, MeasurementType mt) = OVERRIDE (retroMaxValue(d, mt) - retroMaxValue(d, mt)) * noise(d, mt), 0.0;
 
 applyRetroAdjust 'Применить корректировку' (Device d) {
     ASK 'Применить корректировку задним числом для датчика ' + id(d) + '?' DO {
         value(Measurement m, MeasurementType mt) <-
                 IF value(m, mt) > retroMaxValue(d, mt)
-                    THEN retroMaxValue(d, mt) - (OVERRIDE noiseValue(d, mt), 0.0) * random()
-                    ELSE retroMinValue(d, mt) + (OVERRIDE noiseValue(d, mt), 0.0) * random()
+                    THEN retroMaxValue(d, mt) - retroNoiseValue(d, mt) * random()
+                    ELSE retroMinValue(d, mt) + retroNoiseValue(d, mt) * random()
             WHERE device(m) = d AND dateTime(m) >= retroDateFrom() AND dateTime(m) <= retroDateTo() AND
                   number(type(d), mt) AND
                   ((retroMaxValue(d, mt) AND value(m, mt) > retroMaxValue(d, mt)) OR
