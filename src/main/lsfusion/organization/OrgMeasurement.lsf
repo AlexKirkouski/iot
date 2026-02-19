@@ -125,9 +125,32 @@ printReportXls 'Распечатать измерения' (Organization o) {
         printReportXls(o, dFrom, dTo);
 }
 
+deleteFrom 'Удалить с' = DATA LOCAL ZDATETIME ();
+deleteTo 'Удалить по' = DATA LOCAL ZDATETIME ();
+deleteBatchDays 'Размер батча (дн.)' = DATA LOCAL INTEGER ();
+
+deleteMeasurements (Organization o, ZDATETIME dFrom, ZDATETIME dTo, INTEGER batchDays) {
+    LOCAL NESTED batchFrom = ZDATETIME ();
+    LOCAL NESTED batchTo = ZDATETIME ();
+    batchFrom() <- dFrom;
+    WHILE batchFrom() <= dTo DO {
+        batchTo() <- MIN sumDay(batchFrom(), LONG(batchDays)), dTo;
+        APPLY DELETE Measurement m WHERE organization(m) = o AND dateTime(m) >= batchFrom() AND dateTime(m) < batchTo();
+        MESSAGE 'Удалены данные с даты : ' + batchFrom() + ' до даты : ' + batchTo() NOWAIT;
+        batchFrom() <- batchTo();
+    }
+}
+
+deleteMeasurements 'Удалить измерения' (Organization o) {
+    ASK 'Удалить измерения организации ' + name(o) + ' за период ' + deleteFrom() + ' — ' + deleteTo() + '?' DO
+        deleteMeasurements(o, deleteFrom(), deleteTo(), deleteBatchDays());
+}
+
 EXTEND FORM organizations
-    PROPERTIES (o) email, emailReportXls TOOLBAR, printReportXls TOOLBAR   
-; 
+//      PROPERTIES () deleteFrom, deleteTo, deleteBatchDays
+//      deleteMeasurements TOOLBAR
+        PROPERTIES (o) email, emailReportXls TOOLBAR, printReportXls TOOLBAR
+;
 
 // DEVICE MOVEMENT
 
