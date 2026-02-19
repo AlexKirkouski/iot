@@ -113,7 +113,9 @@ noise 'Отклонение значения (0..1)' = DATA DOUBLE (Organization
 periodMinutes 'Отклонение периода (мин.)' = DATA DOUBLE (Organization);
 noise(Device d, MeasurementType mt) = noise(organization(d)) IF mt IS MeasurementType;
 periodMinutes(Device d, MeasurementType mt) = periodMinutes(organization(d)) IF mt IS MeasurementType; // minutes
-showAdjustment(Device d, MeasurementType mt) += 1 IF noise(d, mt) AND periodMinutes(d, mt) AND (maxAdjFixedValue(d, mt) OR minAdjFixedValue(d, mt));
+adjustConfigured 'Корр. настроена' (Device d, MeasurementType mt) =
+    noise(d, mt) AND periodMinutes(d, mt) AND (maxAdjFixedValue(d, mt) OR minAdjFixedValue(d, mt));
+showAdjustment(Device d, MeasurementType mt) += 1 IF adjustConfigured(d, mt);
 
 noiseValue (Device d, MeasurementType mt) = (maxAdjFixedValue(d, mt) - minAdjFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
 
@@ -178,6 +180,63 @@ DESIGN locations {
             NEW templates {
                 caption = 'Шаблоны управления';
                 MOVE BOX(tm);
+            }
+        }
+    }
+}
+
+///// КОРРЕКТИРОВКА ЗАДНИМ ЧИСЛОМ /////
+
+isAdjustActive 'Корр. активна' (Device d, MeasurementType mt) =
+    adjustConfigured(d, mt) AND
+            TIME(currentZDateTime()) >= adjustTimeFrom(d, mt, currentZDateTime()) AND
+            TIME(currentZDateTime()) <= adjustTimeTo(d, mt, currentZDateTime());
+
+retroDateFrom 'Период с' = DATA LOCAL ZDATETIME ();
+retroDateTo 'Период по' = DATA LOCAL ZDATETIME ();
+retroDataMaxValue 'Макс. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
+retroDataMinValue 'Мин. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
+retroMaxValue 'Макс. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMaxValue(mt), maxAdjFixedValue(d, mt);
+retroMinValue 'Мин. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMinValue(mt), minAdjFixedValue(d, mt);
+
+applyRetroAdjust 'Применить корректировку' (Device d) {
+    ASK 'Применить корректировку задним числом для датчика ' + id(d) + '?' DO {
+        value(Measurement m, MeasurementType mt) <-
+                IF value(m, mt) > retroMaxValue(d, mt)
+                    THEN retroMaxValue(d, mt) - (OVERRIDE noiseValue(d, mt), 0.0) * random()
+                    ELSE retroMinValue(d, mt) + (OVERRIDE noiseValue(d, mt), 0.0) * random()
+            WHERE device(m) = d AND dateTime(m) >= retroDateFrom() AND dateTime(m) <= retroDateTo() AND
+                  number(type(d), mt) AND
+                  ((retroMaxValue(d, mt) AND value(m, mt) > retroMaxValue(d, mt)) OR
+                   (retroMinValue(d, mt) AND value(m, mt) < retroMinValue(d, mt)));
+    }
+}
+
+EXTEND FORM devices
+    OBJECTS rcmt = MeasurementType
+    FILTERS number(type(d), rcmt)
+    PROPERTIES (rcmt) READONLY name
+    PROPERTIES (d, rcmt) READONLY isAdjustActive, maxAdjFixedValue, minAdjFixedValue
+    PROPERTIES (d, rcmt) retroMaxValue, retroMinValue
+    PROPERTIES retroDateFrom(), retroDateTo()
+    PROPERTIES (d) PANEL applyRetroAdjust
+;
+
+DESIGN devices {
+    tab {
+        NEW adjustment {
+            caption = 'Корректировка';
+            horizontal = FALSE;
+            fill = 1;
+            NEW retroPeriodBox {
+                caption = 'Период корректировки задним числом';
+                horizontal = TRUE;
+                MOVE PROPERTY(retroDateFrom());
+                MOVE PROPERTY(retroDateTo());
+                MOVE PROPERTY(applyRetroAdjust(d));
+            }
+            MOVE BOX(rcmt) {
+                fill = 1;
             }
         }
     }
