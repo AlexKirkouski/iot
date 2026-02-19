@@ -198,7 +198,7 @@ retroDataMaxValue 'Макс. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
 retroDataMinValue 'Мин. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
 retroMaxValue 'Макс. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMaxValue(mt), maxAdjFixedValue(d, mt);
 retroMinValue 'Мин. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMinValue(mt), minAdjFixedValue(d, mt);
-retroNoiseValue (Device d, MeasurementType mt) = OVERRIDE (retroMaxValue(d, mt) - retroMaxValue(d, mt)) * noise(d, mt), 0.0;
+retroNoiseValue (Device d, MeasurementType mt) = OVERRIDE (retroMaxValue(d, mt) - retroMinValue(d, mt)) * noise(d, mt), 0.0;
 
 applyRetroAdjust 'Применить корректировку' (Device d) {
     ASK 'Применить корректировку задним числом для датчика ' + id(d) + '?' DO {
