@@ -221,23 +221,25 @@ generateRetroMeasurements 'Сгенерировать (задним числом
             LOCAL mPeriod = LONG ();
             mPeriod() <- LONG(measurementPeriod(d));
             WHILE dt() <= retroDateTo() DO {
-                NEW m = Measurement {
-                    device(m) <- d;
-                    dateTime(m) <- dt();
+                IF NOT (GROUP SUM 1 IF device(Measurement m) = d AND dateTime(m) >= sumSeconds(dt(), -(mPeriod()-1)/2) AND dateTime(m) <= sumSeconds(dt(), mPeriod()/2)) THEN {
+                    NEW m = Measurement {
+                        device(m) <- d;
+                        dateTime(m) <- dt();
 
-                    FOR number(type(d), MeasurementType mt) DO {
-                        LOCAL mPrev = Measurement ();
-                        mPrev() <- (GROUP LAST Measurement mp ORDER dateTime(mp), mp WHERE device(mp) = d AND dateTime(mp) < dateTime(m) AND value(mp, mt));
-
-                        LOCAL mNext = Measurement ();
-                        mNext() <- (GROUP LAST Measurement mn ORDER DESC dateTime(mn), mn WHERE device(mn) = d AND dateTime(mn) > dateTime(m) AND value(mn, mt));
-
-                        IF value(mPrev(), mt) AND value(mNext(), mt) THEN {
-                            unAdjustedValue(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
-                        } ELSE IF value(mPrev(), mt) THEN {
-                            unAdjustedValue(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
-                        } ELSE IF value(mNext(), mt) THEN {
-                            unAdjustedValue(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                        FOR number(type(d), MeasurementType mt) DO {
+                            LOCAL mPrev = Measurement ();
+                            mPrev() <- (GROUP LAST Measurement mp ORDER dateTime(mp), mp WHERE device(mp) = d AND dateTime(mp) < dateTime(m) AND value(mp, mt));
+    
+                            LOCAL mNext = Measurement ();
+                            mNext() <- (GROUP LAST Measurement mn ORDER DESC dateTime(mn), mn WHERE device(mn) = d AND dateTime(mn) > dateTime(m) AND value(mn, mt));
+    
+                            IF value(mPrev(), mt) AND value(mNext(), mt) THEN {
+                                unAdjustedValue(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
+                            } ELSE IF value(mPrev(), mt) THEN {
+                                unAdjustedValue(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                            } ELSE IF value(mNext(), mt) THEN {
+                                unAdjustedValue(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                            }
                         }
                     }
                 }
