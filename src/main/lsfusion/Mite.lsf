@@ -234,11 +234,11 @@ generateRetroMeasurements 'Сгенерировать (задним числом
                             mNext() <- (GROUP LAST Measurement mn ORDER DESC dateTime(mn), mn WHERE device(mn) = d AND dateTime(mn) > dateTime(m) AND value(mn, mt));
     
                             IF value(mPrev(), mt) AND value(mNext(), mt) THEN {
-                                unAdjustedValue(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
                             } ELSE IF value(mPrev(), mt) THEN {
-                                unAdjustedValue(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
                             } ELSE IF value(mNext(), mt) THEN {
-                                unAdjustedValue(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
                             }
                         }
                     }
