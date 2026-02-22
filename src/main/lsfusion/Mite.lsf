@@ -213,6 +213,40 @@ applyRetroAdjust 'Применить корректировку' (Device d) {
     }
 }
 
+generateRetroMeasurements 'Сгенерировать (задним числом)' (Device d) {
+    IF measurementPeriod(d) > 0 AND retroDateFrom() AND retroDateTo() THEN {
+        ASK 'Сгенерировать измерения для датчика ' + id(d) + ' в периоде с ' + retroDateFrom() + ' по ' + retroDateTo() + '?' DO {
+            LOCAL dt = ZDATETIME ();
+            dt() <- retroDateFrom();
+            LOCAL mPeriod = LONG ();
+            mPeriod() <- LONG(measurementPeriod(d));
+            WHILE dt() <= retroDateTo() DO {
+                NEW m = Measurement {
+                    device(m) <- d;
+                    dateTime(m) <- dt();
+
+                    FOR number(type(d), MeasurementType mt) DO {
+                        LOCAL mPrev = Measurement ();
+                        mPrev() <- (GROUP LAST Measurement mp ORDER dateTime(mp), mp WHERE device(mp) = d AND dateTime(mp) < dateTime(m) AND value(mp, mt));
+
+                        LOCAL mNext = Measurement ();
+                        mNext() <- (GROUP LAST Measurement mn ORDER DESC dateTime(mn), mn WHERE device(mn) = d AND dateTime(mn) > dateTime(m) AND value(mn, mt));
+
+                        IF value(mPrev(), mt) AND value(mNext(), mt) THEN {
+                            unAdjustedValue(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
+                        } ELSE IF value(mPrev(), mt) THEN {
+                            unAdjustedValue(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                        } ELSE IF value(mNext(), mt) THEN {
+                            unAdjustedValue(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                        }
+                    }
+                }
+                dt() <- sumSeconds(dt(), mPeriod());
+            }
+        }
+    }
+}
+
 EXTEND FORM devices
     OBJECTS rcmt = MeasurementType
     FILTERS number(type(d), rcmt)
@@ -220,7 +254,7 @@ EXTEND FORM devices
     PROPERTIES (d, rcmt) READONLY isAdjustActive, maxAdjFixedValue, minAdjFixedValue
     PROPERTIES (d, rcmt) retroMaxValue, retroMinValue
     PROPERTIES retroDateFrom(), retroDateTo()
-    PROPERTIES (d) PANEL applyRetroAdjust
+    PROPERTIES (d) PANEL applyRetroAdjust, generateRetroMeasurements
 ;
 
 DESIGN devices {
@@ -235,6 +269,7 @@ DESIGN devices {
                 MOVE PROPERTY(retroDateFrom());
                 MOVE PROPERTY(retroDateTo());
                 MOVE PROPERTY(applyRetroAdjust(d));
+                MOVE PROPERTY(generateRetroMeasurements(d));
             }
             MOVE BOX(rcmt) {
                 fill = 1;
