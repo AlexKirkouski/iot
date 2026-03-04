@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.limitReport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="39911b6b-b186-4075-b9ac-447fd0a8a7a9">
+	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="DejaVu Sans" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle2" vTextAlign="Middle" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle1" mode="Opaque" backcolor="#DFDFDF" vTextAlign="Middle" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="GroupCellStyle0" vTextAlign="Middle" fontSize="10">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<field name="d.object" class="java.time.LocalDate"/>
+	<field name="date" class="java.time.LocalDate"/>
+	<field name="dev.object" class="java.lang.Long"/>
+	<field name="mt.object" class="java.lang.Long"/>
+	<field name="id(dev)" class="java.lang.Long"/>
+	<field name="name(dev)" class="java.lang.String"/>
+	<field name="mtName" class="java.lang.String"/>
+	<field name="val" class="java.lang.Double"/>
+	<field name="minReportFixedValue(dev,mt)" class="java.lang.Double"/>
+	<field name="maxReportFixedValue(dev,mt)" class="java.lang.Double"/>
+	<group name="designGroup21">
+		<groupExpression><![CDATA[String.valueOf($F{d.object})]]></groupExpression>
+		<groupHeader>
+			<band height="18" splitType="Prevent">
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="32" height="18" uuid="8cebc084-8708-4a1d-8395-44c4bc36e304"/>
+					<textElement textAlignment="Center"/>
+					<textFieldExpression><![CDATA["Date"]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" pattern="dd/MM/yy" isBlankWhenNull="true">
+					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="32" y="0" width="770" height="18" uuid="38991b8d-b612-4339-8068-d1a7aab2bfeb"/>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[java.sql.Date.valueOf($F{date})]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<pageHeader>
+		<band height="18">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="97" height="18" uuid="2f31fd82-3727-436a-bff2-341032e05543"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["ID"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="97" y="0" width="366" height="18" uuid="0be4eb5e-1509-4120-b4f1-81c51ef22fa7"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Name"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="463" y="0" width="129" height="18" uuid="8870c329-c6c0-4130-913f-4b9feaa2a1f1"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Name"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="592" y="0" width="69" height="18" uuid="fad57750-486c-4b85-8f0f-d0e6e0a400fc"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Value (raw)"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="661" y="0" width="69" height="18" uuid="1f5b39d5-9346-4a8f-a0a3-7770f8ec55de"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Мин. фикс. значение (отчет)"]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="730" y="0" width="72" height="18" uuid="3f4f7b45-2ec8-4a33-84a3-62637480b079"/>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA["Макс. фикс. значение (отчет)"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="18">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="97" height="18" uuid="5874085f-1462-45d5-b76c-35f3af35ae39"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{id(dev)}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="97" y="0" width="366" height="18" uuid="6bc1f58a-ad3d-4542-aabb-01782438bbd2"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA[$F{name(dev)}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="463" y="0" width="129" height="18" uuid="27adf388-142d-4953-b146-934257b2442f"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA[$F{mtName}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="592" y="0" width="69" height="18" uuid="25e46da1-76c9-4ffd-a112-a18580837bce"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{val}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="661" y="0" width="69" height="18" uuid="25da452a-aaf5-4182-a6b0-2f79102f6372"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{minReportFixedValue(dev,mt)}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="730" y="0" width="72" height="18" uuid="dac75bd8-374e-4814-80cb-5c5f0656c335"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{maxReportFixedValue(dev,mt)}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

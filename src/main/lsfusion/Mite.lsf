@@ -96,18 +96,26 @@ timeFrom 'Начало' (Location l, DATE d) = OVERRIDE dataTimeFrom(l, d), time
 timeTo 'Окончание' (Location l, DATE d) = OVERRIDE dataTimeTo(l, d), timeTo(scheduleFor(l, d));
 
 adjustValues 'Учавствует в корректировке' = DATA BOOLEAN (Management);
+inReport 'Участвует в отчете' = DATA BOOLEAN (Management);
 overChangedNames(Management cm) += CHANGED(adjustValues(cm));
+overChangedNames(Management cm) += CHANGED(inReport(cm));
 overCopyNames (Management cm, Management d) +{
     adjustValues(cm) <- adjustValues(d);
+    inReport(cm) <- inReport(d);
 }
 EXTEND FORM controllerManager
-    PROPERTIES (c) adjustValues
+    PROPERTIES (c) adjustValues, inReport
 ;
 
 maxAdjFixedValue 'Макс. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)),
     value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
 minAdjFixedValue 'Мин. фикс. значение' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND adjustValues(controller(cv)),
     value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND adjustValues(controller(cv)) MATERIALIZED;
+
+maxReportFixedValue 'Макс. фикс. значение (отчет)' (ManagementDevice md, MeasurementType mt) = GROUP MAX OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND inReport(controller(cv)),
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND inReport(controller(cv)) MATERIALIZED;
+minReportFixedValue 'Мин. фикс. значение (отчет)' (ManagementDevice md, MeasurementType mt) = GROUP MIN OVERRIDE value(right(ValuesCondition cv)) IF device(left(cv)) = md AND measurementType(left(cv)) = mt AND inReport(controller(cv)),
+    value(left(cv)) IF device(right(cv)) = md AND measurementType(right(cv)) = mt AND inReport(controller(cv)) MATERIALIZED;
 
 noise 'Отклонение значения (0..1)' = DATA DOUBLE (Organization);
 periodMinutes 'Отклонение периода (мин.)' = DATA DOUBLE (Organization);
@@ -455,6 +463,43 @@ EXTEND FORM devices
 EXTEND FORM organizations
     PROPERTIES (o) printMeasurements TOOLBAR, emailMeasurements TOOLBAR
 ;
+
+reportTime 'Время отчета' = DATA TIME (Organization);
+
+FORM limitReport 'Отчет по значениям до корректировки'
+    OBJECTS d = DATE PANEL, o = Organization PANEL
+    PROPERTIES(d) date = VALUE
+    PROPERTIES(o) name SELECTOR
+    
+    OBJECTS m = (dev = Device, mt = MeasurementType)
+    PROPERTIES(dev) id, name
+    PROPERTIES(mt) mtName = name
+    PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o))))
+    PROPERTIES minReportFixedValue(dev, mt), maxReportFixedValue(dev, mt)
+    FILTERS organization(dev) == o,
+            minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
+;
+
+runLimitReport (Organization o) {
+    DIALOG dialogDateIot OBJECTS d = currentDate() INPUT DO
+        PRINT limitReport OBJECTS d = d, o = o;
+}
+runLimitReportOrg 'Сформировать' (Device d) { runLimitReport(organization(d)); }
+
+EXTEND FORM devices
+    PROPERTIES reportTime(o), runLimitReportOrg(d), minReportFixedValue(d, rcmt), maxReportFixedValue(d, rcmt)
+;
+
+DESIGN devices {
+    adjustment {
+        NEW report {
+            caption = 'Отчет по значениям до корректировки';
+            horizontal = TRUE;
+            MOVE PROPERTY(reportTime(o));
+            MOVE PROPERTY(runLimitReportOrg(d));
+        }
+    }
+}
 
 getpackage(FILE file) {
     printToLog('GETPACKAGE : ' + extension(file) + ' -> ' + STRING(RAWFILE(file)));

@@ -105,6 +105,11 @@ printReportXls(Organization o, DATE dFrom, DATE dTo) {
     open(exportExcelFile());
 }
 
+FORM dialogDateIot
+    OBJECTS d = DATE PANEL
+    PROPERTIES(d) VALUE
+;
+
 FORM dialogDates
     OBJECTS dFrom 'Дата от' = DATE PANEL, dTo 'Дата до' = DATE PANEL
     PROPERTIES VALUE(dFrom), VALUE(dTo)
