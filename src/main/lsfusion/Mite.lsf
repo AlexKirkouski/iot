@@ -162,6 +162,10 @@ EXTEND FORM locations
     OBJECTS as = AdjustSchedule
     FILTERS organization(as) = o
     PROPERTIES (as) name, timeFrom, timeTo, NEW, DELETE
+
+    OBJECTS d = Device
+    PROPERTIES(d) id, nameType, NEW, DELETE
+    FILTERS location(d) == l
 ;
 
 DESIGN locations {
@@ -181,6 +185,9 @@ DESIGN locations {
         NEW tabll {
             fill = 1;
             tabbed = TRUE;
+            MOVE BOX(d) {
+                caption = 'Датчики';
+            }
             NEW dateRow {
                 caption = 'Расписания корректировки';
                 MOVE BOX(ds);
@@ -480,14 +487,14 @@ FORM limitReport 'Отчет по значениям до корректиров
             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
 ;
 
-runLimitReport (Organization o) {
+runLimitReport 'Сформировать' (Organization o) {
     DIALOG dialogDateIot OBJECTS d = currentDate() INPUT DO
         PRINT limitReport OBJECTS d = d, o = o;
 }
-runLimitReportOrg 'Сформировать' (Device d) { runLimitReport(organization(d)); }
 
 EXTEND FORM devices
-    PROPERTIES reportTime(o), runLimitReportOrg(d), minReportFixedValue(d, rcmt), maxReportFixedValue(d, rcmt)
+    PROPERTIES(o) reportTime, runLimitReport
+    PROPERTIES(d, rcmt) minReportFixedValue, maxReportFixedValue
 ;
 
 DESIGN devices {
@@ -496,7 +503,7 @@ DESIGN devices {
             caption = 'Отчет по значениям до корректировки';
             horizontal = TRUE;
             MOVE PROPERTY(reportTime(o));
-            MOVE PROPERTY(runLimitReportOrg(d));
+            MOVE PROPERTY(runLimitReport(o));
         }
     }
 }
