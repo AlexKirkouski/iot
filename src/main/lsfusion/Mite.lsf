@@ -481,7 +481,7 @@ FORM limitReport 'Отчет по значениям до корректиров
     OBJECTS m = (dev = Device, mt = MeasurementType)
     PROPERTIES(dev) id, name
     PROPERTIES(mt) mtName = name
-    PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o))))
+    PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o)))), dateTime = ZDATETIME(toDateTime(d, reportTime(o))), time = reportTime(o)
     PROPERTIES minReportFixedValue(dev, mt), maxReportFixedValue(dev, mt)
     FILTERS organization(dev) == o,
             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
