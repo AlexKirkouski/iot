@@ -148,7 +148,7 @@ adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
 // Применяем зажатие по расписанию во время финальной корректировки измерений
 finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += adjustTargetValue(device(m), mt, dateTime(m), v);
 
-container 'ID контейнера' = DATA STRING (Device);
+container 'ID контейнера' = DATA INTEGER (Device);
 
 // UI (точка размещения): все настройки расписания переносим в форму точек размещения
 // - дефолтные расписания для организации (выводим селекторы, организация берётся из organization(l))
@@ -485,6 +485,7 @@ FORM limitReport 'Отчет по значениям до корректиров
     PROPERTIES(mt) mtName = name
     PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o)))), dateTime = ZDATETIME(toDateTime(d, reportTime(o))), time = reportTime(o)
     PROPERTIES minReportFixedValue(dev, mt), maxReportFixedValue(dev, mt)
+    ORDERS container(dev)
     FILTERS organization(dev) == o,
             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
 ;
