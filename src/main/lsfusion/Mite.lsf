@@ -180,11 +180,7 @@ DESIGN locations {
                 MOVE PROPERTY(noise(o));
                 MOVE PROPERTY(periodMinutes(o));
             }
-            MOVE BOX(dow) {
-                caption = 'Расписания по дням недели';
-                PROPERTY(caption(dow)) { caption = 'День недели'; }
-            }
-            MOVE BOX (as) { fill = 1; }
+            MOVE BOX(as) { fill = 1; }
         }
     }
     BOX(l) {
@@ -196,7 +192,19 @@ DESIGN locations {
             }
             NEW dateRow {
                 caption = 'Расписания корректировки';
-                MOVE BOX(ds);
+                horizontal = FALSE;
+                fill = 1;
+                NEW weeklyDefaults {
+                    caption = 'По умолчанию по дням недели';
+                    MOVE BOX(dow) {
+                        caption = 'Расписания по дням недели';
+                        PROPERTY(caption(dow)) { caption = 'День недели'; }
+                    }
+                }
+                MOVE BOX(ds) {
+                    caption = 'Переопределения по датам';
+                    fill = 1;
+                }
             }
             NEW templates {
                 caption = 'Шаблоны управления';
