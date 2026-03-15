@@ -514,10 +514,10 @@ FORM limitReport 'Отчет по значениям до корректиров
 emailLimitReport 'Отправить отчет по значениям до корректировки' (Organization o, DATE d) {
     PRINT limitReport OBJECTS d = d, o = o PDF TO exportFile;
     EMAIL
-            SUBJECT ('Отчет по значениям до корректировки на ' + d)
+            SUBJECT ('MITE report: ' + name(o) + ', ' + d)
             TO email(o)
-            BODY 'Добрый день, <br/><br/>Во вложении PDF-отчет по значениям до корректировки.<br/><br/><br/>С уважением, <br/>Команда MITE'
-            ATTACH exportFile() NAME 'Mite_limitReport_' + d;
+            BODY ('Automated report from MITE.<br/>Organization: ' + name(o) + '<br/>Report date: ' + d + '<br/>Attachment: PDF report with values before correction.')
+            ATTACH exportFile() NAME ('mite_limit_report_' + replace(name(o), ' ', '_') + '_' + d);
 }
 
 runLimitReport 'Сформировать' (Organization o) {
