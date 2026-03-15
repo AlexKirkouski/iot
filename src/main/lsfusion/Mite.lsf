@@ -192,10 +192,10 @@ DESIGN locations {
             }
             NEW dateRow {
                 caption = 'Расписания корректировки';
-                horizontal = FALSE;
-                fill = 1;
+                horizontal = TRUE;
                 NEW weeklyDefaults {
                     caption = 'По умолчанию по дням недели';
+                    fill = 1;
                     MOVE BOX(dow) {
                         caption = 'Расписания по дням недели';
                         PROPERTY(caption(dow)) { caption = 'День недели'; }
