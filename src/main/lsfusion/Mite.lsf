@@ -511,9 +511,27 @@ FORM limitReport 'Отчет по значениям до корректиров
             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
 ;
 
+emailLimitReport 'Отправить отчет по значениям до корректировки' (Organization o, DATE d) {
+    PRINT limitReport OBJECTS d = d, o = o PDF TO exportFile;
+    EMAIL
+            SUBJECT ('Отчет по значениям до корректировки на ' + d)
+            TO email(o)
+            BODY 'Добрый день, <br/><br/>Во вложении PDF-отчет по значениям до корректировки.<br/><br/><br/>С уважением, <br/>Команда MITE'
+            ATTACH exportFile() NAME 'Mite_limitReport_' + d;
+}
+
 runLimitReport 'Сформировать' (Organization o) {
     DIALOG dialogDateIot OBJECTS d = currentDate() INPUT DO
         PRINT limitReport OBJECTS d = d, o = o;
+}
+
+emailLimitReportScheduler 'Отправить отчет по значениям до корректировки из планировщика' (STRING[100] organizationName) {
+    IF NOT Organization.organization(organizationName) THEN {
+        MESSAGE 'Не найдена организация: ' + organizationName;
+        RETURN;
+    }
+
+    emailLimitReport(Organization.organization(organizationName), currentDate());
 }
 
 EXTEND FORM devices
