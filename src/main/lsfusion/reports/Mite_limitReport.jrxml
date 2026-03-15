@@ -1,124 +1,216 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.limitReport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="30" bottomMargin="30" uuid="39911b6b-b186-4075-b9ac-447fd0a8a7a9">
-	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
-	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
-	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="DejaVu Sans" fontSize="10">
-		<box>
-			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-		</box>
-		<paragraph leftIndent="2" rightIndent="2"/>
-	</style>
-	<style name="GroupCellStyle2" vTextAlign="Middle" fontSize="10">
-		<box>
-			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-		</box>
-		<paragraph leftIndent="2" rightIndent="2"/>
-	</style>
-	<style name="GroupCellStyle1" mode="Opaque" backcolor="#DFDFDF" vTextAlign="Middle" fontSize="10">
-		<box>
-			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-		</box>
-		<paragraph leftIndent="2" rightIndent="2"/>
-	</style>
-	<style name="GroupCellStyle0" vTextAlign="Middle" fontSize="10">
-		<box>
-			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-		</box>
-		<paragraph leftIndent="2" rightIndent="2"/>
-	</style>
-	<field name="d.object" class="java.time.LocalDate"/>
+<!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 6.20.6  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite_LimitReport_A4_Compact40" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="78fdd74d-8ccb-4b5b-a3c7-3fdc8c179ff5">
+	<parameter name="pFormCode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Ф/05-СОП № 29-С"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pPosition" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Должность"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pFio" class="java.lang.String">
+		<defaultValueExpression><![CDATA["ФИО"]]></defaultValueExpression>
+	</parameter>
 	<field name="date" class="java.time.LocalDate"/>
-	<field name="dev.object" class="java.lang.Long"/>
-	<field name="mt.object" class="java.lang.Long"/>
-	<field name="id(dev)" class="java.lang.Long"/>
 	<field name="name(dev)" class="java.lang.String"/>
 	<field name="mtName" class="java.lang.String"/>
 	<field name="val" class="java.lang.Double"/>
+	<field name="container(dev)" class="java.lang.Integer"/>
 	<field name="minReportFixedValue(dev,mt)" class="java.lang.Double"/>
 	<field name="maxReportFixedValue(dev,mt)" class="java.lang.Double"/>
-	<group name="designGroup21">
-		<groupExpression><![CDATA[String.valueOf($F{d.object})]]></groupExpression>
+	<field name="time" class="java.time.LocalTime"/>
+	<variable name="RowNo" class="java.lang.Integer" resetType="Group" resetGroup="DateGroup" calculation="Count">
+		<variableExpression><![CDATA[$F{mtName}]]></variableExpression>
+	</variable>
+	<group name="DateGroup" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{date}]]></groupExpression>
 		<groupHeader>
-			<band height="18" splitType="Prevent">
-				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" stretchType="RelativeToBandHeight" x="0" y="0" width="32" height="18" uuid="8cebc084-8708-4a1d-8395-44c4bc36e304"/>
-					<textElement textAlignment="Center"/>
-					<textFieldExpression><![CDATA["Date"]]></textFieldExpression>
-				</textField>
-				<textField textAdjust="StretchHeight" pattern="dd/MM/yy" isBlankWhenNull="true">
-					<reportElement style="GroupCellStyle1" positionType="Float" stretchType="RelativeToBandHeight" x="32" y="0" width="770" height="18" uuid="38991b8d-b612-4339-8068-d1a7aab2bfeb"/>
-					<textElement textAlignment="Right"/>
-					<textFieldExpression><![CDATA[java.sql.Date.valueOf($F{date})]]></textFieldExpression>
+			<band height="18">
+				<textField>
+					<reportElement x="0" y="2" width="300" height="14" uuid="0573d21d-6562-4489-b24f-1fa81f538344"/>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Дата: " + ($F{date} == null ? "" : $F{date}.toString())]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>
+		<groupFooter>
+			<band height="24">
+				<line>
+					<reportElement x="0" y="4" width="555" height="1" uuid="61d21521-31e9-482d-a513-2c71eb43560e"/>
+					<graphicElement>
+						<pen lineWidth="0.4" lineStyle="Dashed"/>
+					</graphicElement>
+				</line>
+				<textField>
+					<reportElement x="8" y="8" width="540" height="12" uuid="f12525b8-58bb-42b2-a6b6-34098385ed68"/>
+					<textElement>
+						<font size="9"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
++ ", " +
+($P{pFio} == null ? "ФИО" : $P{pFio})
++ ", подпись"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
 	</group>
 	<pageHeader>
-		<band height="18">
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="0" y="0" width="97" height="18" uuid="2f31fd82-3727-436a-bff2-341032e05543"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["ID"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="97" y="0" width="366" height="18" uuid="0be4eb5e-1509-4120-b4f1-81c51ef22fa7"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Name"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="463" y="0" width="129" height="18" uuid="8870c329-c6c0-4130-913f-4b9feaa2a1f1"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Name"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="592" y="0" width="69" height="18" uuid="fad57750-486c-4b85-8f0f-d0e6e0a400fc"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Value (raw)"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="661" y="0" width="69" height="18" uuid="1f5b39d5-9346-4a8f-a0a3-7770f8ec55de"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Мин. фикс. значение (отчет)"]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" stretchType="RelativeToBandHeight" x="730" y="0" width="72" height="18" uuid="3f4f7b45-2ec8-4a33-84a3-62637480b079"/>
-				<textElement textAlignment="Center"/>
-				<textFieldExpression><![CDATA["Макс. фикс. значение (отчет)"]]></textFieldExpression>
+		<band height="14">
+			<textField>
+				<reportElement x="355" y="0" width="200" height="12" uuid="4bb563c1-6cd6-4861-b19a-7d27e0328019"/>
+				<textElement textAlignment="Right">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
 			</textField>
 		</band>
 	</pageHeader>
+	<columnHeader>
+		<band height="22">
+			<staticText>
+				<reportElement x="0" y="0" width="30" height="22" uuid="058a2f08-f991-4426-ac8b-40816ff69af4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[№]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="30" y="0" width="85" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Термоконт. №]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="115" y="0" width="85" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Режим, °C]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="200" y="0" width="85" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Датчик]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="285" y="0" width="55" height="22" uuid="42cecb85-3064-40bf-ad5e-73fa291acb28"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Время]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="340" y="0" width="70" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Темп., °C]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="410" y="0" width="145" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Примечание]]></text>
+			</staticText>
+			<line>
+				<reportElement x="0" y="21" width="555" height="1" uuid="aca4e7ea-7451-4ac8-9141-492b578766c5"/>
+				<graphicElement>
+					<pen lineWidth="0.4" lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
+		</band>
+	</columnHeader>
 	<detail>
-		<band height="18">
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="97" height="18" uuid="5874085f-1462-45d5-b76c-35f3af35ae39"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{id(dev)}]]></textFieldExpression>
+		<band height="16" splitType="Prevent">
+			<line>
+				<reportElement x="0" y="3" width="1" height="10" uuid="b6217e5b-0ea6-424f-b70a-69ac29008591"/>
+			</line>
+			<line>
+				<reportElement x="30" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
+			</line>
+			<line>
+				<reportElement x="115" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
+			</line>
+			<line>
+				<reportElement x="200" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
+			</line>
+			<line>
+				<reportElement x="285" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
+			</line>
+			<line>
+				<reportElement x="340" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
+			</line>
+			<line>
+				<reportElement x="410" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
+			</line>
+			<line>
+				<reportElement x="554" y="3" width="1" height="10" uuid="ba5ccd85-b5a7-433f-b9d0-b16de2dffc39"/>
+			</line>
+			<line>
+				<reportElement x="0" y="15" width="555" height="1" uuid="d4b7ae67-3f24-4370-a7a3-6af1c135392c"/>
+				<graphicElement>
+					<pen lineWidth="0.4" lineStyle="Dashed"/>
+				</graphicElement>
+			</line>
+			<textField>
+				<reportElement x="0" y="0" width="30" height="16" uuid="da74afa6-16ae-4e48-94de-d6a76e87dc54"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="97" y="0" width="366" height="18" uuid="6bc1f58a-ad3d-4542-aabb-01782438bbd2"/>
-				<textElement textAlignment="Left"/>
+			<textField>
+				<reportElement x="30" y="0" width="85" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{container(dev)}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="115" y="0" width="85" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{minReportFixedValue(dev,mt)}==null ? "" : $F{minReportFixedValue(dev,mt)})
++ " - " +
+($F{maxReportFixedValue(dev,mt)}==null ? "" : $F{maxReportFixedValue(dev,mt)})]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="200" y="0" width="85" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
 				<textFieldExpression><![CDATA[$F{name(dev)}]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="463" y="0" width="129" height="18" uuid="27adf388-142d-4953-b146-934257b2442f"/>
-				<textElement textAlignment="Left"/>
-				<textFieldExpression><![CDATA[$F{mtName}]]></textFieldExpression>
+			<textField>
+				<reportElement x="285" y="0" width="55" height="16" uuid="cc9cb478-ab5b-459e-a5d1-d53553a25159"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{time} == null ? "" : $F{time}.toString().substring(0,5)]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="592" y="0" width="69" height="18" uuid="25e46da1-76c9-4ffd-a112-a18580837bce"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{val}]]></textFieldExpression>
+			<textField>
+				<reportElement x="340" y="0" width="70" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
 			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="661" y="0" width="69" height="18" uuid="25da452a-aaf5-4182-a6b0-2f79102f6372"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{minReportFixedValue(dev,mt)}]]></textFieldExpression>
-			</textField>
-			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="GroupCellStyle0" positionType="Float" stretchType="RelativeToBandHeight" x="730" y="0" width="72" height="18" uuid="dac75bd8-374e-4814-80cb-5c5f0656c335"/>
-				<textElement textAlignment="Right"/>
-				<textFieldExpression><![CDATA[$F{maxReportFixedValue(dev,mt)}]]></textFieldExpression>
+			<textField>
+				<reportElement x="410" y="0" width="145" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
+	<pageFooter>
+		<band height="1"/>
+	</pageFooter>
 </jasperReport>
