@@ -147,6 +147,8 @@ finalAdjustValue(Measurement m, MeasurementType mt, DOUBLE v) += adjustTargetVal
 
 container 'ID контейнера' = DATA INTEGER (Device);
 
+overDeviceName(ControllerManager cm) += '(контейнер ' + container(templateDevice(cm)) + ')';
+
 // UI (точка размещения): все настройки расписания переносим в форму точек размещения
 // - базовые расписания по дням недели (выводим селекторы, организация берётся из organization(l))
 // - локальное переопределение на конкретную дату (редактируемое свойство dataScheduleFor)
