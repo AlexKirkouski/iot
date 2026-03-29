@@ -625,7 +625,7 @@ DESIGN locations {
     }
 }
 
-overDeviceName = ABSTRACT VALUE STRING (ControllerManager);
+overDeviceName = ABSTRACT STRING (ControllerManager);
 deviceName (ControllerManager cp) = (CONCAT ' ', name(templateDevice(cp)), nameLocation(templateDevice(cp)), overDeviceName(cp));
 
 overCopyNames ABSTRACT LIST (Management, Management);
