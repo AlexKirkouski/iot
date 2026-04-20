@@ -4,7 +4,7 @@ REQUIRE Options, Country, Organization,
         OrgDevice, OrgMeasurement, 
         OrgController, OrgControllerDevice,
         OrgManagement, OrgManagementReport,
-        ProcessMonitor, SQLUtils, ProcessUtils, Backup, Eval,
+        ProcessMonitor, SQLUtils, Backup, Eval,
         GrafanaDashboard,
         MqttServer, Server,
         Export, 
@@ -63,6 +63,19 @@ DESIGN devices {
         MOVE GROUP (settings, d) { horizontal = FALSE; };
     }
 }
+
+machine 'Машина' = DATA BOOLEAN (Location);
+machineLocation 'Машина' (Location l) = GROUP LAST Location ml IF machine(ml) ORDER DESC level(l, ml) MATERIALIZED;
+machineLocation 'Машина' (Device d) = machineLocation(location(d)) MATERIALIZED;
+nameMachine 'Машина' (Device d) = name(machineLocation(d));
+
+EXTEND FORM locations
+    PROPERTIES (l) machine
+;
+
+EXTEND FORM devices
+    PROPERTIES (d) nameMachine
+;
 
 ///// РАСПИСАНИЕ КОРРЕКТИРОВКИ /////
 
@@ -498,11 +511,35 @@ EXTEND FORM organizations
 
 reportTime 'Время отчета' = DATA TIME (Organization);
 
+routeReportDevice(Device d, MeasurementType mt) = machineLocation(d) AND number(type(d), mt) AND minReportFixedValue(d, mt) IS DOUBLE AND maxReportFixedValue(d, mt) IS DOUBLE;
+hasRouteReportDevice(Location l, MeasurementType mt) = GROUP MAX routeReportDevice(Device d, mt) AND machineLocation(d) = l;
+routeReportInterval 'Интервал' (Device d, MeasurementType mt) =
+    'От ' + minReportFixedValue(d, mt) + ' до ' + maxReportFixedValue(d, mt) IF routeReportDevice(d, mt);
+routeReportIntervalValue 'Интервал' (STRING interval) = interval IF interval IS STRING;
+hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
+    GROUP MAX routeReportDevice(Device d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
+routeReportIntervalMinFixedValue(Organization o, MeasurementType mt, STRING interval) =
+    GROUP MIN minReportFixedValue(Device d, mt) IF routeReportDevice(d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
+routeReportIntervalMaxFixedValue(Organization o, MeasurementType mt, STRING interval) =
+    GROUP MAX maxReportFixedValue(Device d, mt) IF routeReportDevice(d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
+
+routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = timeFrom(l, d);
+routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = timeTo(l, d);
+inRouteReportPeriod(Measurement m, MeasurementType mt, Location l, DATE d) =
+    machineLocation(device(m, mt)) = l AND
+    dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= ZDATETIME(toDateTime(d, routeTimeTo(l, d)));
+routeReportFactMinValue 'Мин. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
+    GROUP MIN value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
+routeReportFactMaxValue 'Макс. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
+    GROUP MAX value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
+routeReportFactInterval 'Фактический интервал' (Location l, STRING interval, MeasurementType mt, DATE d) =
+    'От ' + routeReportFactMinValue(l, interval, mt, d) + ' до ' + routeReportFactMaxValue(l, interval, mt, d);
+
 FORM limitReport 'Отчет по значениям до корректировки'
     OBJECTS d = DATE PANEL, o = Organization PANEL
     PROPERTIES(d) date = VALUE
+
     PROPERTIES(o) name SELECTOR
-    
     OBJECTS m = (dev = Device, mt = MeasurementType)
     PROPERTIES(dev) id, container, name
     PROPERTIES(mt) mtName = name
@@ -536,18 +573,44 @@ emailLimitReportScheduler 'Отправить отчет по значениям
     emailLimitReport(Organization.organization(organizationName), currentDate());
 }
 
+FORM routeReportDialog 'Параметры отчета по маршрутам'
+    OBJECTS d = DATE PANEL, mt = MeasurementType PANEL
+    PROPERTIES(d) VALUE
+    PROPERTIES(mt) name SELECTOR
+;
+
+FORM routeReport 'Отчет контроля маршрутов'
+    OBJECTS d = DATE PANEL, o = Organization PANEL, mt = MeasurementType PANEL
+
+    OBJECTS interval = STRING
+    FILTERS hasRouteReportInterval(o, mt, interval)
+
+    OBJECTS ml = Location
+    PROPERTIES machineName = name(ml)
+    PROPERTIES routeTimeFrom = routeTimeFrom(ml, d), routeTimeTo = routeTimeTo(ml, d)
+    PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d) COLUMNS (interval) HEADER routeReportIntervalValue(interval)
+    FILTERS organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
+    ORDERS machineName
+;
+
+runRouteReport 'Сформировать отчет по маршрутам' (Organization o) {
+    DIALOG routeReportDialog OBJECTS d = currentDate() INPUT, mt = temperatureType() INPUT DO
+        SHOW routeReport OBJECTS d = d, o = o, mt = mt;
+}
+
 EXTEND FORM devices
-    PROPERTIES(o) reportTime, runLimitReport
+    PROPERTIES(o) reportTime, runLimitReport, runRouteReport
     PROPERTIES(d, rcmt) minReportFixedValue, maxReportFixedValue
 ;
 
 DESIGN devices {
     adjustment {
         NEW report {
-            caption = 'Отчет по значениям до корректировки';
+            caption = 'Отчеты корректировки';
             horizontal = TRUE;
             MOVE PROPERTY(reportTime(o));
             MOVE PROPERTY(runLimitReport(o));
+            MOVE PROPERTY(runRouteReport(o));
         }
     }
 }
