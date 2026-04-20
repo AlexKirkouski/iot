@@ -66,7 +66,7 @@ DESIGN devices {
 
 machine 'Машина' = DATA BOOLEAN (Location);
 machineLocation 'Машина' (Location l) = GROUP LAST Location ml IF machine(ml) ORDER DESC level(l, ml) MATERIALIZED;
-machineLocation 'Машина' (Device d) = machineLocation(location(d)) MATERIALIZED;
+machineLocation 'Машина' (Device d) = machineLocation(location(d)) MATERIALIZED INDEXED;
 nameMachine 'Машина' (Device d) = name(machineLocation(d));
 
 EXTEND FORM locations
@@ -511,17 +511,13 @@ EXTEND FORM organizations
 
 reportTime 'Время отчета' = DATA TIME (Organization);
 
-routeReportDevice(Device d, MeasurementType mt) = machineLocation(d) AND number(type(d), mt) AND minReportFixedValue(d, mt) IS DOUBLE AND maxReportFixedValue(d, mt) IS DOUBLE;
+routeReportDevice(Device d, MeasurementType mt) = machineLocation(d) AND number(type(d), mt) AND minReportFixedValue(d, mt) AND maxReportFixedValue(d, mt);
 hasRouteReportDevice(Location l, MeasurementType mt) = GROUP MAX routeReportDevice(Device d, mt) AND machineLocation(d) = l;
 routeReportInterval 'Интервал' (Device d, MeasurementType mt) =
-    'От ' + minReportFixedValue(d, mt) + ' до ' + maxReportFixedValue(d, mt) IF routeReportDevice(d, mt);
+    'От ' + minReportFixedValue(d, mt) + ' до ' + maxReportFixedValue(d, mt) IF routeReportDevice(d, mt) MATERIALIZED;
 routeReportIntervalValue 'Интервал' (STRING interval) = interval IF interval IS STRING;
 hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
     GROUP MAX routeReportDevice(Device d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
-routeReportIntervalMinFixedValue(Organization o, MeasurementType mt, STRING interval) =
-    GROUP MIN minReportFixedValue(Device d, mt) IF routeReportDevice(d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
-routeReportIntervalMaxFixedValue(Organization o, MeasurementType mt, STRING interval) =
-    GROUP MAX maxReportFixedValue(Device d, mt) IF routeReportDevice(d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
 
 routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = timeFrom(l, d);
 routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = timeTo(l, d);
