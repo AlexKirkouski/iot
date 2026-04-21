@@ -4,7 +4,7 @@ REQUIRE Options, Country, Organization,
         OrgDevice, OrgMeasurement, 
         OrgController, OrgControllerDevice,
         OrgManagement, OrgManagementReport,
-        ProcessMonitor, SQLUtils, ProcessUtils, Backup, Eval,
+        ProcessMonitor, SQLUtils, Backup, Eval,
         GrafanaDashboard,
         MqttServer, Server,
         Export, 
@@ -519,8 +519,8 @@ routeReportIntervalValue 'Интервал' (STRING interval) = interval IF inte
 hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
     GROUP MAX routeReportDevice(Device d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
 
-routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = timeFrom(l, d);
-routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = timeTo(l, d);
+routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = timeFrom(l, d) COMPLEX;
+routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = timeTo(l, d) COMPLEX;
 inRouteReportPeriod(Measurement m, MeasurementType mt, Location l, DATE d) =
     machineLocation(device(m, mt)) = l AND
     dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= ZDATETIME(toDateTime(d, routeTimeTo(l, d)));
