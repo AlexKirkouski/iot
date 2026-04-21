@@ -128,7 +128,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font fontName="DejaVu Serif" size="11" isBold="true"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header}.replace("От ", "").replace(" до ", "-") + ", C°"]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header} + ", C°"]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement style="HeaderCellStyle" x="734" y="0" width="68" height="72" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
