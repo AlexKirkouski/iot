@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.routeReport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="72994312-5067-4e9f-923f-a8cdea8092de">
+	<parameter name="pFormCode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
+	</parameter>
+	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="12">
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="TableHeaderStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="14" isBold="true">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="4" rightIndent="4"/>
+	</style>
+	<style name="TableSubHeaderStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="12" isBold="true">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="2" rightIndent="2"/>
+	</style>
+	<style name="TableBodyStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="13">
+		<box>
+			<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="4" rightIndent="4"/>
+	</style>
+	<field name="d.object" class="java.time.LocalDate"/>
+	<field name="o.object" class="java.lang.Long"/>
+	<field name="mt.object" class="java.lang.Long"/>
+	<field name="ml.object" class="java.lang.Long"/>
+	<field name="machineName" class="java.lang.String"/>
+	<field name="routeTimeFrom" class="java.time.LocalTime"/>
+	<field name="routeTimeTo" class="java.time.LocalTime"/>
+	<field name="factInterval" class="java.lang.String"/>
+	<field name="factInterval.header" class="java.lang.String"/>
+	<group name="designGroup20945">
+		<groupExpression><![CDATA[String.valueOf($F{d.object})]]></groupExpression>
+	</group>
+	<group name="designGroup20947">
+		<groupExpression><![CDATA[String.valueOf($F{o.object})]]></groupExpression>
+	</group>
+	<group name="designGroup20949">
+		<groupExpression><![CDATA[String.valueOf($F{mt.object})]]></groupExpression>
+	</group>
+	<pageHeader>
+		<band height="156">
+			<textField isBlankWhenNull="true">
+				<reportElement x="602" y="0" width="200" height="16" uuid="602bf4f1-2fd6-45a5-9cc9-7e8e96b981c0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="40" y="22" width="722" height="26" uuid="9ecf8206-71fa-4d46-8bf4-cdf5a21b5540"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Ежедневный отчет контроля температурного режима при транспортировке]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="162" y="48" width="360" height="28" uuid="68034d1c-824d-4ccf-b69a-af0d881ac9ec"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="18" isBold="true"/>
+				</textElement>
+				<text><![CDATA[лекарственных средств]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="548" y="48" width="180" height="28" uuid="a8ae846f-a554-4d9b-a61c-f2f60d50bdab"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="16" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{d.object} == null ? "" : "дата " + new java.text.SimpleDateFormat("dd.MM.yy").format(java.sql.Date.valueOf($F{d.object}))]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="0" y="84" width="55" height="72" uuid="77f396b3-8330-4398-8c0e-164503f895d8"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="16" isBold="true"/>
+				</textElement>
+				<text><![CDATA[№]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="55" y="84" width="220" height="72" uuid="4afc2ded-e6ef-48aa-8f56-840d448ec2b2"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Марка, номер транспортного средства]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="275" y="84" width="75" height="72" uuid="483fffa5-e584-4a49-bfbb-55f6755b7f39"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Время начала маршрута]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="350" y="84" width="75" height="72" uuid="a8f9ac2e-69df-4b4f-9942-f513b9fc0d1f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Время окончания маршрута]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="425" y="84" width="309" height="36" uuid="ec7cf1ee-f338-4943-bb96-368035f1305f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Диапазон температуры при транспортировке]]></text>
+			</staticText>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="TableSubHeaderStyle" stretchType="RelativeToBandHeight" x="425" y="120" width="309" height="36" uuid="83e6fffa-f674-4e1d-b8cf-47a2c7aeb1f0"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header}.replace("От ", "").replace(" до ", "-") + ", °C"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="TableHeaderStyle" x="734" y="84" width="68" height="72" uuid="ef88edc8-8e09-4211-856e-bf34bdeeb14f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Контроль]]></text>
+			</staticText>
+		</band>
+	</pageHeader>
+	<detail>
+		<band height="30">
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="55" height="30" uuid="af3ad6c9-ed07-479f-90cf-051abc1b43f4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{REPORT_COUNT}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="55" y="0" width="220" height="30" uuid="921afb89-c8d3-4690-b9f7-cf6fbd998c9b"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{machineName}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="275" y="0" width="75" height="30" uuid="e56c331d-aaae-4cfb-91ef-4e573a5214d7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{routeTimeFrom} == null ? null : java.sql.Time.valueOf($F{routeTimeFrom})]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="350" y="0" width="75" height="30" uuid="e0429fd6-7684-4f79-b5c2-a259403e104b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="14"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{routeTimeTo} == null ? null : java.sql.Time.valueOf($F{routeTimeTo})]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="425" y="0" width="309" height="30" uuid="11dbe531-6244-49f4-ae78-581c32ae3ad3"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
+			</textField>
+			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+				<reportElement style="TableBodyStyle" positionType="Float" stretchType="RelativeToBandHeight" x="734" y="0" width="68" height="30" uuid="90ca8347-0f2a-4be5-ae2c-3e09473d638d"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
