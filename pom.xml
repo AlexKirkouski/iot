@@ -61,7 +61,7 @@
      <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
-        <version>4.5.7</version>
+        <version>4.5.13</version>
     </dependency>
     <!--Приходится подключать, так как возникает какая-то вилка с зависимостями из silvertunnel-->
     <dependency>
