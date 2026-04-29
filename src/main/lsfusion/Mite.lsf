@@ -595,13 +595,36 @@ FORM routeReport 'Отчет контроля маршрутов'
     ORDERS machineName
 ;
 
+emailRouteReport 'Отправить отчет по маршрутам' (Organization o, DATE d, MeasurementType mt) {
+    PRINT routeReport OBJECTS d = d, o = o, mt = mt PDF TO exportFile;
+    EMAIL
+            SUBJECT ('MITE route report: ' + name(o) + ', ' + d + ', ' + name(mt))
+            TO email(o)
+            BODY ('Automated route report from MITE.<br/>Organization: ' + name(o) + '<br/>Report date: ' + d + '<br/>Measurement type: ' + name(mt) + '<br/>Attachment: Контроль маршрутов.')
+            ATTACH exportFile() NAME ('mite_route_report_' + replace(name(o), ' ', '_') + '_' + replace(name(mt), ' ', '_') + '_' + d);
+}
+
 runRouteReport 'Сформировать отчет по маршрутам' (Organization o) {
     DIALOG routeReportDialog OBJECTS d = currentDate() INPUT, mt = temperatureType() INPUT DO
         PRINT routeReport OBJECTS d = d, o = o, mt = mt;
 }
 
+emailRouteReport 'Отправить отчет по маршрутам' (Organization o) {
+    DIALOG routeReportDialog OBJECTS d = currentDate() INPUT, mt = temperatureType() INPUT DO
+        emailRouteReport(o, d, mt);
+}
+
+emailRouteReportScheduler 'Отправить отчет по маршрутам из планировщика' (STRING[100] organizationName) {
+    IF NOT Organization.organization(organizationName) THEN {
+        MESSAGE 'Не найдена организация: ' + organizationName;
+        RETURN;
+    }
+
+    emailRouteReport(Organization.organization(organizationName), currentDate(), temperatureType());
+}
+
 EXTEND FORM devices
-    PROPERTIES(o) reportTime, runLimitReport, runRouteReport
+    PROPERTIES(o) reportTime, runLimitReport, runRouteReport, emailRouteReport
     PROPERTIES(d, rcmt) minReportFixedValue, maxReportFixedValue
 ;
 
@@ -613,6 +636,7 @@ DESIGN devices {
             MOVE PROPERTY(reportTime(o));
             MOVE PROPERTY(runLimitReport(o));
             MOVE PROPERTY(runRouteReport(o));
+            MOVE PROPERTY(emailRouteReport(o));
         }
     }
 }
