@@ -35,6 +35,6 @@ jobs:
       - name: Build and push Docker image
         run: >
           mvn -B deploy
-          -P assemble,embed-server,docker
+          -P assemble,docker
           -DskipTests
           -Ddocker.image.fullName="${DOCKER_IMAGE}:latest"
