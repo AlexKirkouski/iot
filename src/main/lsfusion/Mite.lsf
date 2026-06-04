@@ -537,6 +537,9 @@ EXTEND FORM locations
     PROPERTIES routeTimeFrom(l, ds), routeTimeTo(l, ds)
 ;
 
+reportControl 'Контроль' (Device dev, MeasurementType mt, ZDATETIME zdt) =
+    value(dev, mt, zdt) >= minReportFixedValue(dev, mt) AND value(dev, mt, zdt) <= maxReportFixedValue(dev, mt);
+
 FORM limitReport 'Отчет по значениям до корректировки'
     OBJECTS d = DATE PANEL, o = Organization PANEL
     PROPERTIES(d) date = VALUE
@@ -547,6 +550,7 @@ FORM limitReport 'Отчет по значениям до корректиров
     PROPERTIES(mt) mtName = name
     PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o)))), dateTime = ZDATETIME(toDateTime(d, reportTime(o))), time = reportTime(o)
     PROPERTIES minReportFixedValue(dev, mt), maxReportFixedValue(dev, mt)
+    PROPERTIES control = reportControl(dev, mt, ZDATETIME(toDateTime(d, reportTime(o))))
     ORDERS container(dev)
     FILTERS organization(dev) == o, container(dev),
             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
@@ -581,6 +585,10 @@ FORM routeReportDialog 'Параметры отчета по маршрутам'
     PROPERTIES(mt) name SELECTOR
 ;
 
+routeControl 'Контроль' (Location ml, MeasurementType mt, DATE d) =
+    NOT (GROUP SUM 1 IF inRouteReportPeriod(Measurement m, mt, ml, d) AND
+            (value(m, mt) < minReportFixedValue(device(m, mt), mt) OR value(m, mt) > maxReportFixedValue(device(m, mt), mt)));
+
 FORM routeReport 'Отчет контроля маршрутов'
     OBJECTS d = DATE PANEL, o = Organization PANEL, mt = MeasurementType PANEL
 
@@ -591,6 +599,7 @@ FORM routeReport 'Отчет контроля маршрутов'
     PROPERTIES machineName = name(ml)
     PROPERTIES routeTimeFrom = routeTimeFrom(ml, d), routeTimeTo = routeTimeTo(ml, d)
     PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d) COLUMNS (interval) HEADER routeReportIntervalValue(interval)
+    PROPERTIES control = routeControl(ml, mt, d)
     FILTERS organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
     ORDERS machineName
 ;

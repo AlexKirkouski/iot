@@ -23,6 +23,16 @@
 		</box>
 		<paragraph leftIndent="6" rightIndent="6"/>
 	</style>
+	<style name="ControlStyle" style="BodyCellStyle" isBold="true">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.TRUE.equals($F{control})]]></conditionExpression>
+			<style forecolor="#1A8A1A"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[!Boolean.TRUE.equals($F{control})]]></conditionExpression>
+			<style forecolor="#CC0000"/>
+		</conditionalStyle>
+	</style>
 	<parameter name="pFormCode" class="java.lang.String">
 		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
 	</parameter>
@@ -35,6 +45,7 @@
 	<field name="routeTimeTo" class="java.time.LocalTime"/>
 	<field name="factInterval" class="java.lang.String"/>
 	<field name="factInterval.header" class="java.lang.String"/>
+	<field name="control" class="java.lang.Boolean"/>
 	<variable name="RowNo" class="java.lang.Integer" resetType="Group" resetGroup="designGroup20953" calculation="Count">
 		<variableExpression><![CDATA[$F{ml.object}]]></variableExpression>
 	</variable>
@@ -178,11 +189,11 @@
 				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="734" y="0" width="68" height="28" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
+				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="734" y="0" width="68" height="28" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font fontName="DejaVu Serif" size="12"/>
+					<font fontName="DejaVu Sans" size="12"/>
 				</textElement>
-				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
