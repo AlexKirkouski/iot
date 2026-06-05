@@ -137,22 +137,66 @@ showAdjustment(Device d, MeasurementType mt) += 1 IF adjustConfigured(d, mt);
 
 noiseValue (Device d, MeasurementType mt) = (maxAdjFixedValue(d, mt) - minAdjFixedValue(d, mt)) * noise(d, mt) MATERIALIZED;
 
+///// РЕЖИМЫ ШУМА ПО ВРЕМЕНИ СУТОК /////
+// Режим шума — справочник: название + окно времени + ЦЕЛЬ (граница/середина) + ШУМ.
+// Вешается на датчик; в окне режима корректировка тянет к цели режима с его шумом.
+// Режим не выбран / вне окна -> обычное поведение: к границе, шум организации.
+CLASS CorrectionTarget {
+    toLimit 'К границе',
+    toMiddle 'К середине'
+}
+CLASS NoiseMode 'Режим шума';
+organization 'Организация' = DATA Organization (NoiseMode);
+name 'Название' = DATA STRING[100] (NoiseMode) NONULL IN id;
+timeFrom 'Начало' = DATA TIME (NoiseMode) NONULL;
+timeTo 'Окончание' = DATA TIME (NoiseMode) NONULL;
+target = DATA CorrectionTarget (NoiseMode);
+nameTarget 'Цель' (NoiseMode m) = staticCaption(target(m)) CHARWIDTH 12;
+noise 'Шум (0..1)' = DATA DOUBLE (NoiseMode);
+CONSTRAINT NoiseMode m IS NoiseMode AND timeFrom(m) > timeTo(m)
+    MESSAGE 'Начало режима шума должно быть не позже окончания';
+// По умолчанию при создании: цель — к границе, шум — как у организации
+WHEN SET(NoiseMode m IS NoiseMode) AND NOT target(m) DO target(m) <- CorrectionTarget.toLimit;
+WHEN SET(NoiseMode m IS NoiseMode) AND NOT noise(m) DO noise(m) <- noise(organization(m));
+
+// Выбор режима шума на датчике (по умолчанию не выбран -> обычное поведение)
+noiseMode 'Режим шума' = DATA NoiseMode (Device);
+nameNoiseMode 'Режим шума' (Device d) = name(noiseMode(d)) CHARWIDTH 15;
+CONSTRAINT noiseMode(Device d) AND organization(noiseMode(d)) != organization(d)
+    MESSAGE 'Режим шума должен принадлежать организации датчика';
+
+// Активный режим датчика в момент zdt (если окно покрывает время)
+activeNoiseMode (Device d, ZDATETIME zdt) =
+    noiseMode(d) IF TIME(zdt) >= timeFrom(noiseMode(d)) AND TIME(zdt) <= timeTo(noiseMode(d));
+// Цель корректировки: цель активного режима, иначе — к границе (обычное поведение)
+correctionTarget (Device d, ZDATETIME zdt) = OVERRIDE target(activeNoiseMode(d, zdt)), CorrectionTarget.toLimit;
+// Шум по времени: шум активного режима, иначе — обычный шум организации
+noise (Device d, MeasurementType mt, ZDATETIME zdt) = OVERRIDE noise(activeNoiseMode(d, zdt)), noise(d, mt);
+// Время-зависимый разброс; НЕ MATERIALIZED
+noiseValue (Device d, MeasurementType mt, ZDATETIME zdt) = (maxAdjFixedValue(d, mt) - minAdjFixedValue(d, mt)) * noise(d, mt, zdt);
+// Середина диапазона и цели: к границе минус шум, либо к середине (по цели режима)
+midAdjValue (Device d, MeasurementType mt) = (minAdjFixedValue(d, mt) + maxAdjFixedValue(d, mt)) / 2;
+upperTarget (Device d, MeasurementType mt, ZDATETIME zdt) =
+    IF correctionTarget(d, zdt) = CorrectionTarget.toMiddle THEN midAdjValue(d, mt) ELSE maxAdjFixedValue(d, mt) - noiseValue(d, mt, zdt);
+lowerTarget (Device d, MeasurementType mt, ZDATETIME zdt) =
+    IF correctionTarget(d, zdt) = CorrectionTarget.toMiddle THEN midAdjValue(d, mt) ELSE minAdjFixedValue(d, mt) + noiseValue(d, mt, zdt);
+
 timeFrom(Device d, ZDATETIME zdt) = timeFrom(location(d), DATE(zdt));
 timeTo(Device d, ZDATETIME zdt) = timeTo(location(d), DATE(zdt));
-adjustTimeFrom(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeFrom(d, zdt), -periodMinutes(d, mt)); 
-adjustTimeTo(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeTo(d,zdt), periodMinutes(d, mt)); 
+adjustTimeFrom(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeFrom(d, zdt), -periodMinutes(d, mt));
+adjustTimeTo(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeTo(d,zdt), periodMinutes(d, mt));
 
-adjust(Device d, MeasurementType mt, DOUBLE prevValueToTarget, INTEGER secondsToTarget) =
-    IF secondsToTarget <= measurementPeriod(d) OR abs(prevValueToTarget) <= noiseValue(d, mt) THEN 0.0
-        ELSE exp(ln(noiseValue(d, mt) / abs(prevValueToTarget)) / round0(secondsToTarget / measurementPeriod(d))) * prevValueToTarget;
-adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsToTarget) = target - adjust(d, mt, target - prevLastValue(d, mt), secondsToTarget) + (random() - 0.5) * noiseValue(d, mt);
+adjust(Device d, MeasurementType mt, DOUBLE prevValueToTarget, INTEGER secondsToTarget, ZDATETIME zdt) =
+    IF secondsToTarget <= measurementPeriod(d) OR abs(prevValueToTarget) <= noiseValue(d, mt, zdt) THEN 0.0
+        ELSE exp(ln(noiseValue(d, mt, zdt) / abs(prevValueToTarget)) / round0(secondsToTarget / measurementPeriod(d))) * prevValueToTarget;
+adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsToTarget, ZDATETIME zdt) = target - adjust(d, mt, target - prevLastValue(d, mt), secondsToTarget, zdt) + (random() - 0.5) * noiseValue(d, mt, zdt);
 
-// Вспомогательный clamp в диапазон [min, max] если границы заданы
+// Вспомогательный clamp: при выходе за границу тянем к цели (граница или середина — по режиму датчика). Шум — по времени.
 adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
         IF TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt) AND v IS DOUBLE THEN
-            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(TIME(zdt), adjustTimeTo(d, mt, zdt))) // we're coming back
-                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(maxAdjFixedValue(d, mt) - noiseValue(d, mt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt))), v)
-                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(minAdjFixedValue(d, mt) + noiseValue(d, mt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt))), v) 
+            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(TIME(zdt), adjustTimeTo(d, mt, zdt)), zdt) // we're coming back
+                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(upperTarget(d, mt, zdt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt)), zdt), v)
+                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(lowerTarget(d, mt, zdt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt)), zdt), v)
                  ELSE v;
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
@@ -180,8 +224,12 @@ EXTEND FORM locations
     FILTERS organization(as) = o
     PROPERTIES (as) name, timeFrom, timeTo, NEW, DELETE
 
+    OBJECTS nm = NoiseMode
+    FILTERS organization(nm) = o
+    PROPERTIES (nm) name, timeFrom, timeTo, nameTarget, noise, NEW, DELETE
+
     OBJECTS d = Device
-    PROPERTIES(d) id, container, nameType, NEW, DELETE
+    PROPERTIES(d) id, container, nameType, nameNoiseMode, NEW, DELETE
     FILTERS location(d) == l
 ;
 
@@ -195,7 +243,12 @@ DESIGN locations {
                 MOVE PROPERTY(noise(o));
                 MOVE PROPERTY(periodMinutes(o));
             }
-            MOVE BOX(as) { fill = 1; }
+            NEW schedulesRow {
+                horizontal = TRUE;
+                fill = 1;
+                MOVE BOX(as) { fill = 1; caption = 'Расписания корректировки'; }
+                MOVE BOX(nm) { fill = 1; caption = 'Режимы шума (имя + время + шум; выбираются на датчике)'; }
+            }
         }
     }
     BOX(l) {
@@ -243,13 +296,17 @@ retroDataMinValue 'Мин. (корр.)' = DATA LOCAL DOUBLE (MeasurementType);
 retroMaxValue 'Макс. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMaxValue(mt), maxAdjFixedValue(d, mt);
 retroMinValue 'Мин. (корр.)' (Device d, MeasurementType mt) = OVERRIDE retroDataMinValue(mt), minAdjFixedValue(d, mt);
 retroNoiseValue (Device d, MeasurementType mt) = OVERRIDE (retroMaxValue(d, mt) - retroMinValue(d, mt)) * noise(d, mt), 0.0;
+// Разброс задним числом с учётом интервала корректировки по времени суток
+retroNoiseValue (Device d, MeasurementType mt, ZDATETIME zdt) = OVERRIDE (retroMaxValue(d, mt) - retroMinValue(d, mt)) * noise(d, mt, zdt), 0.0;
 
 applyRetroAdjust 'Применить корректировку' (Device d) {
     ASK 'Применить корректировку задним числом для датчика ' + id(d) + '?' DO {
         value(Measurement m, MeasurementType mt) <-
-                IF value(m, mt) > retroMaxValue(d, mt)
-                    THEN retroMaxValue(d, mt) - retroNoiseValue(d, mt) * random()
-                    ELSE retroMinValue(d, mt) + retroNoiseValue(d, mt) * random()
+                IF correctionTarget(d, dateTime(m)) = CorrectionTarget.toMiddle
+                    THEN (retroMinValue(d, mt) + retroMaxValue(d, mt)) / 2 + (random() - 0.5) * retroNoiseValue(d, mt, dateTime(m))
+                    ELSE (IF value(m, mt) > retroMaxValue(d, mt)
+                              THEN retroMaxValue(d, mt) - retroNoiseValue(d, mt, dateTime(m)) * random()
+                              ELSE retroMinValue(d, mt) + retroNoiseValue(d, mt, dateTime(m)) * random())
             WHERE device(m) = d AND dateTime(m) >= retroDateFrom() AND dateTime(m) <= retroDateTo() AND
                   number(type(d), mt) AND
                   ((retroMaxValue(d, mt) AND value(m, mt) > retroMaxValue(d, mt)) OR
@@ -278,11 +335,11 @@ generateRetroMeasurements 'Сгенерировать (задним числом
                             mNext() <- (GROUP LAST Measurement mn ORDER DESC dateTime(mn), mn WHERE device(mn) = d AND dateTime(mn) > dateTime(m) AND value(mn, mt));
     
                             IF value(mPrev(), mt) AND value(mNext(), mt) THEN {
-                                value(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mPrev(), mt) + (value(mNext(), mt) - value(mPrev(), mt)) * DOUBLE(subtractSeconds(dateTime(m), dateTime(mPrev()))) / DOUBLE(subtractSeconds(dateTime(mNext()), dateTime(mPrev()))) + (random() - 0.5) * retroNoiseValue(d, mt, dateTime(m));
                             } ELSE IF value(mPrev(), mt) THEN {
-                                value(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mPrev(), mt) + (random() - 0.5) * retroNoiseValue(d, mt, dateTime(m));
                             } ELSE IF value(mNext(), mt) THEN {
-                                value(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt);
+                                value(m, mt) <- value(mNext(), mt) + (random() - 0.5) * retroNoiseValue(d, mt, dateTime(m));
                             }
                         }
                     }
@@ -300,7 +357,7 @@ EXTEND FORM devices
     PROPERTIES (d, rcmt) READONLY isAdjustActive, maxAdjFixedValue, minAdjFixedValue
     PROPERTIES (d, rcmt) retroMaxValue, retroMinValue
     PROPERTIES retroDateFrom(), retroDateTo()
-    PROPERTIES (d) PANEL applyRetroAdjust, generateRetroMeasurements
+    PROPERTIES (d) PANEL nameNoiseMode, applyRetroAdjust, generateRetroMeasurements
 ;
 
 DESIGN devices {
@@ -309,6 +366,11 @@ DESIGN devices {
             caption = 'Корректировка';
             horizontal = FALSE;
             fill = 1;
+            NEW noiseModeRow {
+                horizontal = TRUE;
+                caption = 'Режим шума прибора';
+                MOVE PROPERTY(nameNoiseMode(d));
+            }
             NEW retroPeriodBox {
                 caption = 'Период корректировки задним числом';
                 horizontal = TRUE;
