@@ -86,42 +86,42 @@
 				<text><![CDATA[№]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="28" y="0" width="72" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
+				<reportElement x="28" y="0" width="78" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Термоконт. №]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="100" y="0" width="72" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
+				<reportElement x="106" y="0" width="82" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Режим, °C]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="172" y="0" width="92" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
+				<reportElement x="188" y="0" width="112" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Датчик]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="264" y="0" width="56" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
+				<reportElement x="300" y="0" width="58" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Темп., °C]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="320" y="0" width="55" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
+				<reportElement x="358" y="0" width="62" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Контроль]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="375" y="0" width="180" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604598"/>
+				<reportElement x="420" y="0" width="135" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604598"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9" isBold="true"/>
 				</textElement>
@@ -144,19 +144,19 @@
 				<reportElement x="28" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
 			</line>
 			<line>
-				<reportElement x="100" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
+				<reportElement x="106" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
 			</line>
 			<line>
-				<reportElement x="172" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
+				<reportElement x="188" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
 			</line>
 			<line>
-				<reportElement x="264" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
+				<reportElement x="300" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
 			</line>
 			<line>
-				<reportElement x="320" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
+				<reportElement x="358" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
 			</line>
 			<line>
-				<reportElement x="375" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
+				<reportElement x="420" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
 			</line>
 			<line>
 				<reportElement x="554" y="3" width="1" height="10" uuid="ba5ccd85-b5a7-433f-b9d0-b16de2dffc39"/>
@@ -175,14 +175,14 @@
 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="28" y="0" width="72" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
+				<reportElement x="28" y="0" width="78" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{container(dev)}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="100" y="0" width="72" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
+				<reportElement x="106" y="0" width="82" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
@@ -191,28 +191,28 @@
 ($F{maxReportFixedValue(dev,mt)}==null ? "" : $F{maxReportFixedValue(dev,mt)})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="172" y="0" width="92" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
+				<reportElement x="188" y="0" width="112" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{name(dev)}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="264" y="0" width="56" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+				<reportElement x="300" y="0" width="58" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
 				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="ControlStyle" x="320" y="0" width="55" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
+				<reportElement style="ControlStyle" x="358" y="0" width="62" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
 				<textElement verticalAlignment="Middle">
 					<font size="10"/>
 				</textElement>
 				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="375" y="0" width="180" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f9"/>
+				<reportElement x="420" y="0" width="135" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f9"/>
 				<textElement verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
