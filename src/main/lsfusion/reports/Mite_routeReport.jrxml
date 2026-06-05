@@ -36,6 +36,12 @@
 	<parameter name="pFormCode" class="java.lang.String">
 		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
 	</parameter>
+	<parameter name="pPosition" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Должность"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pFio" class="java.lang.String">
+		<defaultValueExpression><![CDATA["ФИО"]]></defaultValueExpression>
+	</parameter>
 	<field name="d.object" class="java.time.LocalDate"/>
 	<field name="o.object" class="java.lang.Long"/>
 	<field name="mt.object" class="java.lang.Long"/>
@@ -197,4 +203,18 @@
 			</textField>
 		</band>
 	</detail>
+	<summary>
+		<band height="34">
+			<textField>
+				<reportElement x="26" y="14" width="600" height="16" uuid="b9d7e2a1-5c4f-4a3b-9e21-7d6c8f0a1b23"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="DejaVu Serif" size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
++ ", " +
+($P{pFio} == null ? "ФИО" : $P{pFio})
++ ", подпись"]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
 </jasperReport>
