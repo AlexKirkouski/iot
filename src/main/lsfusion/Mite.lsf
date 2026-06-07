@@ -590,8 +590,12 @@ hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
 
 dataReportTimeFrom = DATA TIME (Location, DATE);
 dataReportTimeTo = DATA TIME (Location, DATE);
-routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = OVERRIDE dataReportTimeFrom(l, d), timeFrom(l, d) COMPLEX;
-routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = OVERRIDE dataReportTimeTo(l, d), timeTo(l, d) COMPLEX;
+
+// Точка расширения для бота «выезд/приезд» (реализация — модуль MachineBot): время из телеграма перебивает плановое от-до
+botRouteTimeFrom = ABSTRACT TIME (Location, DATE);
+botRouteTimeTo = ABSTRACT TIME (Location, DATE);
+routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = OVERRIDE botRouteTimeFrom(l, d), dataReportTimeFrom(l, d), timeFrom(l, d) COMPLEX;
+routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = OVERRIDE botRouteTimeTo(l, d), dataReportTimeTo(l, d), timeTo(l, d) COMPLEX;
 inRouteReportPeriod(Measurement m, MeasurementType mt, Location l, DATE d) =
     machineLocation(device(m, mt)) = l AND
     dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= ZDATETIME(toDateTime(d, routeTimeTo(l, d)));

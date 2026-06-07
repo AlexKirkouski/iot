@@ -1,0 +1,138 @@
+MODULE MachineBot;
+
+// Бот «выезд/приезд» машин: отдельный модуль поверх Mite.
+// Mite определяет точку расширения botRouteTimeFrom/botRouteTimeTo (ABSTRACT) для отчёта по маршрутам.
+REQUIRE Mite, Telegram;
+
+// ===== Машина: марка / номер + телеграм =====
+mark 'Марка' = DATA STRING[50] (Location);                      // ПЕЖО, ФОРД, ...
+machineNumber 'Номер' = DATA STRING[20] (Location);             // код машины в сообщениях бота, напр. 4750
+tgUsername 'Telegram username' = DATA STRING[100] (Location);   // аккаунт машины, напр. @4750 (для справки)
+tgChatId 'Telegram chat_id' = DATA STRING[30] (Location);       // id чата машины с ботом (совпадает с Chat.id)
+markNumber 'Машина' (Location l) = CONCAT ' ', mark(l), machineNumber(l) CHARWIDTH 15;
+// Поиск машины по номеру (в орг-ции) и по chat_id — для разбора входящих; заодно уникальность
+machineByNumber = GROUP AGGR Location ml BY organization(ml), machineNumber(ml);
+machineByChatId = GROUP AGGR Location ml BY tgChatId(ml);
+
+EXTEND FORM locations
+    PROPERTIES (l) mark, machineNumber, tgUsername, tgChatId
+;
+
+// ===== Бот на организацию = telegram-аккаунт (хранит токен; webhook ставит платформа) =====
+botAccount 'Бот (Telegram)' = DATA Messenger.Account (Organization);
+orgByAccount = GROUP AGGR Organization o BY botAccount(o);
+// Локально вебхук не поставить (нет публичного URL) — флаг, чтобы создание аккаунта не падало на тесте
+skipBotWebhook 'Не ставить webhook (локально)' = DATA BOOLEAN (Messenger.Account);
+skipSetWebHookTelegram(Messenger.Account a) += skipBotWebhook(a);
+// Чат машины с ботом орг-ции (для отправки)
+machineChat (Location ml) = chatIdAccount(botAccount(organization(ml)), tgChatId(ml));
+
+// ===== Выезд/приезд машины за дату: сгенерированное (план ±30) или реальное (от водителя) =====
+botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
+botArrival 'Приезд (бот)' = DATA TIME (Location, DATE);
+botDepartureReal 'Выезд от водителя' = DATA BOOLEAN (Location, DATE);    // TRUE = реальное сообщение водителя
+botArrivalReal 'Приезд от водителя' = DATA BOOLEAN (Location, DATE);
+botDepartureSent = DATA BOOLEAN (Location, DATE);                        // авто-сообщение «выезд» уже отправлено
+botArrivalSent = DATA BOOLEAN (Location, DATE);
+botDepartureMsgId = DATA LONG (Location, DATE);                          // telegram message_id авто-сообщения «выезд» (для удаления)
+botArrivalMsgId = DATA LONG (Location, DATE);
+
+// Реализация точки расширения Mite: время маршрута берём из бота (реальное/сгенерённое)
+botRouteTimeFrom(Location l, DATE d) += botDeparture(l, d);
+botRouteTimeTo(Location l, DATE d) += botArrival(l, d);
+
+// ===== Механизм 1а: генерация выезда/приезда (план ±30 мин, не затирая реальные от водителя) =====
+generateMachineRoutes 'Сгенерировать выезды/приезды' (Organization o, DATE d) {
+    LOCAL off = INTEGER ();
+    FOR Location ml IS Location AND machine(ml) AND organization(ml) = o AND timeFrom(ml, d) AND timeTo(ml, d) DO {
+        IF NOT botDepartureReal(ml, d) THEN {
+            off() <- round0((random() - 0.5) * 60);
+            botDeparture(ml, d) <- sumMinutes(timeFrom(ml, d), off());
+        }
+        IF NOT botArrivalReal(ml, d) THEN {
+            off() <- round0((random() - 0.5) * 60);
+            botArrival(ml, d) <- sumMinutes(timeTo(ml, d), off());
+        }
+    }
+}
+
+// ===== Telegram: своя отправка с захватом message_id + удаление =====
+// (платформенный sendMessageTelegram возвращает только ok/description, без message_id — а он нужен для удаления)
+GROUP machineSendResult EXTID 'result';
+botSentMsgId = DATA LOCAL LONG ();
+FORM machineSendResultForm
+    PROPERTIES() IN machineSendResult botSentMsgId EXTID 'message_id';
+
+// Отправляет text в чат, кладёт telegram message_id в botSentMsgId(), пишет сообщение в историю как от бота
+sendMachineMsg (Chat chat, STRING text) {
+    LOCAL result = JSONFILE ();
+    EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(account(chat)) + '/sendMessage?chat_id=' + id(chat) + '&text=' + text TO result;
+    botSentMsgId() <- NULL;
+    IMPORT machineSendResultForm JSON FROM result();
+    IF botSentMsgId() THEN NEW bm = Message {   // история чата; from='YOU' -> разбор входящих это сообщение пропустит
+        chat(bm) <- chat;
+        message(bm) <- text;
+        dateTime(bm) <- currentDateTime();
+        from(bm) <- 'YOU';
+    }
+    APPLY;
+}
+// Удаляет ранее отправленное авто-сообщение бота
+deleteMachineMsg (Chat chat, LONG msgId) {
+    LOCAL result = JSONFILE ();
+    EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(account(chat)) + '/deleteMessage?chat_id=' + id(chat) + '&message_id=' + msgId TO result;
+}
+
+// ===== Механизм 1б: отправка в Telegram сырым текстом «<номер>1»/«<номер>2» (как у водителя) =====
+sendMachineRoute 'Отправить выезд/приезд в бот' (Location ml, DATE d) {
+    IF machine(ml) AND botAccount(organization(ml)) AND tgChatId(ml) THEN {
+        LOCAL chat = Chat ();
+        chat() <- machineChat(ml);
+        IF NOT chat() THEN NEW c = Chat { account(c) <- botAccount(organization(ml)); id(c) <- tgChatId(ml); chat() <- c; }
+        IF botDeparture(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDepartureSent(ml, d) THEN {
+            sendMachineMsg(chat(), machineNumber(ml) + '1');
+            botDepartureMsgId(ml, d) <- botSentMsgId();
+            botDepartureSent(ml, d) <- TRUE;
+        }
+        IF botArrival(ml, d) AND NOT botArrivalReal(ml, d) AND NOT botArrivalSent(ml, d) THEN {
+            sendMachineMsg(chat(), machineNumber(ml) + '2');
+            botArrivalMsgId(ml, d) <- botSentMsgId();
+            botArrivalSent(ml, d) <- TRUE;
+        }
+    }
+}
+sendMachineRoutes 'Разослать выезды/приезды' (Organization o, DATE d) {
+    FOR Location ml IS Location AND machine(ml) AND organization(ml) = o AND (botDeparture(ml, d) OR botArrival(ml, d)) DO
+        sendMachineRoute(ml, d);
+}
+
+// ===== Механизм 2: разбор входящих сообщений водителей =====
+processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (Message);
+// «47501» / «4750-1» / «4750 1» -> чистые цифры «47501»; последняя цифра = действие, остальное = номер
+cleanMachineMsg (Message m) = replace(replace(replace(trim(message(m)), '-', ''), ' ', ''), '_', '');
+machineMsgAction (Message m) = right(cleanMachineMsg(m), 1) IF (right(cleanMachineMsg(m), 1) == '1' OR right(cleanMachineMsg(m), 1) == '2');
+machineMsgNumber (Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
+// машина: по номеру в орг-ции аккаунта-получателя; если номер не совпал — пробуем по chat_id отправителя
+incomingMachine (Message m) = OVERRIDE machineByNumber(orgByAccount(account(chat(m))), machineMsgNumber(m)), machineByChatId(id(chat(m)));
+
+WHEN SET(Message m IS Message) AND from(m) != 'YOU' AND NOT processedMachineMsg(m) AND incomingMachine(m) AND machineMsgAction(m) DO {
+    FOR Location ml = incomingMachine(m) DO {
+        IF machineMsgAction(m) == '1' THEN {
+            botDeparture(ml, DATE(dateTime(m))) <- TIME(dateTime(m));
+            botDepartureReal(ml, DATE(dateTime(m))) <- TRUE;
+            IF botDepartureMsgId(ml, DATE(dateTime(m))) THEN {   // пришло реальное -> убрать авто-сообщение бота
+                deleteMachineMsg(chat(m), botDepartureMsgId(ml, DATE(dateTime(m))));
+                botDepartureMsgId(ml, DATE(dateTime(m))) <- NULL;
+            }
+        }
+        IF machineMsgAction(m) == '2' THEN {
+            botArrival(ml, DATE(dateTime(m))) <- TIME(dateTime(m));
+            botArrivalReal(ml, DATE(dateTime(m))) <- TRUE;
+            IF botArrivalMsgId(ml, DATE(dateTime(m))) THEN {
+                deleteMachineMsg(chat(m), botArrivalMsgId(ml, DATE(dateTime(m))));
+                botArrivalMsgId(ml, DATE(dateTime(m))) <- NULL;
+            }
+        }
+    }
+    processedMachineMsg(m) <- TRUE;
+}
