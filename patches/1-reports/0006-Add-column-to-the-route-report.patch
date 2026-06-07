@@ -1,0 +1,110 @@
+From d19a44cc8a0ed596dd09de9f508fb23ef33fc55d Mon Sep 17 00:00:00 2001
+From: Mia Gorceva <elena@mite.club>
+Date: Fri, 5 Jun 2026 14:23:09 +0300
+Subject: [PATCH 6/7] =?UTF-8?q?Add=20"=D0=9F=D1=80=D0=B8=D0=BC=D0=B5=D1=87?=
+ =?UTF-8?q?=D0=B0=D0=BD=D0=B8=D0=B5"=20column=20to=20the=20route=20report?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Re-flow the route report columns to fit a free-text "Примечание" column
+on the right, matching the limit report which already has one. Column
+widths are rebalanced to stay within the printable width.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../lsfusion/reports/Mite_routeReport.jrxml   | 35 ++++++++++++-------
+ 1 file changed, 22 insertions(+), 13 deletions(-)
+
+diff --git a/src/main/lsfusion/reports/Mite_routeReport.jrxml b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+index e0091ad..1103a40 100644
+--- a/src/main/lsfusion/reports/Mite_routeReport.jrxml
++++ b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+@@ -93,62 +93,71 @@
+ 	<columnHeader>
+ 		<band height="40">
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="0" y="0" width="55" height="40" uuid="88aa8838-b5f6-49e0-aa98-c848931da78d"/>
++				<reportElement style="HeaderCellStyle" x="0" y="0" width="28" height="40" uuid="88aa8838-b5f6-49e0-aa98-c848931da78d"/>
+ 				<text><![CDATA[№]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="55" y="0" width="220" height="40" uuid="76a0f252-01c5-47a1-8c83-742d71f286b4"/>
++				<reportElement style="HeaderCellStyle" x="28" y="0" width="174" height="40" uuid="76a0f252-01c5-47a1-8c83-742d71f286b4"/>
+ 				<text><![CDATA[Марка, номер транспортного средства]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="275" y="0" width="75" height="40" uuid="f2a5c3f1-8bb5-4d17-b39d-78c378807fa4"/>
++				<reportElement style="HeaderCellStyle" x="202" y="0" width="60" height="40" uuid="f2a5c3f1-8bb5-4d17-b39d-78c378807fa4"/>
+ 				<text><![CDATA[Время начала маршрута]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="350" y="0" width="75" height="40" uuid="b8ef8b86-70fd-41b1-b2d5-c89567a24fb1"/>
++				<reportElement style="HeaderCellStyle" x="262" y="0" width="60" height="40" uuid="b8ef8b86-70fd-41b1-b2d5-c89567a24fb1"/>
+ 				<text><![CDATA[Время окончания маршрута]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="425" y="0" width="309" height="20" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
++				<reportElement style="HeaderCellStyle" x="322" y="0" width="300" height="20" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
+ 				<text><![CDATA[Диапазон температуры при транспортировке]]></text>
+ 			</staticText>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="425" y="20" width="309" height="20" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
++				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="322" y="20" width="300" height="20" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
+ 				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header} + ", C°"]]></textFieldExpression>
+ 			</textField>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="734" y="0" width="68" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
++				<reportElement style="HeaderCellStyle" x="622" y="0" width="60" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
+ 				<text><![CDATA[Контроль]]></text>
+ 			</staticText>
++			<staticText>
++				<reportElement style="HeaderCellStyle" x="682" y="0" width="120" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ae"/>
++				<text><![CDATA[Примечание]]></text>
++			</staticText>
+ 		</band>
+ 	</columnHeader>
+ 	<detail>
+ 		<band height="16" splitType="Stretch">
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="55" height="16" uuid="36abf0c0-fca8-4e47-9fb5-3872f2bd6afb"/>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="28" height="16" uuid="36abf0c0-fca8-4e47-9fb5-3872f2bd6afb"/>
+ 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="55" y="0" width="220" height="16" uuid="f03e7477-c893-4d0c-a5bc-aa53ef48102b"/>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="28" y="0" width="174" height="16" uuid="f03e7477-c893-4d0c-a5bc-aa53ef48102b"/>
+ 				<textElement textAlignment="Left"/>
+ 				<textFieldExpression><![CDATA[$F{machineName}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="275" y="0" width="75" height="16" uuid="ff0d77fd-c9c7-4aa2-a2d9-d57fce2967c8"/>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="202" y="0" width="60" height="16" uuid="ff0d77fd-c9c7-4aa2-a2d9-d57fce2967c8"/>
+ 				<textFieldExpression><![CDATA[$F{routeTimeFrom} == null ? null : java.sql.Time.valueOf($F{routeTimeFrom})]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="350" y="0" width="75" height="16" uuid="f124dd1b-efbe-4fb3-b164-7fbb42fb9cd1"/>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="262" y="0" width="60" height="16" uuid="f124dd1b-efbe-4fb3-b164-7fbb42fb9cd1"/>
+ 				<textFieldExpression><![CDATA[$F{routeTimeTo} == null ? null : java.sql.Time.valueOf($F{routeTimeTo})]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="425" y="0" width="309" height="16" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="322" y="0" width="300" height="16" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
+ 				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="734" y="0" width="68" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
++				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="622" y="0" width="60" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
+ 				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
+ 			</textField>
++			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="682" y="0" width="120" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1d"/>
++				<textElement textAlignment="Left"/>
++				<textFieldExpression><![CDATA[""]]></textFieldExpression>
++			</textField>
+ 		</band>
+ 	</detail>
+ 	<summary>
+-- 
+2.39.5 (Apple Git-154)
+

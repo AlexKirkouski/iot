@@ -1,0 +1,60 @@
+From c92b03c70398850c35dddc7ea263cd632a6bb853 Mon Sep 17 00:00:00 2001
+From: Mia Gorceva <elena@mite.club>
+Date: Fri, 5 Jun 2026 12:19:04 +0300
+Subject: [PATCH 3/7] =?UTF-8?q?Add=20"=D0=94=D0=BE=D0=BB=D0=B6=D0=BD=D0=BE?=
+ =?UTF-8?q?=D1=81=D1=82=D1=8C,=20=D0=A4=D0=98=D0=9E,=20=D0=BF=D0=BE=D0=B4?=
+ =?UTF-8?q?=D0=BF=D0=B8=D1=81=D1=8C"=20signature=20line=20to=20the=20route?=
+ =?UTF-8?q?=20report?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The production route report carries a signature line at the bottom (as the limit
+report does), but the repo's Mite_routeReport.jrxml had no footer/summary band.
+Add pPosition/pFio parameters (defaults "Должность"/"ФИО") and a summary band
+rendering "<Должность>, <ФИО>, подпись", mirroring Mite_limitReport.jrxml.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../lsfusion/reports/Mite_routeReport.jrxml   | 20 +++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/src/main/lsfusion/reports/Mite_routeReport.jrxml b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+index 3d72c57..d3458f9 100644
+--- a/src/main/lsfusion/reports/Mite_routeReport.jrxml
++++ b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+@@ -36,6 +36,12 @@
+ 	<parameter name="pFormCode" class="java.lang.String">
+ 		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
+ 	</parameter>
++	<parameter name="pPosition" class="java.lang.String">
++		<defaultValueExpression><![CDATA["Должность"]]></defaultValueExpression>
++	</parameter>
++	<parameter name="pFio" class="java.lang.String">
++		<defaultValueExpression><![CDATA["ФИО"]]></defaultValueExpression>
++	</parameter>
+ 	<field name="d.object" class="java.time.LocalDate"/>
+ 	<field name="o.object" class="java.lang.Long"/>
+ 	<field name="mt.object" class="java.lang.Long"/>
+@@ -197,4 +203,18 @@
+ 			</textField>
+ 		</band>
+ 	</detail>
++	<summary>
++		<band height="34">
++			<textField>
++				<reportElement x="26" y="14" width="600" height="16" uuid="b9d7e2a1-5c4f-4a3b-9e21-7d6c8f0a1b23"/>
++				<textElement textAlignment="Left" verticalAlignment="Middle">
++					<font fontName="DejaVu Serif" size="12"/>
++				</textElement>
++				<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
+++ ", " +
++($P{pFio} == null ? "ФИО" : $P{pFio})
+++ ", подпись"]]></textFieldExpression>
++			</textField>
++		</band>
++	</summary>
+ </jasperReport>
+-- 
+2.39.5 (Apple Git-154)
+

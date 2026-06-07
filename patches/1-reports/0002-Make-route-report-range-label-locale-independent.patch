@@ -1,0 +1,46 @@
+From bf4b6569334e75ec77b21e0f4a853aff3f140b6f Mon Sep 17 00:00:00 2001
+From: Mia Gorceva <elena@mite.club>
+Date: Fri, 5 Jun 2026 11:57:42 +0300
+Subject: [PATCH 2/7] =?UTF-8?q?Make=20route-report=20range=20label=20local?=
+ =?UTF-8?q?e-independent=20("=D0=9E=D1=82=20...=20=D0=B4=D0=BE=20...")?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+routeReportInterval / routeReportFactInterval built the range label with plain
+'От ' / ' до ' literals. With reverse translation these resolve per display
+locale, so on an en/C-locale instance the label renders as "From ...". Use raw
+string literals (r'От ', r' до ') so the label is always the fixed Russian text,
+matching the production output. (routeReportInterval is MATERIALIZED — after a
+deploy its stored value recomputes to the raw text.)
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ src/main/lsfusion/Mite.lsf | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/main/lsfusion/Mite.lsf b/src/main/lsfusion/Mite.lsf
+index da9b54d..2752a4a 100644
+--- a/src/main/lsfusion/Mite.lsf
++++ b/src/main/lsfusion/Mite.lsf
+@@ -514,7 +514,7 @@ reportTime 'Время отчета' = DATA TIME (Organization);
+ routeReportDevice(Device d, MeasurementType mt) = machineLocation(d) AND number(type(d), mt) AND minReportFixedValue(d, mt) AND maxReportFixedValue(d, mt);
+ hasRouteReportDevice(Location l, MeasurementType mt) = GROUP MAX routeReportDevice(Device d, mt) AND machineLocation(d) = l;
+ routeReportInterval 'Интервал' (Device d, MeasurementType mt) =
+-    'От ' + round0(minReportFixedValue(d, mt)) + ' до ' + round0(maxReportFixedValue(d, mt)) IF routeReportDevice(d, mt) MATERIALIZED;
++    r'От ' + round0(minReportFixedValue(d, mt)) + r' до ' + round0(maxReportFixedValue(d, mt)) IF routeReportDevice(d, mt) MATERIALIZED;
+ routeReportIntervalValue 'Интервал' (STRING interval) = interval IF interval IS STRING;
+ hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
+     GROUP MAX routeReportDevice(Device d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
+@@ -531,7 +531,7 @@ routeReportFactMinValue 'Мин. реальное значение' (Location l,
+ routeReportFactMaxValue 'Макс. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
+     GROUP MAX value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
+ routeReportFactInterval 'Фактический интервал' (Location l, STRING interval, MeasurementType mt, DATE d) =
+-    'От ' + round0(routeReportFactMinValue(l, interval, mt, d)) + ' до ' + round0(routeReportFactMaxValue(l, interval, mt, d));
++    r'От ' + round0(routeReportFactMinValue(l, interval, mt, d)) + r' до ' + round0(routeReportFactMaxValue(l, interval, mt, d));
+ 
+ EXTEND FORM locations
+     PROPERTIES routeTimeFrom(l, ds), routeTimeTo(l, ds)
+-- 
+2.39.5 (Apple Git-154)
+
