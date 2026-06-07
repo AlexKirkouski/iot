@@ -185,6 +185,15 @@ timeFrom(Device d, ZDATETIME zdt) = timeFrom(location(d), DATE(zdt));
 timeTo(Device d, ZDATETIME zdt) = timeTo(location(d), DATE(zdt));
 adjustTimeFrom(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeFrom(d, zdt), -periodMinutes(d, mt));
 adjustTimeTo(Device d, MeasurementType mt, ZDATETIME zdt) = sumMinutes(timeTo(d,zdt), periodMinutes(d, mt));
+// Окно активности с учётом перехода через полночь: если начало > конец, окно «через 00:00» (контролируем [начало..24] И [00..конец])
+inAdjustWindow(Device d, MeasurementType mt, ZDATETIME zdt) =
+    IF adjustTimeFrom(d, mt, zdt) <= adjustTimeTo(d, mt, zdt)
+        THEN TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt)
+        ELSE TIME(zdt) >= adjustTimeFrom(d, mt, zdt) OR TIME(zdt) <= adjustTimeTo(d, mt, zdt);
+// Секунды с начала окна с учётом перехода через полночь (после 00:00 добавляем сутки)
+elapsedFromStart(Device d, MeasurementType mt, ZDATETIME zdt) =
+    IF TIME(zdt) >= timeFrom(d, zdt) THEN subtractSeconds(TIME(zdt), timeFrom(d, zdt))
+        ELSE subtractSeconds(TIME(zdt), timeFrom(d, zdt)) + 86400;
 
 adjust(Device d, MeasurementType mt, DOUBLE prevValueToTarget, INTEGER secondsToTarget, ZDATETIME zdt) =
     IF secondsToTarget <= measurementPeriod(d) OR abs(prevValueToTarget) <= noiseValue(d, mt, zdt) THEN 0.0
@@ -193,10 +202,10 @@ adjustTargetValue(DOUBLE target, Device d, MeasurementType mt, INTEGER secondsTo
 
 // Вспомогательный clamp: при выходе за границу тянем к цели (граница или середина — по режиму датчика). Шум — по времени.
 adjustTargetValue(Device d, MeasurementType mt, ZDATETIME zdt, DOUBLE v) =
-        IF TIME(zdt) >= adjustTimeFrom(d, mt, zdt) AND TIME(zdt) <= adjustTimeTo(d, mt, zdt) AND v IS DOUBLE THEN
-            CASE WHEN TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(TIME(zdt), adjustTimeTo(d, mt, zdt)), zdt) // we're coming back
-                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(upperTarget(d, mt, zdt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt)), zdt), v)
-                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(lowerTarget(d, mt, zdt), d, mt, subtractSeconds(TIME(zdt), timeFrom(d, zdt)), zdt), v)
+        IF inAdjustWindow(d, mt, zdt) AND v IS DOUBLE THEN
+            CASE WHEN adjustTimeFrom(d, mt, zdt) <= adjustTimeTo(d, mt, zdt) AND TIME(zdt) > timeTo(location(d), DATE(zdt)) THEN adjustTargetValue(v, d, mt, subtractSeconds(TIME(zdt), adjustTimeTo(d, mt, zdt)), zdt) // we're coming back (только для окна в пределах суток)
+                 WHEN v > maxAdjFixedValue(d, mt) THEN min(adjustTargetValue(upperTarget(d, mt, zdt), d, mt, elapsedFromStart(d, mt, zdt), zdt), v)
+                 WHEN v < minAdjFixedValue(d, mt) THEN max(adjustTargetValue(lowerTarget(d, mt, zdt), d, mt, elapsedFromStart(d, mt, zdt), zdt), v)
                  ELSE v;
 
 // Применяем зажатие по расписанию во время финальной корректировки измерений
@@ -285,9 +294,7 @@ DESIGN locations {
 ///// КОРРЕКТИРОВКА ЗАДНИМ ЧИСЛОМ /////
 
 isAdjustActive 'Корр. активна' (Device d, MeasurementType mt) =
-    adjustConfigured(d, mt) AND
-            TIME(currentZDateTime()) >= adjustTimeFrom(d, mt, currentZDateTime()) AND
-            TIME(currentZDateTime()) <= adjustTimeTo(d, mt, currentZDateTime());
+    adjustConfigured(d, mt) AND inAdjustWindow(d, mt, currentZDateTime());
 
 retroDateFrom 'Период с' = DATA LOCAL ZDATETIME ();
 retroDateTo 'Период по' = DATA LOCAL ZDATETIME ();
