@@ -598,6 +598,9 @@ routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = 
 routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = OVERRIDE botRouteTimeTo(l, d), dataReportTimeTo(l, d), timeTo(l, d) COMPLEX;
 inRouteReportPeriod(Measurement m, MeasurementType mt, Location l, DATE d) =
     machineLocation(device(m, mt)) = l AND
+    // Константные границы по дате (день d плюс сутки на маршрут через полночь): даёт планировщику использовать индекс (device, dateTime) вместо seq scan по всей истории измерений
+    dateTime(m, mt) >= ZDATETIME(toDateTime(d, 00:00)) AND dateTime(m, mt) < ZDATETIME(toDateTime(sum(d, 2), 00:00)) AND
+    // Точные границы по реальному окну маршрута
     dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= ZDATETIME(toDateTime(d, routeTimeTo(l, d)));
 routeReportFactMinValue 'Мин. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
     GROUP MIN value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
