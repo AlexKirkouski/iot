@@ -20,6 +20,7 @@ This is a **missing source dependency**, NOT a DB-migration / `db.allowDropModul
 The live app (`https://app.mite.club`) is updated by the **`upgradeApp`** Jenkins pipeline on app.mite.club. It: clones this repo from GitHub → `mvn clean install -P assemble,embed-server` → over SSH stops the `lsfusion` service, swaps `/usr/lsfusion/lsfusion-server.jar`, starts it, and tails `/usr/lsfusion/logs/start.log` until `Server has successfully started in` (the build fails if it sees `Server has stopped`).
 
 - A deploy picks up **only what's pushed to `master`** (the job re-clones each run).
+- The job auto-triggers on every push to `master` via a GitHub webhook (`/github-webhook/` → `GitHubPushTrigger`); it can also be started manually.
 - Verify after a deploy: `https://app.mite.club/ → 200` and the `successfully started` line in `start.log`.
 - If a build hangs at `Executing script … stopServer.sh`, kill orphan `tail -f .../start.log` processes (the stop step is guarded with `systemctl is-active`, but old runs could leave a tail behind).
 
