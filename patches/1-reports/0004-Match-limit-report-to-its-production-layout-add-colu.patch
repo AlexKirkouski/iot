@@ -1,0 +1,262 @@
+From 579733d618e209216654482475cad98fa7a28280 Mon Sep 17 00:00:00 2001
+From: Mia Gorceva <elena@mite.club>
+Date: Fri, 5 Jun 2026 12:40:16 +0300
+Subject: [PATCH 4/7] =?UTF-8?q?Match=20limit=20report=20to=20its=20product?=
+ =?UTF-8?q?ion=20layout=20+=20add=20=D0=9A=D0=BE=D0=BD=D1=82=D1=80=D0=BE?=
+ =?UTF-8?q?=D0=BB=D1=8C=20column?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Rebuild Mite_limitReport.jrxml to the production "Отчет по значениям до
+корректировки" view: centered bold title, form code + date/report-time in the
+top-right header (above the column headers), compact thin/dashed table, and the
+"Должность, ФИО, подпись" footer. The per-row "Время" column is dropped (the time
+now lives in the header). Adds the new "Контроль" column (green ✓ / red ✗).
+
+The date/time is rendered in the page header with delayed group evaluation so it
+sits above the column headers (not pushed below them by a group header band).
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+---
+ .../lsfusion/reports/Mite_limitReport.jrxml   | 100 ++++++++----------
+ 1 file changed, 46 insertions(+), 54 deletions(-)
+
+diff --git a/src/main/lsfusion/reports/Mite_limitReport.jrxml b/src/main/lsfusion/reports/Mite_limitReport.jrxml
+index e294742..ffe3c38 100644
+--- a/src/main/lsfusion/reports/Mite_limitReport.jrxml
++++ b/src/main/lsfusion/reports/Mite_limitReport.jrxml
+@@ -34,28 +34,11 @@
+ 	</variable>
+ 	<group name="DateGroup" isStartNewPage="true">
+ 		<groupExpression><![CDATA[$F{date}]]></groupExpression>
+-		<groupHeader>
+-			<band height="18">
+-				<textField>
+-					<reportElement x="0" y="2" width="300" height="14" uuid="0573d21d-6562-4489-b24f-1fa81f538344"/>
+-					<textElement>
+-						<font size="9"/>
+-					</textElement>
+-					<textFieldExpression><![CDATA["Дата: " + ($F{date} == null ? "" : $F{date}.toString())]]></textFieldExpression>
+-				</textField>
+-			</band>
+-		</groupHeader>
+ 		<groupFooter>
+ 			<band height="24">
+-				<line>
+-					<reportElement x="0" y="4" width="555" height="1" uuid="61d21521-31e9-482d-a513-2c71eb43560e"/>
+-					<graphicElement>
+-						<pen lineWidth="0.4" lineStyle="Dashed"/>
+-					</graphicElement>
+-				</line>
+ 				<textField>
+-					<reportElement x="8" y="8" width="540" height="12" uuid="f12525b8-58bb-42b2-a6b6-34098385ed68"/>
+-					<textElement>
++					<reportElement x="0" y="8" width="540" height="14" uuid="f12525b8-58bb-42b2-a6b6-34098385ed68"/>
++					<textElement verticalAlignment="Middle">
+ 						<font size="9"/>
+ 					</textElement>
+ 					<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
+@@ -67,69 +50,78 @@
+ 		</groupFooter>
+ 	</group>
+ 	<pageHeader>
+-		<band height="14">
++		<band height="62">
+ 			<textField>
+ 				<reportElement x="355" y="0" width="200" height="12" uuid="4bb563c1-6cd6-4861-b19a-7d27e0328019"/>
+ 				<textElement textAlignment="Right">
+-					<font size="9"/>
++					<font size="8"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
+ 			</textField>
++			<staticText>
++				<reportElement x="0" y="14" width="555" height="30" uuid="1a2b3c4d-0001-0000-0000-000000000001"/>
++				<textElement textAlignment="Center" verticalAlignment="Middle">
++					<font size="11" isBold="true"/>
++				</textElement>
++				<text><![CDATA[Ежедневный отчет о состоянии температуры в контейнере до закладки лекарственных средств.]]></text>
++			</staticText>
++			<textField evaluationTime="Group" evaluationGroup="DateGroup">
++				<reportElement x="355" y="46" width="200" height="14" uuid="0573d21d-6562-4489-b24f-1fa81f538344"/>
++				<textElement textAlignment="Right" verticalAlignment="Middle">
++					<font size="10" isBold="true"/>
++				</textElement>
++				<textFieldExpression><![CDATA[($F{date} == null ? "" : new java.text.SimpleDateFormat("dd.MM.yy").format(java.sql.Date.valueOf($F{date})))
+++ "  " +
++($F{time} == null ? "" : $F{time}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm")))]]></textFieldExpression>
++			</textField>
+ 		</band>
+ 	</pageHeader>
+ 	<columnHeader>
+ 		<band height="22">
+ 			<staticText>
+-				<reportElement x="0" y="0" width="30" height="22" uuid="058a2f08-f991-4426-ac8b-40816ff69af4"/>
++				<reportElement x="0" y="0" width="28" height="22" uuid="058a2f08-f991-4426-ac8b-40816ff69af4"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[№]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="30" y="0" width="85" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
++				<reportElement x="28" y="0" width="72" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Термоконт. №]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="115" y="0" width="85" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
++				<reportElement x="100" y="0" width="72" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Режим, °C]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="200" y="0" width="85" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
++				<reportElement x="172" y="0" width="92" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Датчик]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="285" y="0" width="55" height="22" uuid="42cecb85-3064-40bf-ad5e-73fa291acb28"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font size="9" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Время]]></text>
+-			</staticText>
+-			<staticText>
+-				<reportElement x="340" y="0" width="70" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
++				<reportElement x="264" y="0" width="56" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Темп., °C]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="410" y="0" width="60" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
++				<reportElement x="320" y="0" width="55" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Контроль]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="470" y="0" width="85" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604598"/>
++				<reportElement x="375" y="0" width="180" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604598"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+@@ -138,7 +130,7 @@
+ 			<line>
+ 				<reportElement x="0" y="21" width="555" height="1" uuid="aca4e7ea-7451-4ac8-9141-492b578766c5"/>
+ 				<graphicElement>
+-					<pen lineWidth="0.4" lineStyle="Dashed"/>
++					<pen lineWidth="0.5" lineStyle="Solid"/>
+ 				</graphicElement>
+ 			</line>
+ 		</band>
+@@ -149,22 +141,22 @@
+ 				<reportElement x="0" y="3" width="1" height="10" uuid="b6217e5b-0ea6-424f-b70a-69ac29008591"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="30" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
++				<reportElement x="28" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="115" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
++				<reportElement x="100" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="200" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
++				<reportElement x="172" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="285" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
++				<reportElement x="264" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="340" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
++				<reportElement x="320" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="410" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
++				<reportElement x="375" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
+ 			</line>
+ 			<line>
+ 				<reportElement x="554" y="3" width="1" height="10" uuid="ba5ccd85-b5a7-433f-b9d0-b16de2dffc39"/>
+@@ -176,21 +168,21 @@
+ 				</graphicElement>
+ 			</line>
+ 			<textField>
+-				<reportElement x="0" y="0" width="30" height="16" uuid="da74afa6-16ae-4e48-94de-d6a76e87dc54"/>
++				<reportElement x="0" y="0" width="28" height="16" uuid="da74afa6-16ae-4e48-94de-d6a76e87dc54"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="30" y="0" width="85" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
++				<reportElement x="28" y="0" width="72" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$F{container(dev)}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="115" y="0" width="85" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
++				<reportElement x="100" y="0" width="72" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+@@ -199,32 +191,32 @@
+ ($F{maxReportFixedValue(dev,mt)}==null ? "" : $F{maxReportFixedValue(dev,mt)})]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="200" y="0" width="85" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
++				<reportElement x="172" y="0" width="92" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$F{name(dev)}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="285" y="0" width="55" height="16" uuid="cc9cb478-ab5b-459e-a5d1-d53553a25159"/>
++				<reportElement x="264" y="0" width="56" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+-				<textFieldExpression><![CDATA[$F{time} == null ? "" : $F{time}.toString().substring(0,5)]]></textFieldExpression>
++				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="340" y="0" width="70" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font size="9"/>
++				<reportElement style="ControlStyle" x="320" y="0" width="55" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
++				<textElement verticalAlignment="Middle">
++					<font size="10"/>
+ 				</textElement>
+-				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
++				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement style="ControlStyle" x="410" y="0" width="60" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
++				<reportElement x="375" y="0" width="180" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f9"/>
+ 				<textElement verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+-				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
++				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+ 			</textField>
+ 		</band>
+ 	</detail>
+-- 
+2.39.5 (Apple Git-154)
+

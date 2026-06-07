@@ -1,0 +1,569 @@
+diff --git a/src/main/lsfusion/Mite.lsf b/src/main/lsfusion/Mite.lsf
+index 147bb3e..2752a4a 100644
+--- a/src/main/lsfusion/Mite.lsf
++++ b/src/main/lsfusion/Mite.lsf
+@@ -514,7 +514,7 @@ reportTime 'Время отчета' = DATA TIME (Organization);
+ routeReportDevice(Device d, MeasurementType mt) = machineLocation(d) AND number(type(d), mt) AND minReportFixedValue(d, mt) AND maxReportFixedValue(d, mt);
+ hasRouteReportDevice(Location l, MeasurementType mt) = GROUP MAX routeReportDevice(Device d, mt) AND machineLocation(d) = l;
+ routeReportInterval 'Интервал' (Device d, MeasurementType mt) =
+-    'От ' + round0(minReportFixedValue(d, mt)) + ' до ' + round0(maxReportFixedValue(d, mt)) IF routeReportDevice(d, mt) MATERIALIZED;
++    r'От ' + round0(minReportFixedValue(d, mt)) + r' до ' + round0(maxReportFixedValue(d, mt)) IF routeReportDevice(d, mt) MATERIALIZED;
+ routeReportIntervalValue 'Интервал' (STRING interval) = interval IF interval IS STRING;
+ hasRouteReportInterval(Organization o, MeasurementType mt, STRING interval) =
+     GROUP MAX routeReportDevice(Device d, mt) AND organization(d) = o AND routeReportInterval(d, mt) = interval;
+@@ -531,12 +531,15 @@ routeReportFactMinValue 'Мин. реальное значение' (Location l,
+ routeReportFactMaxValue 'Макс. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
+     GROUP MAX value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
+ routeReportFactInterval 'Фактический интервал' (Location l, STRING interval, MeasurementType mt, DATE d) =
+-    'От ' + round0(routeReportFactMinValue(l, interval, mt, d)) + ' до ' + round0(routeReportFactMaxValue(l, interval, mt, d));
++    r'От ' + round0(routeReportFactMinValue(l, interval, mt, d)) + r' до ' + round0(routeReportFactMaxValue(l, interval, mt, d));
+ 
+ EXTEND FORM locations
+     PROPERTIES routeTimeFrom(l, ds), routeTimeTo(l, ds)
+ ;
+ 
++reportControl 'Контроль' (Device dev, MeasurementType mt, ZDATETIME zdt) =
++    value(dev, mt, zdt) >= minReportFixedValue(dev, mt) AND value(dev, mt, zdt) <= maxReportFixedValue(dev, mt);
++
+ FORM limitReport 'Отчет по значениям до корректировки'
+     OBJECTS d = DATE PANEL, o = Organization PANEL
+     PROPERTIES(d) date = VALUE
+@@ -547,6 +550,7 @@ FORM limitReport 'Отчет по значениям до корректиров
+     PROPERTIES(mt) mtName = name
+     PROPERTIES val = value(dev, mt, ZDATETIME(toDateTime(d, reportTime(o)))), dateTime = ZDATETIME(toDateTime(d, reportTime(o))), time = reportTime(o)
+     PROPERTIES minReportFixedValue(dev, mt), maxReportFixedValue(dev, mt)
++    PROPERTIES control = reportControl(dev, mt, ZDATETIME(toDateTime(d, reportTime(o))))
+     ORDERS container(dev)
+     FILTERS organization(dev) == o, container(dev),
+             minReportFixedValue(dev, mt) AND maxReportFixedValue(dev, mt)
+@@ -581,6 +585,10 @@ FORM routeReportDialog 'Параметры отчета по маршрутам'
+     PROPERTIES(mt) name SELECTOR
+ ;
+ 
++routeControl 'Контроль' (Location ml, MeasurementType mt, DATE d) =
++    NOT (GROUP SUM 1 IF inRouteReportPeriod(Measurement m, mt, ml, d) AND
++            (value(m, mt) < minReportFixedValue(device(m, mt), mt) OR value(m, mt) > maxReportFixedValue(device(m, mt), mt)));
++
+ FORM routeReport 'Отчет контроля маршрутов'
+     OBJECTS d = DATE PANEL, o = Organization PANEL, mt = MeasurementType PANEL
+ 
+@@ -591,6 +599,7 @@ FORM routeReport 'Отчет контроля маршрутов'
+     PROPERTIES machineName = name(ml)
+     PROPERTIES routeTimeFrom = routeTimeFrom(ml, d), routeTimeTo = routeTimeTo(ml, d)
+     PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d) COLUMNS (interval) HEADER routeReportIntervalValue(interval)
++    PROPERTIES control = routeControl(ml, mt, d)
+     FILTERS organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
+     ORDERS machineName
+ ;
+diff --git a/src/main/lsfusion/reports/Mite_limitReport.jrxml b/src/main/lsfusion/reports/Mite_limitReport.jrxml
+index ddbe81b..91a1e9e 100644
+--- a/src/main/lsfusion/reports/Mite_limitReport.jrxml
++++ b/src/main/lsfusion/reports/Mite_limitReport.jrxml
+@@ -1,6 +1,16 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <!-- Created with Jaspersoft Studio version 7.0.3.final using JasperReports Library version 6.20.6  -->
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite_LimitReport_A4_Compact40" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="78fdd74d-8ccb-4b5b-a3c7-3fdc8c179ff5">
++	<style name="ControlStyle" hAlign="Center" vAlign="Middle" isBold="true">
++		<conditionalStyle>
++			<conditionExpression><![CDATA[Boolean.TRUE.equals($F{control})]]></conditionExpression>
++			<style forecolor="#1A8A1A"/>
++		</conditionalStyle>
++		<conditionalStyle>
++			<conditionExpression><![CDATA[!Boolean.TRUE.equals($F{control})]]></conditionExpression>
++			<style forecolor="#CC0000"/>
++		</conditionalStyle>
++	</style>
+ 	<parameter name="pFormCode" class="java.lang.String">
+ 		<defaultValueExpression><![CDATA["Ф/05-СОП № 29-С"]]></defaultValueExpression>
+ 	</parameter>
+@@ -18,33 +28,17 @@
+ 	<field name="minReportFixedValue(dev,mt)" class="java.lang.Double"/>
+ 	<field name="maxReportFixedValue(dev,mt)" class="java.lang.Double"/>
+ 	<field name="time" class="java.time.LocalTime"/>
++	<field name="control" class="java.lang.Boolean"/>
+ 	<variable name="RowNo" class="java.lang.Integer" resetType="Group" resetGroup="DateGroup" calculation="Count">
+ 		<variableExpression><![CDATA[$F{mtName}]]></variableExpression>
+ 	</variable>
+ 	<group name="DateGroup" isStartNewPage="true">
+ 		<groupExpression><![CDATA[$F{date}]]></groupExpression>
+-		<groupHeader>
+-			<band height="18">
+-				<textField>
+-					<reportElement x="0" y="2" width="300" height="14" uuid="0573d21d-6562-4489-b24f-1fa81f538344"/>
+-					<textElement>
+-						<font size="9"/>
+-					</textElement>
+-					<textFieldExpression><![CDATA["Дата: " + ($F{date} == null ? "" : $F{date}.toString())]]></textFieldExpression>
+-				</textField>
+-			</band>
+-		</groupHeader>
+ 		<groupFooter>
+ 			<band height="24">
+-				<line>
+-					<reportElement x="0" y="4" width="555" height="1" uuid="61d21521-31e9-482d-a513-2c71eb43560e"/>
+-					<graphicElement>
+-						<pen lineWidth="0.4" lineStyle="Dashed"/>
+-					</graphicElement>
+-				</line>
+ 				<textField>
+-					<reportElement x="8" y="8" width="540" height="12" uuid="f12525b8-58bb-42b2-a6b6-34098385ed68"/>
+-					<textElement>
++					<reportElement x="0" y="8" width="540" height="14" uuid="f12525b8-58bb-42b2-a6b6-34098385ed68"/>
++					<textElement verticalAlignment="Middle">
+ 						<font size="9"/>
+ 					</textElement>
+ 					<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
+@@ -56,62 +50,78 @@
+ 		</groupFooter>
+ 	</group>
+ 	<pageHeader>
+-		<band height="14">
++		<band height="62">
+ 			<textField>
+ 				<reportElement x="355" y="0" width="200" height="12" uuid="4bb563c1-6cd6-4861-b19a-7d27e0328019"/>
+ 				<textElement textAlignment="Right">
+-					<font size="9"/>
++					<font size="8"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
+ 			</textField>
++			<staticText>
++				<reportElement x="0" y="14" width="555" height="30" uuid="1a2b3c4d-0001-0000-0000-000000000001"/>
++				<textElement textAlignment="Center" verticalAlignment="Middle">
++					<font size="11" isBold="true"/>
++				</textElement>
++				<text><![CDATA[Ежедневный отчет о состоянии температуры в контейнере до закладки лекарственных средств.]]></text>
++			</staticText>
++			<textField evaluationTime="Group" evaluationGroup="DateGroup">
++				<reportElement x="355" y="46" width="200" height="14" uuid="0573d21d-6562-4489-b24f-1fa81f538344"/>
++				<textElement textAlignment="Right" verticalAlignment="Middle">
++					<font size="10" isBold="true"/>
++				</textElement>
++				<textFieldExpression><![CDATA[($F{date} == null ? "" : new java.text.SimpleDateFormat("dd.MM.yy").format(java.sql.Date.valueOf($F{date})))
+++ "  " +
++($F{time} == null ? "" : $F{time}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm")))]]></textFieldExpression>
++			</textField>
+ 		</band>
+ 	</pageHeader>
+ 	<columnHeader>
+ 		<band height="22">
+ 			<staticText>
+-				<reportElement x="0" y="0" width="30" height="22" uuid="058a2f08-f991-4426-ac8b-40816ff69af4"/>
++				<reportElement x="0" y="0" width="28" height="22" uuid="058a2f08-f991-4426-ac8b-40816ff69af4"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[№]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="30" y="0" width="85" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
++				<reportElement x="28" y="0" width="78" height="22" uuid="9d18e0ab-bcf3-4a86-830d-51b657278ac0"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Термоконт. №]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="115" y="0" width="85" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
++				<reportElement x="106" y="0" width="82" height="22" uuid="8b112fc2-ce7a-48e3-a45d-b39e52ec34a2"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Режим, °C]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="200" y="0" width="85" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
++				<reportElement x="188" y="0" width="112" height="22" uuid="d71f32db-8fb5-463d-aec9-a8df39a5436b"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+ 				<text><![CDATA[Датчик]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="285" y="0" width="55" height="22" uuid="42cecb85-3064-40bf-ad5e-73fa291acb28"/>
++				<reportElement x="300" y="0" width="58" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+-				<text><![CDATA[Время]]></text>
++				<text><![CDATA[Темп., °C]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="340" y="0" width="70" height="22" uuid="f9f73197-4eba-4ac1-974c-8fc3d38e2d22"/>
++				<reportElement x="358" y="0" width="62" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+-				<text><![CDATA[Темп., °C]]></text>
++				<text><![CDATA[Контроль]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement x="410" y="0" width="145" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604597"/>
++				<reportElement x="420" y="0" width="135" height="22" uuid="a7101936-6d6f-4192-b787-6d7e38604598"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9" isBold="true"/>
+ 				</textElement>
+@@ -120,7 +130,7 @@
+ 			<line>
+ 				<reportElement x="0" y="21" width="555" height="1" uuid="aca4e7ea-7451-4ac8-9141-492b578766c5"/>
+ 				<graphicElement>
+-					<pen lineWidth="0.4" lineStyle="Dashed"/>
++					<pen lineWidth="0.5" lineStyle="Solid"/>
+ 				</graphicElement>
+ 			</line>
+ 		</band>
+@@ -131,22 +141,22 @@
+ 				<reportElement x="0" y="3" width="1" height="10" uuid="b6217e5b-0ea6-424f-b70a-69ac29008591"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="30" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
++				<reportElement x="28" y="3" width="1" height="10" uuid="67b10465-0706-4dcf-a0be-65ae22040e72"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="115" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
++				<reportElement x="106" y="3" width="1" height="10" uuid="892f588d-e667-469f-bb7a-688d5eb9d649"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="200" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
++				<reportElement x="188" y="3" width="1" height="10" uuid="6d71c85e-274d-4ce3-a79c-aa1c2b55af0a"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="285" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
++				<reportElement x="300" y="3" width="1" height="10" uuid="93a7b782-74e6-47fa-836f-7b693c9ce109"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="340" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
++				<reportElement x="358" y="3" width="1" height="10" uuid="58170e63-4e9b-4157-a553-bb8dbc961df5"/>
+ 			</line>
+ 			<line>
+-				<reportElement x="410" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
++				<reportElement x="420" y="3" width="1" height="10" uuid="365e13da-f7fb-472c-b8ab-b14fd7dbd4b2"/>
+ 			</line>
+ 			<line>
+ 				<reportElement x="554" y="3" width="1" height="10" uuid="ba5ccd85-b5a7-433f-b9d0-b16de2dffc39"/>
+@@ -158,21 +168,21 @@
+ 				</graphicElement>
+ 			</line>
+ 			<textField>
+-				<reportElement x="0" y="0" width="30" height="16" uuid="da74afa6-16ae-4e48-94de-d6a76e87dc54"/>
++				<reportElement x="0" y="0" width="28" height="16" uuid="da74afa6-16ae-4e48-94de-d6a76e87dc54"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="30" y="0" width="85" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
++				<reportElement x="28" y="0" width="78" height="16" uuid="a84531ce-4754-47a4-aa2d-98cdc34a0359"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$F{container(dev)}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="115" y="0" width="85" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
++				<reportElement x="106" y="0" width="82" height="16" uuid="b8272e62-c6f9-45f6-abce-46382b81c479"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+@@ -181,28 +191,28 @@
+ ($F{maxReportFixedValue(dev,mt)}==null ? "" : $F{maxReportFixedValue(dev,mt)})]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="200" y="0" width="85" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
++				<reportElement x="188" y="0" width="112" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$F{name(dev)}]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="285" y="0" width="55" height="16" uuid="cc9cb478-ab5b-459e-a5d1-d53553a25159"/>
++				<reportElement x="300" y="0" width="58" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+-				<textFieldExpression><![CDATA[$F{time} == null ? "" : $F{time}.toString().substring(0,5)]]></textFieldExpression>
++				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="340" y="0" width="70" height="16" uuid="914d65e7-ebd9-4515-814d-5cea48d49d27"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font size="9"/>
++				<reportElement style="ControlStyle" x="358" y="0" width="62" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
++				<textElement verticalAlignment="Middle">
++					<font size="10"/>
+ 				</textElement>
+-				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
++				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
+ 			</textField>
+ 			<textField>
+-				<reportElement x="410" y="0" width="145" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>
++				<reportElement x="420" y="0" width="135" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f9"/>
+ 				<textElement verticalAlignment="Middle">
+ 					<font size="9"/>
+ 				</textElement>
+diff --git a/src/main/lsfusion/reports/Mite_routeReport.jrxml b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+index 2e53dbe..1103a40 100644
+--- a/src/main/lsfusion/reports/Mite_routeReport.jrxml
++++ b/src/main/lsfusion/reports/Mite_routeReport.jrxml
+@@ -2,30 +2,46 @@
+ <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Mite.routeReport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="efd9d69d-bdf3-4ac0-997c-956eadfc068a">
+ 	<property name="net.sf.jasperreports.export.xls.print.page.width" value="842"/>
+ 	<property name="net.sf.jasperreports.export.xls.print.page.height" value="595"/>
+-	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="12">
++	<style name="DefaultStyle" isDefault="true" vTextAlign="Middle" fontSize="9">
+ 		<paragraph leftIndent="2" rightIndent="2"/>
+ 	</style>
+-	<style name="HeaderCellStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="14" isBold="true">
++	<style name="HeaderCellStyle" mode="Transparent" vTextAlign="Middle" hTextAlign="Center" fontSize="9" isBold="true">
+ 		<box>
+-			<pen lineWidth="0.35" lineStyle="Solid" lineColor="#000000"/>
++			<pen lineWidth="0.4" lineStyle="Dashed" lineColor="#000000"/>
+ 		</box>
+-		<paragraph leftIndent="4" rightIndent="4"/>
++		<paragraph leftIndent="2" rightIndent="2"/>
+ 	</style>
+-	<style name="SubHeaderCellStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="12" isBold="true">
++	<style name="SubHeaderCellStyle" mode="Transparent" vTextAlign="Middle" hTextAlign="Center" fontSize="9" isBold="true">
+ 		<box>
+-			<pen lineWidth="0.35" lineStyle="Solid" lineColor="#000000"/>
++			<pen lineWidth="0.4" lineStyle="Dashed" lineColor="#000000"/>
+ 		</box>
+ 		<paragraph leftIndent="2" rightIndent="2"/>
+ 	</style>
+-	<style name="BodyCellStyle" mode="Opaque" backcolor="#FFFFFF" vTextAlign="Middle" fontName="DejaVu Serif" fontSize="13">
++	<style name="BodyCellStyle" mode="Transparent" vTextAlign="Middle" hTextAlign="Center" fontSize="9">
+ 		<box>
+-			<pen lineWidth="0.35" lineStyle="Solid" lineColor="#000000"/>
++			<pen lineWidth="0.4" lineStyle="Dashed" lineColor="#000000"/>
+ 		</box>
+-		<paragraph leftIndent="6" rightIndent="6"/>
++		<paragraph leftIndent="2" rightIndent="2"/>
++	</style>
++	<style name="ControlStyle" style="BodyCellStyle" fontName="DejaVu Sans" fontSize="10" isBold="true">
++		<conditionalStyle>
++			<conditionExpression><![CDATA[Boolean.TRUE.equals($F{control})]]></conditionExpression>
++			<style forecolor="#1A8A1A"/>
++		</conditionalStyle>
++		<conditionalStyle>
++			<conditionExpression><![CDATA[!Boolean.TRUE.equals($F{control})]]></conditionExpression>
++			<style forecolor="#CC0000"/>
++		</conditionalStyle>
+ 	</style>
+ 	<parameter name="pFormCode" class="java.lang.String">
+ 		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
+ 	</parameter>
++	<parameter name="pPosition" class="java.lang.String">
++		<defaultValueExpression><![CDATA["Должность"]]></defaultValueExpression>
++	</parameter>
++	<parameter name="pFio" class="java.lang.String">
++		<defaultValueExpression><![CDATA["ФИО"]]></defaultValueExpression>
++	</parameter>
+ 	<field name="d.object" class="java.time.LocalDate"/>
+ 	<field name="o.object" class="java.lang.Long"/>
+ 	<field name="mt.object" class="java.lang.Long"/>
+@@ -35,6 +51,7 @@
+ 	<field name="routeTimeTo" class="java.time.LocalTime"/>
+ 	<field name="factInterval" class="java.lang.String"/>
+ 	<field name="factInterval.header" class="java.lang.String"/>
++	<field name="control" class="java.lang.Boolean"/>
+ 	<variable name="RowNo" class="java.lang.Integer" resetType="Group" resetGroup="designGroup20953" calculation="Count">
+ 		<variableExpression><![CDATA[$F{ml.object}]]></variableExpression>
+ 	</variable>
+@@ -48,142 +65,113 @@
+ 		<groupExpression><![CDATA[String.valueOf($F{mt.object})]]></groupExpression>
+ 	</group>
+ 	<pageHeader>
+-		<band height="86">
++		<band height="48">
+ 			<printWhenExpression><![CDATA[$V{PAGE_NUMBER}.intValue() == 1]]></printWhenExpression>
+ 			<textField isBlankWhenNull="true">
+-				<reportElement x="602" y="0" width="200" height="16" uuid="e130b8be-fbb2-4418-a1c6-a5e2cd85ad9e"/>
++				<reportElement x="602" y="0" width="200" height="12" uuid="e130b8be-fbb2-4418-a1c6-a5e2cd85ad9e"/>
+ 				<textElement textAlignment="Right" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="11"/>
++					<font size="8"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
+ 			</textField>
+ 			<staticText>
+-				<reportElement x="26" y="20" width="720" height="26" uuid="2dbe6608-f8a8-4025-a450-848d6b49068a"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="17" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Ежедневный отчет контроля температурного режима при транспортировке]]></text>
+-			</staticText>
+-			<staticText>
+-				<reportElement x="158" y="48" width="372" height="28" uuid="d45845b0-d0c7-4503-b185-83dcf698d241"/>
++				<reportElement x="0" y="14" width="802" height="16" uuid="2dbe6608-f8a8-4025-a450-848d6b49068a"/>
+ 				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="17" isBold="true"/>
++					<font size="11" isBold="true"/>
+ 				</textElement>
+-				<text><![CDATA[лекарственных средств]]></text>
++				<text><![CDATA[Ежедневный отчет контроля температурного режима при транспортировке лекарственных средств]]></text>
+ 			</staticText>
+ 			<textField isBlankWhenNull="true">
+-				<reportElement x="554" y="48" width="180" height="28" uuid="2fdb93d0-cf55-418d-9147-cc5b40d2d0f6"/>
+-				<textElement textAlignment="Left" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="16" isBold="true"/>
++				<reportElement x="602" y="32" width="200" height="14" uuid="2fdb93d0-cf55-418d-9147-cc5b40d2d0f6"/>
++				<textElement textAlignment="Right" verticalAlignment="Middle">
++					<font size="10" isBold="true"/>
+ 				</textElement>
+ 				<textFieldExpression><![CDATA[$F{d.object} == null ? "" : "дата " + new java.text.SimpleDateFormat("dd.MM.yy").format(java.sql.Date.valueOf($F{d.object}))]]></textFieldExpression>
+ 			</textField>
+ 		</band>
+ 	</pageHeader>
+ 	<columnHeader>
+-		<band height="72">
++		<band height="40">
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="0" y="0" width="55" height="72" uuid="88aa8838-b5f6-49e0-aa98-c848931da78d"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="16" isBold="true"/>
+-				</textElement>
++				<reportElement style="HeaderCellStyle" x="0" y="0" width="28" height="40" uuid="88aa8838-b5f6-49e0-aa98-c848931da78d"/>
+ 				<text><![CDATA[№]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="55" y="0" width="220" height="72" uuid="76a0f252-01c5-47a1-8c83-742d71f286b4"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Марка, номер
+-транспортного средства]]></text>
++				<reportElement style="HeaderCellStyle" x="28" y="0" width="174" height="40" uuid="76a0f252-01c5-47a1-8c83-742d71f286b4"/>
++				<text><![CDATA[Марка, номер транспортного средства]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="275" y="0" width="75" height="72" uuid="f2a5c3f1-8bb5-4d17-b39d-78c378807fa4"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="10" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Время
+-начала
+-маршрута]]></text>
++				<reportElement style="HeaderCellStyle" x="202" y="0" width="60" height="40" uuid="f2a5c3f1-8bb5-4d17-b39d-78c378807fa4"/>
++				<text><![CDATA[Время начала маршрута]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="350" y="0" width="75" height="72" uuid="b8ef8b86-70fd-41b1-b2d5-c89567a24fb1"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="10" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Время
+-окончания
+-маршрута]]></text>
++				<reportElement style="HeaderCellStyle" x="262" y="0" width="60" height="40" uuid="b8ef8b86-70fd-41b1-b2d5-c89567a24fb1"/>
++				<text><![CDATA[Время окончания маршрута]]></text>
+ 			</staticText>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="425" y="0" width="309" height="36" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Диапазон температуры
+-при транспортировке]]></text>
++				<reportElement style="HeaderCellStyle" x="322" y="0" width="300" height="20" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
++				<text><![CDATA[Диапазон температуры при транспортировке]]></text>
+ 			</staticText>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="425" y="36" width="309" height="36" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+-				</textElement>
++				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="322" y="20" width="300" height="20" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
+ 				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header} + ", C°"]]></textFieldExpression>
+ 			</textField>
+ 			<staticText>
+-				<reportElement style="HeaderCellStyle" x="734" y="0" width="68" height="72" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="11" isBold="true"/>
+-				</textElement>
+-				<text><![CDATA[Контр
+-оль]]></text>
++				<reportElement style="HeaderCellStyle" x="622" y="0" width="60" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
++				<text><![CDATA[Контроль]]></text>
++			</staticText>
++			<staticText>
++				<reportElement style="HeaderCellStyle" x="682" y="0" width="120" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ae"/>
++				<text><![CDATA[Примечание]]></text>
+ 			</staticText>
+ 		</band>
+ 	</columnHeader>
+ 	<detail>
+-		<band height="28" splitType="Stretch">
++		<band height="16" splitType="Stretch">
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="55" height="28" uuid="36abf0c0-fca8-4e47-9fb5-3872f2bd6afb"/>
+-				<textElement textAlignment="Left" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="14"/>
+-				</textElement>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="0" y="0" width="28" height="16" uuid="36abf0c0-fca8-4e47-9fb5-3872f2bd6afb"/>
+ 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="55" y="0" width="220" height="28" uuid="f03e7477-c893-4d0c-a5bc-aa53ef48102b"/>
+-				<textElement textAlignment="Left" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="14"/>
+-				</textElement>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="28" y="0" width="174" height="16" uuid="f03e7477-c893-4d0c-a5bc-aa53ef48102b"/>
++				<textElement textAlignment="Left"/>
+ 				<textFieldExpression><![CDATA[$F{machineName}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="275" y="0" width="75" height="28" uuid="ff0d77fd-c9c7-4aa2-a2d9-d57fce2967c8"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="14"/>
+-				</textElement>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="202" y="0" width="60" height="16" uuid="ff0d77fd-c9c7-4aa2-a2d9-d57fce2967c8"/>
+ 				<textFieldExpression><![CDATA[$F{routeTimeFrom} == null ? null : java.sql.Time.valueOf($F{routeTimeFrom})]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" pattern="H.mm" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="350" y="0" width="75" height="28" uuid="f124dd1b-efbe-4fb3-b164-7fbb42fb9cd1"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="14"/>
+-				</textElement>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="262" y="0" width="60" height="16" uuid="f124dd1b-efbe-4fb3-b164-7fbb42fb9cd1"/>
+ 				<textFieldExpression><![CDATA[$F{routeTimeTo} == null ? null : java.sql.Time.valueOf($F{routeTimeTo})]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="425" y="0" width="309" height="28" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="12"/>
+-				</textElement>
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="322" y="0" width="300" height="16" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
+ 				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
+ 			</textField>
+ 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="734" y="0" width="68" height="28" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
+-				<textElement textAlignment="Center" verticalAlignment="Middle">
+-					<font fontName="DejaVu Serif" size="12"/>
+-				</textElement>
++				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="622" y="0" width="60" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
++				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
++			</textField>
++			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
++				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="682" y="0" width="120" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1d"/>
++				<textElement textAlignment="Left"/>
+ 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
+ 			</textField>
+ 		</band>
+ 	</detail>
++	<summary>
++		<band height="24">
++			<textField>
++				<reportElement x="0" y="8" width="600" height="14" uuid="b9d7e2a1-5c4f-4a3b-9e21-7d6c8f0a1b23"/>
++				<textElement textAlignment="Left" verticalAlignment="Middle">
++					<font size="9"/>
++				</textElement>
++				<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
+++ ", " +
++($P{pFio} == null ? "ФИО" : $P{pFio})
+++ ", подпись"]]></textFieldExpression>
++			</textField>
++		</band>
++	</summary>
+ </jasperReport>
