@@ -594,14 +594,19 @@ dataReportTimeTo = DATA TIME (Location, DATE);
 // Точка расширения для бота «выезд/приезд» (реализация — модуль MachineBot): время из телеграма перебивает плановое от-до
 botRouteTimeFrom = ABSTRACT TIME (Location, DATE);
 botRouteTimeTo = ABSTRACT TIME (Location, DATE);
+botRouteEndDateTime = ABSTRACT ZDATETIME (Location, DATE);   // реальный конец рейса как datetime (для рейсов через полночь / многодневных)
 routeTimeFrom 'Время начала маршрута' (Location l, DATE d) = OVERRIDE botRouteTimeFrom(l, d), dataReportTimeFrom(l, d), timeFrom(l, d) COMPLEX;
 routeTimeTo 'Время окончания маршрута' (Location l, DATE d) = OVERRIDE botRouteTimeTo(l, d), dataReportTimeTo(l, d), timeTo(l, d) COMPLEX;
+// Конец окна маршрута как полный datetime: реальный приезд бота, иначе плановое окончание (с переносом на следующие сутки при переходе через полночь)
+routeEndDateTime (Location l, DATE d) = OVERRIDE botRouteEndDateTime(l, d),
+    (IF routeTimeTo(l, d) >= routeTimeFrom(l, d) THEN ZDATETIME(toDateTime(d, routeTimeTo(l, d)))
+        ELSE ZDATETIME(toDateTime(sum(d, 1), routeTimeTo(l, d)))) COMPLEX;
 inRouteReportPeriod(Measurement m, MeasurementType mt, Location l, DATE d) =
     machineLocation(device(m, mt)) = l AND
-    // Константные границы по дате (день d плюс сутки на маршрут через полночь): даёт планировщику использовать индекс (device, dateTime) вместо seq scan по всей истории измерений
-    dateTime(m, mt) >= ZDATETIME(toDateTime(d, 00:00)) AND dateTime(m, mt) < ZDATETIME(toDateTime(sum(d, 2), 00:00)) AND
-    // Точные границы по реальному окну маршрута
-    dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= ZDATETIME(toDateTime(d, routeTimeTo(l, d)));
+    // Константные границы по дате (день d плюс до 5 суток на многодневный рейс): даёт планировщику использовать индекс (device, dateTime) вместо seq scan по всей истории измерений
+    dateTime(m, mt) >= ZDATETIME(toDateTime(d, 00:00)) AND dateTime(m, mt) < ZDATETIME(toDateTime(sum(d, 5), 00:00)) AND
+    // Точные границы: от выезда до реального приезда (через полночь / многодневный)
+    dateTime(m, mt) >= ZDATETIME(toDateTime(d, routeTimeFrom(l, d))) AND dateTime(m, mt) <= routeEndDateTime(l, d);
 routeReportFactMinValue 'Мин. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
     GROUP MIN value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
 routeReportFactMaxValue 'Макс. реальное значение' (Location l, STRING interval, MeasurementType mt, DATE d) =
