@@ -5,22 +5,16 @@ MODULE MachineBot;
 REQUIRE Mite, Telegram;
 
 // ===== Машина: номер =====
-machineNumber 'Номер' = DATA STRING[20] (Location);            // код в сообщении водителя, напр. 4750
+machineNumber 'Код' = DATA STRING[20] (Location);            // код в сообщении водителя, напр. 4750
 machineByNumber = GROUP AGGR Location ml BY organization(ml), machineNumber(ml);
 EXTEND FORM locations
     PROPERTIES (l) machineNumber
 ;
 
-// ===== Бот и чат водителей — на организацию =====
-botAccount 'Бот (Telegram)' = DATA Messenger.Account (Organization);
-orgByAccount = GROUP AGGR Organization o BY botAccount(o);
-driversChat 'Чат водителей' = DATA Messenger.Chat (Organization);        // групповой чат, напр. @Drivers_dominanta
-// Локально вебхук не поставить (нет публичного URL) — флаг, чтобы создание аккаунта не падало на тесте
-skipBotWebhook 'Не ставить webhook (локально)' = DATA BOOLEAN (Messenger.Account);
-skipSetWebHookTelegram(Messenger.Account a) += skipBotWebhook(a);
-EXTEND FORM organizations
-    PROPERTIES (o) botAccount, driversChat
-;
+// ===== Организация и чат водителей берутся из существующей привязки чата к организации (Messengers) =====
+// organization(Chat) уже задаётся в форме мессенджеров (колонка «Организация») — доп. поля не нужны.
+// Чат водителей для рассылки «от нас» — чат организации с именем 'Drivers'.
+driversChat (Organization o) = GROUP MAX Messenger.Chat c IF organization(c) = o AND name(c) = 'Drivers';
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
@@ -106,10 +100,10 @@ processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (M
 cleanMachineMsg (Messenger.Message m) = replace(replace(replace(trim(message(m)), '-', ''), ' ', ''), '_', '');
 machineMsgAction (Messenger.Message m) = right(cleanMachineMsg(m), 1) IF (right(cleanMachineMsg(m), 1) == '1' OR right(cleanMachineMsg(m), 1) == '2');
 machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
-// организация — по аккаунту бота; whitelist — сообщение именно из чата водителей этой организации
-msgOrg (Messenger.Message m) = orgByAccount(account(chat(m)));
-fromDriversChat (Messenger.Message m) = chat(m) == driversChat(msgOrg(m));
-incomingMachine (Messenger.Message m) = machineByNumber(msgOrg(m), machineMsgNumber(m)) IF fromDriversChat(m);
+// организация — из существующей привязки чата к организации (Messengers); машина — по коду в сообщении.
+// whitelist = чат привязан к организации (если не привязан — organization(chat) пусто, сообщение игнорируется)
+msgOrg (Messenger.Message m) = organization(chat(m));
+incomingMachine (Messenger.Message m) = machineByNumber(msgOrg(m), machineMsgNumber(m));
 
 // зафиксировать реальный выезд (+ удалить авто-сообщение «выезд»)
 recordRealDeparture (Location ml, DATETIME at) {
