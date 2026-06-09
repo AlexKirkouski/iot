@@ -613,6 +613,8 @@ routeReportFactMaxValue 'Макс. реальное значение' (Location 
     GROUP MAX value(Measurement m, mt) IF inRouteReportPeriod(m, mt, l, d) AND routeReportInterval(device(m, mt), mt) = interval;
 routeReportFactInterval 'Фактический интервал' (Location l, STRING interval, MeasurementType mt, DATE d) =
     r'От ' + round0(routeReportFactMinValue(l, interval, mt, d)) + r' до ' + round0(routeReportFactMaxValue(l, interval, mt, d));
+// у машины есть этот режим (есть датчик с таким интервалом) — чтобы в вертикальном отчёте не было пустых строк машина×чужой режим
+machineInterval (Location ml, STRING interval, MeasurementType mt) = GROUP MAX routeReportDevice(Device d, mt) AND machineLocation(d) = ml AND routeReportInterval(d, mt) = interval;
 
 EXTEND FORM locations
     PROPERTIES routeTimeFrom(l, ds), routeTimeTo(l, ds)
@@ -680,7 +682,7 @@ FORM routeReport 'Отчет контроля маршрутов'
     PROPERTIES expectedInterval = routeReportIntervalValue(interval)
     PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d)
     PROPERTIES control = routeControl(ml, mt, d)
-    FILTERS hasRouteReportInterval(o, mt, interval),
+    FILTERS hasRouteReportInterval(o, mt, interval), machineInterval(ml, interval, mt),
             organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
     ORDERS machineName
 ;
