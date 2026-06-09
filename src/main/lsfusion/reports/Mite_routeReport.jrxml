@@ -10,12 +10,16 @@
 			<style forecolor="#CC0000"/>
 		</conditionalStyle>
 	</style>
+	<parameter name="pFormCode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Ф/08-СОП № 11-С"]]></defaultValueExpression>
+	</parameter>
 	<parameter name="pPosition" class="java.lang.String">
 		<defaultValueExpression><![CDATA["Должность"]]></defaultValueExpression>
 	</parameter>
 	<parameter name="pFio" class="java.lang.String">
 		<defaultValueExpression><![CDATA["ФИО"]]></defaultValueExpression>
 	</parameter>
+	<field name="d.object" class="java.time.LocalDate"/>
 	<field name="machineName" class="java.lang.String"/>
 	<field name="routeTimeFrom" class="java.time.LocalTime"/>
 	<field name="routeTimeTo" class="java.time.LocalTime"/>
@@ -26,50 +30,82 @@
 		<variableExpression><![CDATA[$F{machineName}]]></variableExpression>
 	</variable>
 	<pageHeader>
-		<band height="40">
+		<band height="64">
+			<printWhenExpression><![CDATA[$V{PAGE_NUMBER}.intValue() == 1]]></printWhenExpression>
+			<textField>
+				<reportElement x="380" y="0" width="175" height="12" uuid="aa11bb22-0001-0000-0000-000000000010"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"><font size="8" isItalic="true"/></textElement>
+				<textFieldExpression><![CDATA[$P{pFormCode}]]></textFieldExpression>
+			</textField>
 			<staticText>
-				<reportElement x="0" y="6" width="555" height="28" uuid="aa11bb22-0001-0000-0000-000000000001"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font size="11" isBold="true"/>
-				</textElement>
-				<text><![CDATA[Ежедневный отчет контроля температуры на маршрутах машин]]></text>
+				<reportElement x="0" y="14" width="555" height="30" uuid="aa11bb22-0001-0000-0000-000000000001"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="11" isBold="true"/></textElement>
+				<text><![CDATA[Ежедневный отчет контроля температурного режима при транспортировке лекарственных средств]]></text>
 			</staticText>
+			<textField>
+				<reportElement x="0" y="46" width="555" height="14" uuid="aa11bb22-0001-0000-0000-000000000002"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
+				<textFieldExpression><![CDATA[$F{d.object} == null ? "" : "дата " + new java.text.SimpleDateFormat("dd.MM.yy").format(java.sql.Date.valueOf($F{d.object}))]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
-		<band height="22">
+		<band height="44">
 			<staticText>
-				<reportElement x="0" y="0" width="28" height="22" uuid="aa11bb22-0002-0000-0000-000000000001"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<reportElement x="0" y="0" width="22" height="44" uuid="aa11bb22-0002-0000-0000-000000000001"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
 				<text><![CDATA[№]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="28" y="0" width="120" height="22" uuid="aa11bb22-0002-0000-0000-000000000002"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
-				<text><![CDATA[Машина]]></text>
+				<reportElement x="22" y="0" width="125" height="44" uuid="aa11bb22-0002-0000-0000-000000000002"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[Марка, номер транспортного средства]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="148" y="0" width="90" height="22" uuid="aa11bb22-0002-0000-0000-000000000003"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
-				<text><![CDATA[Маршрут]]></text>
+				<reportElement x="147" y="0" width="52" height="44" uuid="aa11bb22-0002-0000-0000-000000000003"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[Время начала маршрута]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="238" y="0" width="110" height="22" uuid="aa11bb22-0002-0000-0000-000000000004"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<reportElement x="199" y="0" width="52" height="44" uuid="aa11bb22-0002-0000-0000-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[Время окончания маршрута]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="251" y="0" width="150" height="22" uuid="aa11bb22-0002-0000-0000-000000000005"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[Диапазон температуры при транспортировке]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="251" y="22" width="90" height="22" uuid="aa11bb22-0002-0000-0000-00000000000a"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
 				<text><![CDATA[Режим, °C]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="348" y="0" width="110" height="22" uuid="aa11bb22-0002-0000-0000-000000000005"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<reportElement x="341" y="22" width="60" height="22" uuid="aa11bb22-0002-0000-0000-000000000006"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
 				<text><![CDATA[Факт, °C]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="458" y="0" width="97" height="22" uuid="aa11bb22-0002-0000-0000-000000000006"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9" isBold="true"/></textElement>
+				<reportElement x="401" y="0" width="50" height="44" uuid="aa11bb22-0002-0000-0000-000000000007"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
 				<text><![CDATA[Контроль]]></text>
 			</staticText>
+			<staticText>
+				<reportElement x="451" y="0" width="104" height="44" uuid="aa11bb22-0002-0000-0000-000000000008"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8" isBold="true"/></textElement>
+				<text><![CDATA[Примечание]]></text>
+			</staticText>
 			<line>
-				<reportElement x="0" y="21" width="555" height="1" uuid="aa11bb22-0002-0000-0000-000000000007"/>
+				<reportElement x="251" y="22" width="150" height="1" uuid="aa11bb22-0002-0000-0000-00000000000b"/>
+				<graphicElement><pen lineWidth="0.4" lineStyle="Solid"/></graphicElement>
+			</line>
+			<line>
+				<reportElement x="341" y="22" width="1" height="22" uuid="aa11bb22-0002-0000-0000-00000000000c"/>
+				<graphicElement><pen lineWidth="0.4" lineStyle="Solid"/></graphicElement>
+			</line>
+			<line>
+				<reportElement x="0" y="43" width="555" height="1" uuid="aa11bb22-0002-0000-0000-000000000009"/>
 				<graphicElement><pen lineWidth="0.5" lineStyle="Solid"/></graphicElement>
 			</line>
 		</band>
@@ -77,54 +113,64 @@
 	<detail>
 		<band height="16" splitType="Prevent">
 			<line><reportElement x="0" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000001"/></line>
-			<line><reportElement x="28" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000002"/></line>
-			<line><reportElement x="148" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000003"/></line>
-			<line><reportElement x="238" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000004"/></line>
-			<line><reportElement x="348" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000005"/></line>
-			<line><reportElement x="458" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000006"/></line>
-			<line><reportElement x="554" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000007"/></line>
+			<line><reportElement x="22" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000002"/></line>
+			<line><reportElement x="147" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000003"/></line>
+			<line><reportElement x="199" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000004"/></line>
+			<line><reportElement x="251" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000005"/></line>
+			<line><reportElement x="341" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000006"/></line>
+			<line><reportElement x="401" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000007"/></line>
+			<line><reportElement x="451" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000008"/></line>
+			<line><reportElement x="554" y="3" width="1" height="10" uuid="aa11bb22-0003-0000-0000-000000000009"/></line>
 			<line>
-				<reportElement x="0" y="15" width="555" height="1" uuid="aa11bb22-0003-0000-0000-000000000008"/>
+				<reportElement x="0" y="15" width="555" height="1" uuid="aa11bb22-0003-0000-0000-000000000010"/>
 				<graphicElement><pen lineWidth="0.4" lineStyle="Dashed"/></graphicElement>
 			</line>
 			<textField>
-				<reportElement x="0" y="0" width="28" height="16" uuid="aa11bb22-0004-0000-0000-000000000001"/>
+				<reportElement x="0" y="0" width="22" height="16" uuid="aa11bb22-0004-0000-0000-000000000001"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
 				<textFieldExpression><![CDATA[$V{RowNo}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="28" y="0" width="120" height="16" uuid="aa11bb22-0004-0000-0000-000000000002"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
+				<reportElement x="22" y="0" width="125" height="16" uuid="aa11bb22-0004-0000-0000-000000000002"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="8"/></textElement>
 				<textFieldExpression><![CDATA[$F{machineName}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="148" y="0" width="90" height="16" uuid="aa11bb22-0004-0000-0000-000000000003"/>
+				<reportElement x="147" y="0" width="52" height="16" uuid="aa11bb22-0004-0000-0000-000000000003"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
-				<textFieldExpression><![CDATA[($F{routeTimeFrom} == null ? "" : $F{routeTimeFrom}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm")))
-+ " - " +
-($F{routeTimeTo} == null ? "" : $F{routeTimeTo}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm")))]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{routeTimeFrom} == null ? "" : $F{routeTimeFrom}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm"))]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="238" y="0" width="110" height="16" uuid="aa11bb22-0004-0000-0000-000000000004"/>
+				<reportElement x="199" y="0" width="52" height="16" uuid="aa11bb22-0004-0000-0000-000000000004"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
+				<textFieldExpression><![CDATA[$F{routeTimeTo} == null ? "" : $F{routeTimeTo}.format(java.time.format.DateTimeFormatter.ofPattern("H:mm"))]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="251" y="0" width="90" height="16" uuid="aa11bb22-0004-0000-0000-000000000005"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
 				<textFieldExpression><![CDATA[$F{expectedInterval}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement x="348" y="0" width="110" height="16" uuid="aa11bb22-0004-0000-0000-000000000005"/>
+				<reportElement x="341" y="0" width="60" height="16" uuid="aa11bb22-0004-0000-0000-000000000006"/>
 				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
 				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
 			</textField>
 			<textField>
-				<reportElement style="ControlStyle" x="458" y="0" width="97" height="16" uuid="aa11bb22-0004-0000-0000-000000000006"/>
-				<textElement verticalAlignment="Middle"><font size="10"/></textElement>
+				<reportElement style="ControlStyle" x="401" y="0" width="50" height="16" uuid="aa11bb22-0004-0000-0000-000000000007"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="10"/></textElement>
 				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="451" y="0" width="104" height="16" uuid="aa11bb22-0004-0000-0000-000000000008"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"><font size="9"/></textElement>
+				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
 	<summary>
-		<band height="30">
+		<band height="34">
 			<textField>
-				<reportElement x="0" y="10" width="540" height="14" uuid="aa11bb22-0005-0000-0000-000000000001"/>
+				<reportElement x="0" y="14" width="540" height="14" uuid="aa11bb22-0005-0000-0000-000000000001"/>
 				<textElement verticalAlignment="Middle"><font size="9"/></textElement>
 				<textFieldExpression><![CDATA[($P{pPosition} == null ? "Должность" : $P{pPosition})
 + ", " +
