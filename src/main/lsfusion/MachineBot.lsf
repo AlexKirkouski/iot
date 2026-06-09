@@ -99,13 +99,18 @@ sendMachineRoutes 'Разослать выезды/приезды' (Organization
         sendMachineRoute(ml, d);
     APPLY;
 }
+// Кнопка для проверки: сгенерировать выезды/приезды на сегодня из расписания (±30), без рассылки
+generateMachineRoutesToday 'Бот: сгенерировать маршруты на сегодня (из расписания)' (Organization o) {
+    generateMachineRoutes(o, currentDate());
+    APPLY;
+}
 // Кнопка для проверки «от нас»: сгенерировать план ±30 на сегодня и сразу разослать в чат Drivers
 generateAndSendMachineRoutes 'Бот: сгенерировать и разослать на сегодня' (Organization o) {
     generateMachineRoutes(o, currentDate());
     sendMachineRoutes(o, currentDate());
 }
 EXTEND FORM organizations
-    PROPERTIES (o) generateAndSendMachineRoutes
+    PROPERTIES (o) generateMachineRoutesToday, generateAndSendMachineRoutes
 ;
 // Экшены для планировщика (как emailRouteReportScheduler): по имени организации, на сегодня
 botMorningDispatch 'Бот: утро — сгенерировать и разослать ВЫЕЗДЫ' (STRING[100] organizationName) {
