@@ -99,10 +99,18 @@ sendMachineRoutes 'Разослать выезды/приезды' (Organization
         sendMachineRoute(ml, d);
     APPLY;
 }
-// Кнопка для проверки: сгенерировать выезды/приезды на сегодня из расписания (±30), без рассылки
+// Кнопка для проверки: сгенерировать выезды/приезды на сегодня из расписания (±30), без рассылки.
+// Перегенерирует (сбрасывает несохранённые ботом времена), чтобы кнопку можно было жать повторно, и показывает результат.
 generateMachineRoutesToday 'Бот: сгенерировать маршруты на сегодня (из расписания)' (Organization o) {
+    FOR organization(Location ml) = o AND machine(ml) AND NOT botDepartureReal(ml, currentDate()) DO
+        botDeparture(ml, currentDate()) <- NULL;
+    FOR organization(Location ml) = o AND machine(ml) AND NOT botArrivalReal(ml, currentDate()) DO
+        botArrival(ml, currentDate()) <- NULL;
     generateMachineRoutes(o, currentDate());
     APPLY;
+    LOCAL cnt = INTEGER ();
+    cnt() <- GROUP SUM 1 IF organization(Location ml) = o AND machine(ml) AND botDeparture(ml, currentDate());
+    MESSAGE 'Сгенерировано маршрутов на ' + currentDate() + ': ' + (OVERRIDE cnt(), 0);
 }
 // Кнопка для проверки «от нас»: сгенерировать план ±30 на сегодня и сразу разослать в чат Drivers
 generateAndSendMachineRoutes 'Бот: сгенерировать и разослать на сегодня' (Organization o) {
