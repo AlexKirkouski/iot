@@ -673,15 +673,15 @@ routeControl 'Контроль' (Location ml, MeasurementType mt, DATE d) =
 FORM routeReport 'Отчет контроля маршрутов'
     OBJECTS d = DATE PANEL, o = Organization PANEL, mt = MeasurementType PANEL
 
-    OBJECTS interval = STRING
-    FILTERS hasRouteReportInterval(o, mt, interval)
-
-    OBJECTS ml = Location
+    // Вертикально: каждая строка = (машина × интервал), интервалы идут вниз, а не колонками вправо
+    OBJECTS m = (ml = Location, interval = STRING)
     PROPERTIES machineName = name(ml)
     PROPERTIES routeTimeFrom = routeTimeFrom(ml, d), routeTimeTo = routeTimeTo(ml, d)
-    PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d) COLUMNS (interval) HEADER routeReportIntervalValue(interval)
+    PROPERTIES expectedInterval = routeReportIntervalValue(interval)
+    PROPERTIES factInterval = routeReportFactInterval(ml, interval, mt, d)
     PROPERTIES control = routeControl(ml, mt, d)
-    FILTERS organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
+    FILTERS hasRouteReportInterval(o, mt, interval),
+            organization(ml) == o, machine(ml), hasRouteReportDevice(ml, mt), routeTimeFrom(ml, d), routeTimeTo(ml, d)
     ORDERS machineName
 ;
 
