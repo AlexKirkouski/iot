@@ -39,20 +39,25 @@ botRouteTimeFrom(Location l, DATE d) += botDeparture(l, d);
 botRouteEndDateTime(Location l, DATE d) +=
     ZDATETIME(toDateTime((OVERRIDE botArrivalDate(l, d), d), botArrival(l, d))) IF botArrival(l, d);
 
-// ===== Механизм 1а: утренняя генерация (план ±30; приезд на след. сутки, если Окончание < Начало = 2-дневный рейс) =====
-generateMachineRoutes 'Сгенерировать выезды/приезды' (Organization o, DATE d) {
+// ===== Механизм 1а: генерация (план ±30; приезд на след. сутки, если Окончание < Начало = 2-дневный рейс) =====
+generateDepartures (Organization o, DATE d) {
     LOCAL off = INTEGER ();
-    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) DO {
-        IF NOT botDepartureReal(ml, d) THEN {
-            off() <- round0((random() - 0.5) * 60);
-            botDeparture(ml, d) <- sumMinutes(timeFrom(ml, d), off());
-        }
-        IF NOT botArrivalReal(ml, d) THEN {
-            off() <- round0((random() - 0.5) * 60);
-            botArrival(ml, d) <- sumMinutes(timeTo(ml, d), off());
-            botArrivalDate(ml, d) <- (IF timeTo(ml, d) < timeFrom(ml, d) THEN sum(d, 1) ELSE d);
-        }
+    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDeparture(ml, d) DO {
+        off() <- round0((random() - 0.5) * 60);
+        botDeparture(ml, d) <- sumMinutes(timeFrom(ml, d), off());
     }
+}
+generateArrivals (Organization o, DATE d) {
+    LOCAL off = INTEGER ();
+    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND NOT botArrivalReal(ml, d) AND NOT botArrival(ml, d) DO {
+        off() <- round0((random() - 0.5) * 60);
+        botArrival(ml, d) <- sumMinutes(timeTo(ml, d), off());
+        botArrivalDate(ml, d) <- (IF timeTo(ml, d) < timeFrom(ml, d) THEN sum(d, 1) ELSE d);
+    }
+}
+generateMachineRoutes 'Сгенерировать выезды/приезды' (Organization o, DATE d) {
+    generateDepartures(o, d);
+    generateArrivals(o, d);
 }
 
 // ===== Telegram: своя отправка с захватом message_id + удаление =====
@@ -102,6 +107,17 @@ generateAndSendMachineRoutes 'Бот: сгенерировать и разосл
 EXTEND FORM organizations
     PROPERTIES (o) generateAndSendMachineRoutes
 ;
+// Экшены для планировщика (как emailRouteReportScheduler): по имени организации, на сегодня
+botMorningDispatch 'Бот: утро — сгенерировать и разослать ВЫЕЗДЫ' (STRING[100] organizationName) {
+    generateDepartures(Organization.organization(organizationName), currentDate());
+    APPLY;
+    sendMachineRoutes(Organization.organization(organizationName), currentDate());
+}
+botEveningDispatch 'Бот: вечер — сгенерировать и разослать ПРИЕЗДЫ' (STRING[100] organizationName) {
+    generateArrivals(Organization.organization(organizationName), currentDate());
+    APPLY;
+    sendMachineRoutes(Organization.organization(organizationName), currentDate());
+}
 
 // ===== Механизм 2: приём сообщений водителей =====
 processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (Messenger.Message);
