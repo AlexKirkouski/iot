@@ -6,15 +6,15 @@ REQUIRE Mite, Telegram;
 
 // ===== Машина: номер =====
 machineNumber 'Код' = DATA STRING[20] (Location);            // код в сообщении водителя, напр. 4750
-machineByNumber = GROUP AGGR Location ml BY organization(ml), machineNumber(ml);
+machineByNumber = GROUP AGGR Location ml BY organization(ml), machineNumber(ml);   // уникальность кода в орг
+// Опознаём машину прямо по коду из сообщения (привязка чата к орг в этой базе ненадёжна)
+machineByCode (STRING code) = GROUP MAX Location ml IF machineNumber(ml) = code AND machine(ml);
 EXTEND FORM locations
     PROPERTIES (l) machineNumber
 ;
 
-// ===== Организация и чат водителей берутся из существующей привязки чата к организации (Messengers) =====
-// organization(Chat) уже задаётся в форме мессенджеров (колонка «Организация») — доп. поля не нужны.
-// Чат водителей для рассылки «от нас» — чат организации с именем 'Drivers'.
-driversChat (Organization o) = GROUP MAX Messenger.Chat c IF organization(c) = o AND name(c) = 'Drivers';
+// ===== Чат водителей для рассылки «от нас» — групповой чат с именем 'Drivers' =====
+driversChat = GROUP MAX Messenger.Chat c IF name(c) = 'Drivers';
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
@@ -77,7 +77,7 @@ deleteMachineMsg (Messenger.Chat chat, LONG msgId) {
 // ===== Механизм 1б: рассылка «от нас» в чат водителей =====
 sendMachineRoute (Location ml, DATE d) {
     LOCAL chat = Messenger.Chat ();
-    chat() <- driversChat(organization(ml));
+    chat() <- driversChat();
     IF chat() AND machineNumber(ml) THEN {
         IF botDeparture(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) THEN {
             sendMachineMsg(chat(), machineNumber(ml) + '1');
@@ -94,23 +94,29 @@ sendMachineRoutes 'Разослать выезды/приезды' (Organization
         sendMachineRoute(ml, d);
     APPLY;
 }
+// Кнопка для проверки «от нас»: сгенерировать план ±30 на сегодня и сразу разослать в чат Drivers
+generateAndSendMachineRoutes 'Бот: сгенерировать и разослать на сегодня' (Organization o) {
+    generateMachineRoutes(o, currentDate());
+    sendMachineRoutes(o, currentDate());
+}
+EXTEND FORM organizations
+    PROPERTIES (o) generateAndSendMachineRoutes
+;
 
-// ===== Механизм 2: приём сообщений водителей (только из чата водителей этой орг) =====
+// ===== Механизм 2: приём сообщений водителей =====
 processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (Messenger.Message);
 cleanMachineMsg (Messenger.Message m) = replace(replace(replace(trim(message(m)), '-', ''), ' ', ''), '_', '');
 machineMsgAction (Messenger.Message m) = right(cleanMachineMsg(m), 1) IF (right(cleanMachineMsg(m), 1) == '1' OR right(cleanMachineMsg(m), 1) == '2');
 machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
-// организация — из существующей привязки чата к организации (Messengers); машина — по коду в сообщении.
-// whitelist = чат привязан к организации (если не привязан — organization(chat) пусто, сообщение игнорируется)
-msgOrg (Messenger.Message m) = organization(chat(m));
-incomingMachine (Messenger.Message m) = machineByNumber(msgOrg(m), machineMsgNumber(m));
+// машина — по коду из сообщения (глобально). Бот получает сообщения только в группах, где он состоит — это и есть белый список.
+incomingMachine (Messenger.Message m) = machineByCode(machineMsgNumber(m));
 
 // зафиксировать реальный выезд (+ удалить авто-сообщение «выезд»)
 recordRealDeparture (Location ml, DATETIME at) {
     botDeparture(ml, DATE(at)) <- TIME(at);
     botDepartureReal(ml, DATE(at)) <- TRUE;
     IF botDepartureMsgId(ml, DATE(at)) THEN {
-        deleteMachineMsg(driversChat(organization(ml)), botDepartureMsgId(ml, DATE(at)));
+        deleteMachineMsg(driversChat(), botDepartureMsgId(ml, DATE(at)));
         botDepartureMsgId(ml, DATE(at)) <- NULL;
     }
 }
@@ -123,7 +129,7 @@ recordRealArrival (Location ml, DATETIME at) {
         botArrivalDate(ml, dep()) <- DATE(at);
         botArrivalReal(ml, dep()) <- TRUE;
         IF botArrivalMsgId(ml, dep()) THEN {
-            deleteMachineMsg(driversChat(organization(ml)), botArrivalMsgId(ml, dep()));
+            deleteMachineMsg(driversChat(), botArrivalMsgId(ml, dep()));
             botArrivalMsgId(ml, dep()) <- NULL;
         }
     }
