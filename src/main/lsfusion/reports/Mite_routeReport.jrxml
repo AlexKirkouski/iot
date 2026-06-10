@@ -101,19 +101,19 @@
 				<text><![CDATA[Время окончания маршрута]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HeaderCellStyle" x="194" y="0" width="246" height="20" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
+				<reportElement style="HeaderCellStyle" x="194" y="0" width="244" height="20" uuid="ec9c524d-ad0e-422f-8f91-42ec8f811a77"/>
 				<text><![CDATA[Диапазон температуры при транспортировке]]></text>
 			</staticText>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="194" y="20" width="246" height="20" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
+				<reportElement style="SubHeaderCellStyle" stretchType="RelativeToBandHeight" x="194" y="20" width="244" height="20" uuid="f4a6f316-99a4-4466-a860-6802fa2ff8dc"/>
 				<textFieldExpression><![CDATA[$F{factInterval.header} == null ? "" : $F{factInterval.header} + ", C°"]]></textFieldExpression>
 			</textField>
 			<staticText>
-				<reportElement style="HeaderCellStyle" x="440" y="0" width="45" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
+				<reportElement style="HeaderCellStyle" x="438" y="0" width="54" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ad"/>
 				<text><![CDATA[Контроль]]></text>
 			</staticText>
 			<staticText>
-				<reportElement style="HeaderCellStyle" x="485" y="0" width="70" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ae"/>
+				<reportElement style="HeaderCellStyle" x="492" y="0" width="63" height="40" uuid="032f7e24-f43f-4a7c-bb0e-7186e293e3ae"/>
 				<text><![CDATA[Примечание]]></text>
 			</staticText>
 		</band>
@@ -138,15 +138,15 @@
 				<textFieldExpression><![CDATA[$F{routeTimeTo} == null ? null : java.sql.Time.valueOf($F{routeTimeTo})]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="194" y="0" width="246" height="16" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
+				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="194" y="0" width="244" height="16" uuid="43884f35-7f6f-4e4d-aad5-70f523f71703"/>
 				<textFieldExpression><![CDATA[$F{factInterval}]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="440" y="0" width="45" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
+				<reportElement style="ControlStyle" positionType="Float" stretchType="RelativeToBandHeight" x="438" y="0" width="54" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1c"/>
 				<textFieldExpression><![CDATA[Boolean.TRUE.equals($F{control}) ? "✓" : "✗"]]></textFieldExpression>
 			</textField>
 			<textField textAdjust="StretchHeight" isBlankWhenNull="true">
-				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="485" y="0" width="70" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1d"/>
+				<reportElement style="BodyCellStyle" positionType="Float" stretchType="RelativeToBandHeight" x="492" y="0" width="63" height="16" uuid="e6ec9f4d-864f-4d46-9e11-c69698dcff1d"/>
 				<textElement textAlignment="Left"/>
 				<textFieldExpression><![CDATA[""]]></textFieldExpression>
 			</textField>
