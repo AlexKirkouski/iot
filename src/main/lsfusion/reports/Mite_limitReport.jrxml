@@ -23,10 +23,10 @@
 	<field name="date" class="java.time.LocalDate"/>
 	<field name="name(dev)" class="java.lang.String"/>
 	<field name="mtName" class="java.lang.String"/>
-	<field name="val" class="java.lang.Double"/>
+	<field name="val" class="java.lang.String"/>
 	<field name="container(dev)" class="java.lang.Integer"/>
-	<field name="minReportFixedValue(dev,mt)" class="java.lang.Double"/>
-	<field name="maxReportFixedValue(dev,mt)" class="java.lang.Double"/>
+	<field name="minLimit" class="java.lang.String"/>
+	<field name="maxLimit" class="java.lang.String"/>
 	<field name="time" class="java.time.LocalTime"/>
 	<field name="control" class="java.lang.Boolean"/>
 	<variable name="RowNo" class="java.lang.Integer" resetType="Group" resetGroup="DateGroup" calculation="Count">
@@ -186,9 +186,9 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[($F{minReportFixedValue(dev,mt)}==null ? "" : $F{minReportFixedValue(dev,mt)})
+				<textFieldExpression><![CDATA[($F{minLimit}==null ? "" : $F{minLimit})
 + " - " +
-($F{maxReportFixedValue(dev,mt)}==null ? "" : $F{maxReportFixedValue(dev,mt)})]]></textFieldExpression>
+($F{maxLimit}==null ? "" : $F{maxLimit})]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement x="188" y="0" width="112" height="16" uuid="8010513e-dac0-4f29-b7b9-18c3ec5b5ebc"/>
@@ -202,7 +202,7 @@
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font size="9"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{val} == null ? "" : Math.round($F{val})]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{val}]]></textFieldExpression>
 			</textField>
 			<textField>
 				<reportElement style="ControlStyle" x="358" y="0" width="62" height="16" uuid="c140e6b3-8d26-4720-9963-d34be5a9c2f8"/>

@@ -81,11 +81,10 @@ deleteMachineMsg (Messenger.Chat chat, LONG msgId) {
 
 // ===== Механизм 1б: диспетчер «от нас» — рассылка по ПЛАНОВОМУ времени =====
 // настало ли плановое время выезда / приезда (приезд — с учётом рейса через полночь по botArrivalDate)
-departureDue (Location ml, DATE d) = botDeparture(ml, d) AND
-    (d < currentDate() OR (d = currentDate() AND TIME(currentDateTime()) >= botDeparture(ml, d)));
-arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND
-    ((OVERRIDE botArrivalDate(ml, d), d) < currentDate()
-     OR ((OVERRIDE botArrivalDate(ml, d), d) = currentDate() AND TIME(currentDateTime()) >= botArrival(ml, d)));
+// «настало» = текущий момент в окне [план; план+90 мин] — чтобы не разослать устаревший план (напр. после перезапуска/деплоя)
+// «наступило» = текущий день и время плана уже пришло (приезд — по дате приезда, для рейса через полночь)
+departureDue (Location ml, DATE d) = botDeparture(ml, d) AND d = currentDate() AND TIME(currentDateTime()) >= botDeparture(ml, d);
+arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND (OVERRIDE botArrivalDate(ml, d), d) = currentDate() AND TIME(currentDateTime()) >= botArrival(ml, d);
 
 // отправить выезд/приезд «от нас», если время плана настало и ещё не отправлено и не пришло от водителя
 sendDeparture (Location ml, DATE d) {
@@ -176,37 +175,32 @@ processMachineMsg (Messenger.Message m) {
 }
 WHEN SET(Messenger.Message m IS Messenger.Message) DO processMachineMsg(m);
 
-// ===== Регистрация заданий планировщика (idempotent — создаются при старте, если ещё нет) =====
-// деталь задания через script, чтобы передать имя организации в действие
-addBotTaskDetail (STRING[100] taskName, STRING scriptText) {
-    NEW d = UserScheduledTaskDetail {
-        scheduledTask(d) <- scheduledTask(taskName);
-        order(d) <- 1;
-        active(d) <- TRUE;
-        script(d) <- scriptText;
-    }
-}
+// ===== Параметрless-обёртки для планировщика (привязка по каноническому имени — надёжнее script) =====
+botGeneratePlanDominanta 'Бот: план (ДоминантаФарм)' () { botGeneratePlan('ДоминантаФарм'); }
+botDispatchDueDominanta 'Бот: рассылка (ДоминантаФарм)' () { botDispatchDue('ДоминантаФарм'); }
+botCleanupDeparturesDominanta 'Бот: уборка выездов (ДоминантаФарм)' () { botCleanupDepartures('ДоминантаФарм'); }
+botCleanupArrivalsDominanta 'Бот: уборка приездов (ДоминантаФарм)' () { botCleanupArrivals('ДоминантаФарм'); }
+
+// ===== Регистрация заданий планировщика (пересоздаём при старте — чинит ранее созданные) =====
 botSetupSchedule () {
+    FOR name(UserScheduledTask t) LIKE 'Бот:%' DO DELETE t;
     // 04:00 — сгенерировать план (выезд+приезд) на день
-    IF NOT scheduledTask('Бот: план маршрутов (ДоминантаФарм)') THEN {
-        createScheduledTask('Бот: план маршрутов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 04:00), 86400, SchedulerStartType.afterStart);
-        addBotTaskDetail('Бот: план маршрутов (ДоминантаФарм)', 'botGeneratePlan(\'ДоминантаФарм\')');
-    }
+    createScheduledTask('Бот: план маршрутов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 04:00), 86400, SchedulerStartType.afterStart);
+    createScheduledTaskDetail('Бот: план маршрутов (ДоминантаФарм)', 1, 'MachineBot.botGeneratePlanDominanta[]');
     // каждую минуту — разослать наступившие по плану
-    IF NOT scheduledTask('Бот: рассылка по плану (ДоминантаФарм)') THEN {
-        createScheduledTask('Бот: рассылка по плану (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 00:00), 60, SchedulerStartType.afterFinish);
-        addBotTaskDetail('Бот: рассылка по плану (ДоминантаФарм)', 'botDispatchDue(\'ДоминантаФарм\')');
-    }
+    createScheduledTask('Бот: рассылка по плану (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 00:00), 60, SchedulerStartType.afterFinish);
+    createScheduledTaskDetail('Бот: рассылка по плану (ДоминантаФарм)', 1, 'MachineBot.botDispatchDueDominanta[]');
     // ~11:00 — убрать лишние авто-выезды (где водитель отчитался сам)
-    IF NOT scheduledTask('Бот: уборка выездов (ДоминантаФарм)') THEN {
-        createScheduledTask('Бот: уборка выездов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 11:00), 86400, SchedulerStartType.afterStart);
-        addBotTaskDetail('Бот: уборка выездов (ДоминантаФарм)', 'botCleanupDepartures(\'ДоминантаФарм\')');
-    }
+    createScheduledTask('Бот: уборка выездов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 11:00), 86400, SchedulerStartType.afterStart);
+    createScheduledTaskDetail('Бот: уборка выездов (ДоминантаФарм)', 1, 'MachineBot.botCleanupDeparturesDominanta[]');
     // 23:00 — убрать лишние авто-приезды
-    IF NOT scheduledTask('Бот: уборка приездов (ДоминантаФарм)') THEN {
-        createScheduledTask('Бот: уборка приездов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 23:00), 86400, SchedulerStartType.afterStart);
-        addBotTaskDetail('Бот: уборка приездов (ДоминантаФарм)', 'botCleanupArrivals(\'ДоминантаФарм\')');
-    }
+    createScheduledTask('Бот: уборка приездов (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 23:00), 86400, SchedulerStartType.afterStart);
+    createScheduledTaskDetail('Бот: уборка приездов (ДоминантаФарм)', 1, 'MachineBot.botCleanupArrivalsDominanta[]');
+    // после перезапуска/деплоя не рассылать УЖЕ ПРОШЕДШИЙ неотправленный план (устаревший); будущий план дня — оставить
+    FOR Location ml IS Location AND machine(ml) AND NOT botDepartureReal(ml, currentDate()) AND NOT botDepartureMsgId(ml, currentDate()) AND TIME(currentDateTime()) > botDeparture(ml, currentDate()) DO
+        botDeparture(ml, currentDate()) <- NULL;
+    FOR Location ml IS Location AND machine(ml) AND NOT botArrivalReal(ml, currentDate()) AND NOT botArrivalMsgId(ml, currentDate()) AND TIME(currentDateTime()) > botArrival(ml, currentDate()) DO
+        botArrival(ml, currentDate()) <- NULL;
     APPLY;
 }
 onStarted() + { botSetupSchedule(); }
