@@ -13,8 +13,9 @@ EXTEND FORM locations
     PROPERTIES (l) machineNumber
 ;
 
-// ===== Чат водителей для рассылки «от нас» — групповой чат с именем 'Drivers' =====
-driversChat = GROUP MAX Messenger.Chat c IF name(c) = 'Drivers_dominanta';
+// ===== Чат водителей для рассылки «от нас» — общая группа Drivers_dominanta (id -5178691583).
+// У этой группы имя/username в lsFusion пустые, надёжно опознаётся только по id чата. =====
+driversChat = GROUP MAX Messenger.Chat c IF Messenger.id(c) = '-5178691583';
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
