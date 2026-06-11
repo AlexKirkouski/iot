@@ -187,7 +187,7 @@ botSetupSchedule () {
     }
     // каждую минуту — разослать наступившие по плану
     IF NOT scheduledTask('Бот: рассылка по плану (ДоминантаФарм)') THEN {
-        createScheduledTask('Бот: рассылка по плану (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 00:00), 60, SchedulerStartType.afterStart);
+        createScheduledTask('Бот: рассылка по плану (ДоминантаФарм)', dateTimeToDateTime(currentDate(), 00:00), 300, SchedulerStartType.afterStart);   // раз в 5 минут — для «от нас» точности хватает, лог не пухнет
         createScheduledTaskDetail('Бот: рассылка по плану (ДоминантаФарм)', 1, 'MachineBot.botDispatchDueDominanta[]');
     }
     // ~11:00 — убрать лишние авто-выезды (где водитель отчитался сам)
