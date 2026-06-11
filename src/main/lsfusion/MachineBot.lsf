@@ -73,6 +73,7 @@ sendMachineMsg (Messenger.Chat chat, STRING txt) {
     LOCAL result = JSONFILE ();
     EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/sendMessage?chat_id=' + Messenger.id(chat) + '&text=' + txt TO result;
     IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
+    printToLog('BOTSEND txt=' + txt + ' chatId=' + (OVERRIDE Messenger.id(chat), 'NULL') + ' hasToken=' + (IF Messenger.token(Messenger.account(chat)) THEN 'Y' ELSE 'N') + ' httpFailed=' + (IF failedHttp() THEN 'Y' ELSE 'N') + ' msgId=' + (OVERRIDE botSentMsgId(), 0));
 }
 deleteMachineMsg (Messenger.Chat chat, LONG msgId) {
     LOCAL result = JSONFILE ();
@@ -89,6 +90,8 @@ arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND (OVERRIDE botArrivalDat
 
 // отправить выезд/приезд «от нас», если время плана настало и ещё не отправлено и не пришло от водителя
 sendDeparture (Location ml, DATE d) {
+    IF departureDue(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) THEN
+        printToLog('DUEDEP ' + name(ml) + ' code=' + (OVERRIDE machineNumber(ml), 'NOCODE') + ' chat=' + (IF driversChat() THEN 'Y' ELSE 'NULL'));
     IF driversChat() AND machineNumber(ml) AND NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND departureDue(ml, d) THEN {
         sendMachineMsg(driversChat(), machineNumber(ml) + '1');
         botDepartureMsgId(ml, d) <- botSentMsgId();
