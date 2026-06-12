@@ -19,6 +19,14 @@ EXTEND FORM locations
 // Рабочая группа: Заголовок = 'Drivers_Dominanta' (id -5165802964). Регистр важен. =====
 driversChat = GROUP MAX Messenger.Chat c IF Messenger.title(c) = 'Drivers_Dominanta';
 
+// ===== Бот машины: отправка от ИМЕНИ машины (свой бот-аккаунт на машину) =====
+// аккаунт-бот машины ищем по имени аккаунта = «Tg name» (или с суффиксом _bot, как в @username)
+machineBotAccount (Location ml) = GROUP MAX Messenger.Account a IF Messenger.name(a) = botName(ml) OR Messenger.name(a) = botName(ml) + '_bot';
+// машина по боту-получателю (водитель пишет в личку бота своей машины → код не нужен)
+machineByBotAccount (Messenger.Account a) = GROUP MAX Location ml IF machineBotAccount(ml) = a AND machine(ml);
+// id общей ленты Drivers (одинаков для всех ботов в группе)
+driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = 'Drivers_Dominanta';
+
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
 botArrival 'Приезд (бот)' = DATA TIME (Location, DATE);
@@ -81,6 +89,22 @@ deleteMachineMsg (Messenger.Chat chat, LONG msgId) {
     IF msgId AND chat THEN
         EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/deleteMessage?chat_id=' + Messenger.id(chat) + '&message_id=' + msgId TO result;
 }
+// отправка в общую ленту Drivers ТОКЕНОМ БОТА МАШИНЫ → в ленте подпись = имя машины
+sendToDrivers (Location ml, STRING txt) {
+    botSentMsgId() <- NULL;
+    LOCAL result = JSONFILE ();
+    LOCAL token = STRING(); token() <- Messenger.token(machineBotAccount(ml));
+    IF token() AND driversChatId() THEN {
+        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/sendMessage?chat_id=' + driversChatId() + '&text=' + txt TO result;
+        IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
+    }
+}
+deleteFromDrivers (Location ml, LONG msgId) {
+    LOCAL result = JSONFILE ();
+    LOCAL token = STRING(); token() <- Messenger.token(machineBotAccount(ml));
+    IF msgId AND token() AND driversChatId() THEN
+        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/deleteMessage?chat_id=' + driversChatId() + '&message_id=' + msgId TO result;
+}
 
 // ===== Механизм 1б: диспетчер «от нас» — рассылка по ПЛАНОВОМУ времени =====
 // настало ли плановое время выезда / приезда (приезд — с учётом рейса через полночь по botArrivalDate)
@@ -91,14 +115,16 @@ arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND (OVERRIDE botArrivalDat
 
 // отправить выезд/приезд «от нас», если время плана настало и ещё не отправлено и не пришло от водителя
 sendDeparture (Location ml, DATE d) {
-    IF driversChat() AND machineNumber(ml) AND NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND departureDue(ml, d) THEN {
-        sendMachineMsg(driversChat(), machineNumber(ml) + '1');
+    IF NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND departureDue(ml, d) THEN {
+        IF machineBotAccount(ml) THEN sendToDrivers(ml, 'Выехал');
+        ELSE IF driversChat() AND machineNumber(ml) THEN sendMachineMsg(driversChat(), machineNumber(ml) + '1');
         botDepartureMsgId(ml, d) <- botSentMsgId();
     }
 }
 sendArrival (Location ml, DATE d) {
-    IF driversChat() AND machineNumber(ml) AND NOT botArrivalReal(ml, d) AND NOT botArrivalMsgId(ml, d) AND arrivalDue(ml, d) THEN {
-        sendMachineMsg(driversChat(), machineNumber(ml) + '2');
+    IF NOT botArrivalReal(ml, d) AND NOT botArrivalMsgId(ml, d) AND arrivalDue(ml, d) THEN {
+        IF machineBotAccount(ml) THEN sendToDrivers(ml, 'Приехал');
+        ELSE IF driversChat() AND machineNumber(ml) THEN sendMachineMsg(driversChat(), machineNumber(ml) + '2');
         botArrivalMsgId(ml, d) <- botSentMsgId();
     }
 }
@@ -123,14 +149,14 @@ botDispatchDue 'Бот: разослать наступившие по план�
 // ~11:00 (выезды) и вечер (приезды) — убрать лишние авто-сообщения бота там, где водитель отчитался сам
 botCleanupDepartures 'Бот: убрать лишние авто-выезды' (STRING[100] organizationName) {
     LOCAL o = Organization (); o() <- botOrg();
-    FOR organization(Location ml) = o() AND machine(ml) AND botDepartureReal(ml, currentDate()) AND botDepartureMsgId(ml, currentDate()) DO {
+    FOR organization(Location ml) = o() AND machine(ml) AND NOT machineBotAccount(ml) AND botDepartureReal(ml, currentDate()) AND botDepartureMsgId(ml, currentDate()) DO {
         deleteMachineMsg(driversChat(), botDepartureMsgId(ml, currentDate()));
         botDepartureMsgId(ml, currentDate()) <- NULL;
     }
 }
 botCleanupArrivals 'Бот: убрать лишние авто-приезды' (STRING[100] organizationName) {
     LOCAL o = Organization (); o() <- botOrg();
-    FOR organization(Location ml) = o() AND machine(ml) AND botArrivalReal(ml, currentDate()) AND botArrivalMsgId(ml, currentDate()) DO {
+    FOR organization(Location ml) = o() AND machine(ml) AND NOT machineBotAccount(ml) AND botArrivalReal(ml, currentDate()) AND botArrivalMsgId(ml, currentDate()) DO {
         deleteMachineMsg(driversChat(), botArrivalMsgId(ml, currentDate()));
         botArrivalMsgId(ml, currentDate()) <- NULL;
     }
@@ -141,27 +167,41 @@ processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (M
 cleanMachineMsg (Messenger.Message m) = replace(replace(replace(trim(message(m)), '-', ''), ' ', ''), '_', '');
 machineMsgAction (Messenger.Message m) = right(cleanMachineMsg(m), 1) IF (right(cleanMachineMsg(m), 1) == '1' OR right(cleanMachineMsg(m), 1) == '2');
 machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
-// машина — по коду из сообщения (глобально). Бот получает сообщения только в группах, где он состоит — это и есть белый список.
-incomingMachine (Messenger.Message m) = machineByCode(machineMsgNumber(m));
+// машина — по боту-получателю ТОЛЬКО в личке (водитель пишет в личку бота своей машины),
+// иначе (в группе бот тоже всё видит) — по коду в тексте.
+incomingMachine (Messenger.Message m) = OVERRIDE
+    (machineByBotAccount(Messenger.account(Messenger.chat(m))) IF Messenger.chatType(Messenger.chat(m)) = Messenger.ChatType.private),
+    machineByCode(machineMsgNumber(m));
 
 // зафиксировать реальный выезд (+ удалить авто-сообщение «выезд»)
 recordRealDeparture (Location ml, DATETIME at) {
+    IF NOT botDepartureReal(ml, DATE(at)) THEN {
     botDeparture(ml, DATE(at)) <- TIME(at);
     botDepartureReal(ml, DATE(at)) <- TRUE;
-    IF botDepartureMsgId(ml, DATE(at)) THEN {
+    IF machineBotAccount(ml) THEN {
+        // машина со своим ботом: убрать имитацию и выложить реальный отчёт её же ботом
+        IF botDepartureMsgId(ml, DATE(at)) THEN deleteFromDrivers(ml, botDepartureMsgId(ml, DATE(at)));
+        sendToDrivers(ml, 'Выехал');
+        botDepartureMsgId(ml, DATE(at)) <- botSentMsgId();
+    } ELSE IF botDepartureMsgId(ml, DATE(at)) THEN {
         deleteMachineMsg(driversChat(), botDepartureMsgId(ml, DATE(at)));
         botDepartureMsgId(ml, DATE(at)) <- NULL;
+    }
     }
 }
 // зафиксировать реальный приезд на дату открытого выезда (+ удалить авто-сообщение «приезд»)
 recordRealArrival (Location ml, DATETIME at) {
     LOCAL dep = DATE ();
     dep() <- lastOpenDepartureDate(ml);
-    IF dep() THEN {
+    IF dep() AND NOT botArrivalReal(ml, dep()) THEN {
         botArrival(ml, dep()) <- TIME(at);
         botArrivalDate(ml, dep()) <- DATE(at);
         botArrivalReal(ml, dep()) <- TRUE;
-        IF botArrivalMsgId(ml, dep()) THEN {
+        IF machineBotAccount(ml) THEN {
+            IF botArrivalMsgId(ml, dep()) THEN deleteFromDrivers(ml, botArrivalMsgId(ml, dep()));
+            sendToDrivers(ml, 'Приехал');
+            botArrivalMsgId(ml, dep()) <- botSentMsgId();
+        } ELSE IF botArrivalMsgId(ml, dep()) THEN {
             deleteMachineMsg(driversChat(), botArrivalMsgId(ml, dep()));
             botArrivalMsgId(ml, dep()) <- NULL;
         }
