@@ -24,6 +24,8 @@ driversChat = GROUP MAX Messenger.Chat c IF Messenger.title(c) = 'Drivers_Domina
 machineBotAccount (Location ml) = GROUP MAX Messenger.Account a IF Messenger.name(a) = botName(ml) OR Messenger.name(a) = botName(ml) + '_bot';
 // машина по боту-получателю (водитель пишет в личку бота своей машины → код не нужен)
 machineByBotAccount (Messenger.Account a) = GROUP MAX Location ml IF machineBotAccount(ml) = a AND machine(ml);
+// машина по группе-получателю: название группы = «Tg name» машины (приём из одноимённой группы)
+machineByGroupChat (Messenger.Chat c) = GROUP MAX Location ml IF botName(ml) = Messenger.title(c) AND machine(ml);
 // id общей ленты Drivers (одинаков для всех ботов в группе)
 driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = 'Drivers_Dominanta';
 
@@ -173,6 +175,7 @@ machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMa
 // иначе (в группе бот тоже всё видит) — по коду в тексте.
 incomingMachine (Messenger.Message m) = OVERRIDE
     (machineByBotAccount(Messenger.account(Messenger.chat(m))) IF Messenger.chatType(Messenger.chat(m)) = Messenger.ChatType.private),
+    machineByGroupChat(Messenger.chat(m)),
     machineByCode(machineMsgNumber(m));
 
 // зафиксировать реальный выезд (+ удалить авто-сообщение «выезд»)
