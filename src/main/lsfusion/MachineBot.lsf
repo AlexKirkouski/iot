@@ -2,7 +2,7 @@ MODULE MachineBot;
 
 // Бот «выезд/приезд» машин: отдельный модуль поверх Mite.
 // Mite задаёт точки расширения botRouteTimeFrom / botRouteEndDateTime для маршрутного отчёта.
-REQUIRE Mite, Telegram, Scheduler;
+REQUIRE Mite, Telegram, Scheduler, Management;
 
 // ===== Машина: номер =====
 machineNumber 'Код' = DATA STRING[20] (Location);            // код в сообщении водителя, напр. 4750
@@ -15,9 +15,10 @@ EXTEND FORM locations
     PROPERTIES (l) machineNumber, botName
 ;
 
-// ===== Чат водителей для рассылки «от нас» — опознаётся по штатному «Заголовку» чата.
-// Рабочая группа: Заголовок = 'Drivers_Dominanta' (id -5165802964). Регистр важен. =====
-driversChat = GROUP MAX Messenger.Chat c IF Messenger.title(c) = 'Drivers_Dominanta';
+// ===== Чат водителей для рассылки «от нас» — по «Отобр. имя» (showName) чата.
+// Вебхук его НЕ затирает (в отличие от
+// заголовка), поэтому при миграции в супергруппу достаточно проставить «Отобр. имя» = 'Drivers' в форме «Чаты».
+driversChat = GROUP MAX Messenger.Chat c IF ControllerManagement.showName(c) = 'Drivers';
 
 // ===== Бот машины: отправка от ИМЕНИ машины (свой бот-аккаунт на машину) =====
 // аккаунт-бот машины ищем по имени аккаунта = «Tg name» (или с суффиксом _bot, как в @username)
@@ -27,7 +28,7 @@ machineByBotAccount (Messenger.Account a) = GROUP MAX Location ml IF machineBotA
 // машина по группе-получателю: название группы = «Tg name» машины (приём из одноимённой группы)
 machineByGroupChat (Messenger.Chat c) = GROUP MAX Location ml IF botName(ml) = Messenger.title(c) AND machine(ml);
 // id общей ленты Drivers (одинаков для всех ботов в группе)
-driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = 'Drivers_Dominanta';
+driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF ControllerManagement.showName(c) = 'Drivers';
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
