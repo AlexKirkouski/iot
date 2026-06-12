@@ -46,6 +46,8 @@ EXTEND FORM locations
 
 // ===== Реализация точек расширения Mite =====
 botRouteTimeFrom(Location l, DATE d) += botDeparture(l, d);
+// показывать в форме «Переопределения по датам» прошлые даты, где есть бот-данные (выезд/приезд)
+dateRowExtra(Location l, DATE d) += TRUE IF botDeparture(l, d) OR botArrival(l, d);
 // конец рейса как полный datetime (дата приезда + время), может быть на N дней позже выезда
 botRouteEndDateTime(Location l, DATE d) +=
     ZDATETIME(toDateTime((OVERRIDE botArrivalDate(l, d), d), botArrival(l, d))) IF botArrival(l, d);

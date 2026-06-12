@@ -219,9 +219,11 @@ overDeviceName(ControllerManager cm) += '(контейнер ' + container(templ
 // - базовые расписания по дням недели (выводим селекторы, организация берётся из organization(l))
 // - локальное переопределение на конкретную дату (редактируемое свойство dataScheduleFor)
 // - справочник расписаний AdjustSchedule (NEW/DELETE)
+// доп. даты для формы «Переопределения по датам» — расширяется модулями (бот добавляет прошлые даты с выездами/приездами)
+dateRowExtra = ABSTRACT BOOLEAN (Location, DATE);
 EXTEND FORM locations
     OBJECTS ds = DATE
-    FILTERS iterate(ds, currentDate(), sum(currentDate(), 60)) OR dataScheduleFor(l, ds)     
+    FILTERS iterate(ds, currentDate(), sum(currentDate(), 60)) OR dataScheduleFor(l, ds) OR dateRowExtra(l, ds)
     PROPERTIES VALUE(ds), nameScheduleFor(l, ds), timeFrom(l, ds), timeTo(l, ds), noise(o), periodMinutes(o) 
 
     OBJECTS dow = DOW
