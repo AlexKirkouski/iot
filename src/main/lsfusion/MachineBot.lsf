@@ -109,6 +109,23 @@ deleteFromDrivers (Location ml, LONG msgId) {
     IF msgId AND token() AND driversChatId() THEN
         EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/deleteMessage?chat_id=' + driversChatId() + '&message_id=' + msgId TO result;
 }
+// id группы машины (название группы = Tg name, тип «группа»)
+machineGroupId (Location ml) = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = botName(ml) AND Messenger.chatType(c) = Messenger.ChatType.group;
+// reply-клавиатура: нажатие шлёт обычный текст «Выехал»/«Приехал» (callback не нужен)
+botKeyboardMarkup () = '{"keyboard":[["Выехал","Приехал"]],"resize_keyboard":true,"is_persistent":true}';
+sendMachineKeyboard (Location ml) {
+    LOCAL result = JSONFILE ();
+    LOCAL token = STRING (); token() <- Messenger.token(machineBotAccount(ml));
+    LOCAL gid = STRING (); gid() <- machineGroupId(ml);
+    IF token() AND gid() THEN
+        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/sendMessage?chat_id=' + gid() + '&text=Отметьте выезд/приезд:&reply_markup=' + botKeyboardMarkup() TO result;
+}
+// разослать кнопки во все группы машин, у которых есть свой бот и одноимённая группа (нажать вручную один раз)
+botSendKeyboards 'Бот: кнопки в группы машин' () {
+    FOR machine(Location ml) AND machineBotAccount(ml) AND machineGroupId(ml) DO
+        sendMachineKeyboard(ml);
+}
+EXTEND FORM locations PROPERTIES() botSendKeyboards;
 
 // ===== Механизм 1б: диспетчер «от нас» — рассылка по ПЛАНОВОМУ времени =====
 // настало ли плановое время выезда / приезда (приезд — с учётом рейса через полночь по botArrivalDate)
@@ -169,7 +186,12 @@ botCleanupArrivals 'Бот: убрать лишние авто-приезды' (
 // ===== Механизм 2: приём сообщений водителей =====
 processedMachineMsg 'Обработано (бот машин)' = DATA BOOLEAN (Messenger.Message);
 cleanMachineMsg (Messenger.Message m) = replace(replace(replace(trim(message(m)), '-', ''), ' ', ''), '_', '');
-machineMsgAction (Messenger.Message m) = right(cleanMachineMsg(m), 1) IF (right(cleanMachineMsg(m), 1) == '1' OR right(cleanMachineMsg(m), 1) == '2');
+// действие: «1» или «выехал» → выезд; «2» или «приехал» → приезд (reply-кнопки шлют текст «Выехал»/«Приехал»)
+msgLower (Messenger.Message m) = lower(trim(message(m)));
+msgHas (Messenger.Message m, STRING sub) = length(msgLower(m)) > length(replace(msgLower(m), sub, ''));
+machineMsgAction (Messenger.Message m) =
+    IF (msgHas(m, 'выехал') OR right(cleanMachineMsg(m), 1) == '1') THEN '1'
+    ELSE (IF (msgHas(m, 'приехал') OR right(cleanMachineMsg(m), 1) == '2') THEN '2');
 machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
 // машина — по боту-получателю ТОЛЬКО в личке (водитель пишет в личку бота своей машины),
 // иначе (в группе бот тоже всё видит) — по коду в тексте.
