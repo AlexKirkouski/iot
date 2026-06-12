@@ -246,7 +246,19 @@ processMachineMsg (Messenger.Message m) {
         processedMachineMsg(m) <- TRUE;
     }
 }
-WHEN SET(Messenger.Message m IS Messenger.Message) DO processMachineMsg(m);
+// === Фикс платформенного бага: тип 'supergroup' вебхук НЕ обрабатывает → на каждом входящем
+// затирает заголовок и тип чата в NULL. Восстанавливаем их из апдейта (супергруппу трактуем как группу).
+// Безопасно: отправки в TRY, а Drivers бот ищет по showName — от заголовка не зависит. ===
+fixSupergroupChat (Messenger.Message m) {
+    IF Telegram.type() == 'supergroup' AND Telegram.title() THEN {
+        Messenger.title(Messenger.chat(m)) <- Telegram.title();
+        Messenger.chatType(Messenger.chat(m)) <- Messenger.ChatType.group;
+    }
+}
+WHEN SET(Messenger.Message m IS Messenger.Message) DO {
+    fixSupergroupChat(m);
+    processMachineMsg(m);
+}
 
 // ===== Параметрless-обёртки для планировщика (привязка по каноническому имени — надёжнее script) =====
 botGeneratePlanDominanta 'Бот: план (ДоминантаФарм)' () { botGeneratePlan('ДоминантаФарм'); }
