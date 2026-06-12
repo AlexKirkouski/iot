@@ -85,20 +85,22 @@ FORM machineSendResultForm
 sendMachineMsg (Messenger.Chat chat, STRING txt) {
     botSentMsgId() <- NULL;
     LOCAL result = JSONFILE ();
-    EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/sendMessage?chat_id=' + Messenger.id(chat) + '&text=' + txt TO result;
-    IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
+    TRY {
+        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/sendMessage?chat_id=' + Messenger.id(chat) + '&text=' + txt TO result;
+        IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
+    }
 }
 deleteMachineMsg (Messenger.Chat chat, LONG msgId) {
     LOCAL result = JSONFILE ();
     IF msgId AND chat THEN
-        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/deleteMessage?chat_id=' + Messenger.id(chat) + '&message_id=' + msgId TO result;
+        TRY { EXTERNAL HTTP GET 'https://api.telegram.org/bot' + Messenger.token(Messenger.account(chat)) + '/deleteMessage?chat_id=' + Messenger.id(chat) + '&message_id=' + msgId TO result; }
 }
 // отправка в общую ленту Drivers ТОКЕНОМ БОТА МАШИНЫ → в ленте подпись = имя машины
 sendToDrivers (Location ml, STRING txt) {
     botSentMsgId() <- NULL;
     LOCAL result = JSONFILE ();
     LOCAL token = STRING(); token() <- Messenger.token(machineBotAccount(ml));
-    IF token() AND driversChatId() THEN {
+    IF token() AND driversChatId() THEN TRY {
         EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/sendMessage?chat_id=' + driversChatId() + '&text=' + txt TO result;
         IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
     }
@@ -107,7 +109,7 @@ deleteFromDrivers (Location ml, LONG msgId) {
     LOCAL result = JSONFILE ();
     LOCAL token = STRING(); token() <- Messenger.token(machineBotAccount(ml));
     IF msgId AND token() AND driversChatId() THEN
-        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/deleteMessage?chat_id=' + driversChatId() + '&message_id=' + msgId TO result;
+        TRY { EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/deleteMessage?chat_id=' + driversChatId() + '&message_id=' + msgId TO result; }
 }
 // id группы машины (название группы = Tg name, тип «группа»)
 machineGroupId (Location ml) = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = botName(ml) AND Messenger.chatType(c) = Messenger.ChatType.group;
@@ -118,8 +120,8 @@ sendMachineKeyboard (Location ml) {
     LOCAL token = STRING (); token() <- Messenger.token(machineBotAccount(ml));
     LOCAL gid = STRING (); gid() <- machineGroupId(ml);
     IF token() AND gid() THEN
-        EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
-            BODYURL 'chat_id=' + gid() + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result;
+        TRY { EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
+            BODYURL 'chat_id=' + gid() + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result; }
 }
 // разослать кнопки во все группы машин, у которых есть свой бот и одноимённая группа (нажать вручную один раз)
 botSendKeyboards 'Бот: кнопки в группы машин' () {
