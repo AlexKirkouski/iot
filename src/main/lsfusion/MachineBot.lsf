@@ -118,7 +118,8 @@ sendMachineKeyboard (Location ml) {
     LOCAL token = STRING (); token() <- Messenger.token(machineBotAccount(ml));
     LOCAL gid = STRING (); gid() <- machineGroupId(ml);
     IF token() AND gid() THEN
-        EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/sendMessage?chat_id=' + gid() + '&text=Отметьте выезд/приезд:&reply_markup=' + botKeyboardMarkup() TO result;
+        EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
+            BODYURL 'chat_id=' + gid() + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result;
 }
 // разослать кнопки во все группы машин, у которых есть свой бот и одноимённая группа (нажать вручную один раз)
 botSendKeyboards 'Бот: кнопки в группы машин' () {
