@@ -15,11 +15,6 @@ EXTEND FORM locations
     PROPERTIES (l) machineNumber, botName
 ;
 
-// ===== Чат водителей для рассылки «от нас» — по «Отобр. имя» (showName) чата.
-// Вебхук его НЕ затирает (в отличие от
-// заголовка), поэтому при миграции в супергруппу достаточно проставить «Отобр. имя» = 'Drivers' в форме «Чаты».
-driversChat = GROUP MAX Messenger.Chat c IF ControllerManagement.showName(c) = 'Drivers';
-
 // ===== Бот машины: отправка от ИМЕНИ машины (свой бот-аккаунт на машину) =====
 // аккаунт-бот машины ищем по имени аккаунта = «Tg name» (или с суффиксом _bot, как в @username)
 machineBotAccount (Location ml) = GROUP MAX Messenger.Account a IF Messenger.name(a) = botName(ml) OR Messenger.name(a) = botName(ml) + '_bot';
@@ -27,8 +22,13 @@ machineBotAccount (Location ml) = GROUP MAX Messenger.Account a IF Messenger.nam
 machineByBotAccount (Messenger.Account a) = GROUP MAX Location ml IF machineBotAccount(ml) = a AND machine(ml);
 // машина по группе-получателю: название группы = «Tg name» машины (приём из одноимённой группы)
 machineByGroupChat (Messenger.Chat c) = GROUP MAX Location ml IF botName(ml) = Messenger.title(c) AND machine(ml);
-// id общей ленты Drivers (одинаков для всех ботов в группе)
-driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF ControllerManagement.showName(c) = 'Drivers';
+// ===== Лента Drivers определяется АВТОМАТИЧЕСКИ: это чат, где собрано НЕСКОЛЬКО ботов-машин.
+// В обычной группе машины — только её бот, а в общей Drivers — все. Настраивать ничего не нужно,
+// и при миграции в супергруппу находится само (боты те же). =====
+botChatMachine (Messenger.Chat c) = machineByBotAccount(Messenger.account(c));   // машина, если чат под ботом-машиной
+botsAtChatId (STRING gid) = GROUP SUM 1 IF Messenger.id(Messenger.Chat c) = gid AND botChatMachine(c);
+driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF botChatMachine(c) AND botsAtChatId(Messenger.id(c)) > 1;
+driversChat = GROUP MAX Messenger.Chat c IF Messenger.id(c) = driversChatId();
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
