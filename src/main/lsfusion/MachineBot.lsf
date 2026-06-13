@@ -22,13 +22,10 @@ machineBotAccount (Location ml) = GROUP MAX Messenger.Account a IF Messenger.nam
 machineByBotAccount (Messenger.Account a) = GROUP MAX Location ml IF machineBotAccount(ml) = a AND machine(ml);
 // машина по группе-получателю: название группы = «Tg name» машины (приём из одноимённой группы)
 machineByGroupChat (Messenger.Chat c) = GROUP MAX Location ml IF botName(ml) = Messenger.title(c) AND machine(ml);
-// ===== Лента Drivers определяется АВТОМАТИЧЕСКИ: это чат, где собрано НЕСКОЛЬКО ботов-машин.
-// В обычной группе машины — только её бот, а в общей Drivers — все. Настраивать ничего не нужно,
-// и при миграции в супергруппу находится само (боты те же). =====
-botChatMachine (Messenger.Chat c) = machineByBotAccount(Messenger.account(c));   // машина, если чат под ботом-машиной
-botsAtChatId (STRING gid) = GROUP SUM 1 IF Messenger.id(Messenger.Chat c) = gid AND botChatMachine(c);
-driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF botChatMachine(c) AND botsAtChatId(Messenger.id(c)) > 1;
-driversChat = GROUP MAX Messenger.Chat c IF Messenger.id(c) = driversChatId();
+// ===== Лента Drivers — по «Отобр. имя» (showName) = 'Drivers_dominanta' (задаётся в форме «Чаты»).
+// showName вебхук НЕ затирает → переживает миграцию супергруппы (id/заголовок могут меняться). =====
+driversChat = GROUP MAX Messenger.Chat c IF ControllerManagement.showName(c) = 'Drivers_dominanta';
+driversChatId () = GROUP MAX Messenger.id(Messenger.Chat c) IF ControllerManagement.showName(c) = 'Drivers_dominanta';
 
 // ===== Рейс: выезд/приезд, ключ — дата ВЫЕЗДА =====
 botDeparture 'Выезд (бот)' = DATA TIME (Location, DATE);
@@ -103,7 +100,16 @@ sendToDrivers (Location ml, STRING txt) {
     LOCAL token = STRING(); token() <- Messenger.token(machineBotAccount(ml));
     IF token() AND driversChatId() THEN TRY {
         EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/sendMessage?chat_id=' + driversChatId() + '&text=' + txt TO result;
-        IF NOT failedHttp() THEN IMPORT machineSendResultForm JSON FROM result();
+        IF NOT failedHttp() THEN {
+            IMPORT machineSendResultForm JSON FROM result();
+            // записать отправленное в историю чата (чтобы было видно в «Сообщения», подпись = имя машины)
+            IF botSentMsgId() THEN NEW msg = Messenger.Message {
+                Messenger.chat(msg) <- driversChat();
+                Messenger.message(msg) <- txt;
+                Messenger.from(msg) <- botName(ml);
+                Messenger.dateTime(msg) <- currentDateTime();
+            }
+        }
     }
 }
 deleteFromDrivers (Location ml, LONG msgId) {
@@ -246,19 +252,7 @@ processMachineMsg (Messenger.Message m) {
         processedMachineMsg(m) <- TRUE;
     }
 }
-// === Фикс платформенного бага: тип 'supergroup' вебхук НЕ обрабатывает → на каждом входящем
-// затирает заголовок и тип чата в NULL. Восстанавливаем их из апдейта (супергруппу трактуем как группу).
-// Безопасно: отправки в TRY, а Drivers бот ищет по showName — от заголовка не зависит. ===
-fixSupergroupChat (Messenger.Message m) {
-    IF Telegram.type() == 'supergroup' AND Telegram.title() THEN {
-        Messenger.title(Messenger.chat(m)) <- Telegram.title();
-        Messenger.chatType(Messenger.chat(m)) <- Messenger.ChatType.group;
-    }
-}
-WHEN SET(Messenger.Message m IS Messenger.Message) DO {
-    fixSupergroupChat(m);
-    processMachineMsg(m);
-}
+WHEN SET(Messenger.Message m IS Messenger.Message) DO processMachineMsg(m);
 
 // ===== Параметрless-обёртки для планировщика (привязка по каноническому имени — надёжнее script) =====
 botGeneratePlanDominanta 'Бот: план (ДоминантаФарм)' () { botGeneratePlan('ДоминантаФарм'); }
@@ -298,20 +292,3 @@ botSetupSchedule () {
 }
 onStarted() + { botSetupSchedule(); }
 
-// ===== Разовое заполнение «Tg name» по коду машины (только если пусто; дальше правится в UI) =====
-botSeedNames () {
-    FOR machineNumber(Location ml) = '5945' AND NOT botName(ml) DO botName(ml) <- 'Gazelle 5945-7';
-    FOR machineNumber(Location ml) = '8790' AND NOT botName(ml) DO botName(ml) <- 'Gazelle 8790-7';
-    FOR machineNumber(Location ml) = '1254' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 1254-7';
-    FOR machineNumber(Location ml) = '1255' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 1255-7';
-    FOR machineNumber(Location ml) = '4750' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 4750-7';
-    FOR machineNumber(Location ml) = '7051' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 7051-7';
-    FOR machineNumber(Location ml) = '8914' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 8914-7';
-    FOR machineNumber(Location ml) = '8915' AND NOT botName(ml) DO botName(ml) <- 'Peugeot 8915-7';
-    FOR machineNumber(Location ml) = '3296' AND NOT botName(ml) DO botName(ml) <- 'Renault 3296-7';
-    FOR machineNumber(Location ml) = '8327' AND NOT botName(ml) DO botName(ml) <- 'Fiat 8327-7';
-    FOR machineNumber(Location ml) = '0951' AND NOT botName(ml) DO botName(ml) <- 'Ford 0951-7';
-    FOR machineNumber(Location ml) = '4310' AND NOT botName(ml) DO botName(ml) <- 'Ford 4310-7';
-    APPLY;
-}
-onStarted() + { botSeedNames(); }
