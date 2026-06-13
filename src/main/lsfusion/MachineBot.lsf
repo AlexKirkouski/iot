@@ -122,13 +122,27 @@ deleteFromDrivers (Location ml, LONG msgId) {
 // JSON со СПЕЦСИМВОЛАМИ percent-кодирован ( { } [ ] " : , ), т.к. lsFusion ломает '{' в строке URL/тела;
 // кириллица сырая (Telegram её принимает). Telegram декодирует %xx → валидный reply_markup.
 botKeyboardMarkup () = '%7B%22keyboard%22%3A%5B%5B%22Выехал%22%2C%22Приехал%22%5D%5D%2C%22resize_keyboard%22%3Atrue%2C%22is_persistent%22%3Atrue%7D';
+// ДИАГНОСТИКА: ответ Telegram на отправку клавиатуры (читаю по БД)
+botKbResult = DATA STRING ();
 // отправить клавиатуру в личку (chatId = id личного чата) токеном бота машины
 sendDmKeyboard (Location ml, STRING chatId) {
     LOCAL result = JSONFILE ();
     LOCAL token = STRING (); token() <- Messenger.token(machineBotAccount(ml));
-    IF token() AND chatId THEN
-        TRY { EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
-            BODYURL 'chat_id=' + chatId + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result; }
+    botKbResult() <- 'нет токена/чата';
+    IF token() AND chatId THEN {
+        botKbResult() <- 'отправляю...';
+        TRY {
+            EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
+                BODYURL 'chat_id=' + chatId + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result;
+            LOCAL description = STRING ();
+            IMPORT FROM result() TO() description;
+            botKbResult() <- 'OK failedHttp=' + (IF failedHttp() THEN 'Y' ELSE 'N') + ' descr=' + description;
+        } CATCH {
+            LOCAL description = STRING ();
+            IMPORT FROM result() TO() description;
+            botKbResult() <- 'CAUGHT descr=' + description;
+        }
+    }
 }
 
 // ===== Механизм 1б: диспетчер «от нас» — рассылка по ПЛАНОВОМУ времени =====
