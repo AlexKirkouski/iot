@@ -12,7 +12,7 @@ machineByCode (STRING code) = GROUP MAX Location ml IF machineNumber(ml) = code 
 // Tg name — англ. название машины (под отдельного бота этой машины), напр. 'Peugeot 4750-7'
 botName 'Tg name' = DATA STRING[100] (Location);
 EXTEND FORM locations
-    PROPERTIES (l) machineNumber, botName
+    PROPERTIES (l) botName
 ;
 
 // ===== Бот машины: отправка от ИМЕНИ машины (свой бот-аккаунт на машину) =====
@@ -118,24 +118,18 @@ deleteFromDrivers (Location ml, LONG msgId) {
     IF msgId AND token() AND driversChatId() THEN
         TRY { EXTERNAL HTTP GET 'https://api.telegram.org/bot' + token() + '/deleteMessage?chat_id=' + driversChatId() + '&message_id=' + msgId TO result; }
 }
-// id группы машины (название группы = Tg name, тип «группа»)
-machineGroupId (Location ml) = GROUP MAX Messenger.id(Messenger.Chat c) IF Messenger.title(c) = botName(ml) AND Messenger.chatType(c) = Messenger.ChatType.group;
-// reply-клавиатура: нажатие шлёт обычный текст «Выехал»/«Приехал» (callback не нужен)
-botKeyboardMarkup () = '{"keyboard":[["Выехал","Приехал"]],"resize_keyboard":true,"is_persistent":true}';
-sendMachineKeyboard (Location ml) {
+// reply-клавиатура [Выехал][Приехал] — нажатие шлёт обычный текст (callback не нужен).
+// JSON со СПЕЦСИМВОЛАМИ percent-кодирован ( { } [ ] " : , ), т.к. lsFusion ломает '{' в строке URL/тела;
+// кириллица сырая (Telegram её принимает). Telegram декодирует %xx → валидный reply_markup.
+botKeyboardMarkup () = '%7B%22keyboard%22%3A%5B%5B%22Выехал%22%2C%22Приехал%22%5D%5D%2C%22resize_keyboard%22%3Atrue%2C%22is_persistent%22%3Atrue%7D';
+// отправить клавиатуру в личку (chatId = id личного чата) токеном бота машины
+sendDmKeyboard (Location ml, STRING chatId) {
     LOCAL result = JSONFILE ();
     LOCAL token = STRING (); token() <- Messenger.token(machineBotAccount(ml));
-    LOCAL gid = STRING (); gid() <- machineGroupId(ml);
-    IF token() AND gid() THEN
+    IF token() AND chatId THEN
         TRY { EXTERNAL HTTP POST 'https://api.telegram.org/bot' + token() + '/sendMessage'
-            BODYURL 'chat_id=' + gid() + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result; }
+            BODYURL 'chat_id=' + chatId + '&text=Отметьте:&reply_markup=' + botKeyboardMarkup() TO result; }
 }
-// разослать кнопки во все группы машин, у которых есть свой бот и одноимённая группа (нажать вручную один раз)
-botSendKeyboards 'Бот: кнопки в группы машин' () {
-    FOR machine(Location ml) AND machineBotAccount(ml) AND machineGroupId(ml) DO
-        sendMachineKeyboard(ml);
-}
-EXTEND FORM locations PROPERTIES() botSendKeyboards;
 
 // ===== Механизм 1б: диспетчер «от нас» — рассылка по ПЛАНОВОМУ времени =====
 // настало ли плановое время выезда / приезда (приезд — с учётом рейса через полночь по botArrivalDate)
@@ -147,15 +141,13 @@ arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND (OVERRIDE botArrivalDat
 // отправить выезд/приезд «от нас», если время плана настало и ещё не отправлено и не пришло от водителя
 sendDeparture (Location ml, DATE d) {
     IF NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND departureDue(ml, d) THEN {
-        IF machineBotAccount(ml) THEN sendToDrivers(ml, 'Выехал');
-        ELSE IF driversChat() AND machineNumber(ml) THEN sendMachineMsg(driversChat(), machineNumber(ml) + '1');
+        sendToDrivers(ml, 'Выехал');
         botDepartureMsgId(ml, d) <- botSentMsgId();
     }
 }
 sendArrival (Location ml, DATE d) {
     IF NOT botArrivalReal(ml, d) AND NOT botArrivalMsgId(ml, d) AND arrivalDue(ml, d) THEN {
-        IF machineBotAccount(ml) THEN sendToDrivers(ml, 'Приехал');
-        ELSE IF driversChat() AND machineNumber(ml) THEN sendMachineMsg(driversChat(), machineNumber(ml) + '2');
+        sendToDrivers(ml, 'Приехал');
         botArrivalMsgId(ml, d) <- botSentMsgId();
     }
 }
@@ -205,10 +197,8 @@ machineMsgAction (Messenger.Message m) =
 machineMsgNumber (Messenger.Message m) = left(cleanMachineMsg(m), length(cleanMachineMsg(m)) - 1) IF machineMsgAction(m);
 // машина — по боту-получателю ТОЛЬКО в личке (водитель пишет в личку бота своей машины),
 // иначе (в группе бот тоже всё видит) — по коду в тексте.
-incomingMachine (Messenger.Message m) = OVERRIDE
-    (machineByBotAccount(Messenger.account(Messenger.chat(m))) IF Messenger.chatType(Messenger.chat(m)) = Messenger.ChatType.private),
-    machineByGroupChat(Messenger.chat(m)),
-    machineByCode(machineMsgNumber(m));
+// ТОЛЬКО личка боту машины: машина = тот бот, кому написали (приватность на личку не влияет, код не нужен).
+incomingMachine (Messenger.Message m) = machineByBotAccount(Messenger.account(Messenger.chat(m))) IF Messenger.chatType(Messenger.chat(m)) = Messenger.ChatType.private;
 
 // зафиксировать реальный выезд (+ удалить авто-сообщение «выезд»)
 recordRealDeparture (Location ml, DATETIME at) {
@@ -246,9 +236,11 @@ recordRealArrival (Location ml, DATETIME at) {
 }
 
 processMachineMsg (Messenger.Message m) {
-    IF Messenger.from(m) != 'YOU' AND NOT processedMachineMsg(m) AND incomingMachine(m) AND machineMsgAction(m) THEN {
+    IF Messenger.from(m) != 'YOU' AND NOT processedMachineMsg(m) AND incomingMachine(m) THEN {
         IF machineMsgAction(m) == '1' THEN recordRealDeparture(incomingMachine(m), Messenger.dateTime(m));
-        IF machineMsgAction(m) == '2' THEN recordRealArrival(incomingMachine(m), Messenger.dateTime(m));
+        ELSE IF machineMsgAction(m) == '2' THEN recordRealArrival(incomingMachine(m), Messenger.dateTime(m));
+        // не действие (напр. /start, «привет») → показать кнопки в этой личке
+        ELSE sendDmKeyboard(incomingMachine(m), Messenger.id(Messenger.chat(m)));
         processedMachineMsg(m) <- TRUE;
     }
 }
