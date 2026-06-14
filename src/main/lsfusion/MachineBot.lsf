@@ -55,16 +55,19 @@ botRouteEndDateTime(Location l, DATE d) +=
     ZDATETIME(toDateTime((OVERRIDE botArrivalDate(l, d), d), botArrival(l, d))) IF botArrival(l, d);
 
 // ===== Механизм 1а: генерация (план ±30; приезд на след. сутки, если Окончание < Начало = 2-дневный рейс) =====
+// генерить в этот день? НЕТ, если официальный выходной/праздник (isDayOff) — КРОМЕ ручного
+// переопределения на дату (выбрано расписание dataScheduleFor или проставлено время dataTimeFrom).
+botGenDay (Location ml, DATE d) = (NOT isDayOff(d)) OR dataScheduleFor(ml, d) OR dataTimeFrom(ml, d);
 generateDepartures (Organization o, DATE d) {
     LOCAL off = INTEGER ();
-    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDeparture(ml, d) DO {
+    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND botGenDay(ml, d) AND NOT botDepartureReal(ml, d) AND NOT botDeparture(ml, d) DO {
         off() <- round0((random() - 0.5) * 60);
         botDeparture(ml, d) <- sumMinutes(timeFrom(ml, d), off());
     }
 }
 generateArrivals (Organization o, DATE d) {
     LOCAL off = INTEGER ();
-    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND NOT botArrivalReal(ml, d) AND NOT botArrival(ml, d) DO {
+    FOR Location ml IS Location AND organization(ml) = o AND machine(ml) AND timeFrom(ml, d) AND timeTo(ml, d) AND botGenDay(ml, d) AND NOT botArrivalReal(ml, d) AND NOT botArrival(ml, d) DO {
         off() <- round0((random() - 0.5) * 60);
         botArrival(ml, d) <- sumMinutes(timeTo(ml, d), off());
         botArrivalDate(ml, d) <- (IF timeTo(ml, d) < timeFrom(ml, d) THEN sum(d, 1) ELSE d);
