@@ -145,13 +145,13 @@ arrivalDue (Location ml, DATE d) = botArrival(ml, d) AND (OVERRIDE botArrivalDat
 
 // отправить выезд/приезд «от нас», если время плана настало и ещё не отправлено и не пришло от водителя
 sendDeparture (Location ml, DATE d) {
-    IF NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND departureDue(ml, d) THEN {
+    IF NOT botDepartureReal(ml, d) AND NOT botDepartureMsgId(ml, d) AND botGenDay(ml, d) AND departureDue(ml, d) THEN {
         sendToDrivers(ml, 'Выехал');
         botDepartureMsgId(ml, d) <- botSentMsgId();
     }
 }
 sendArrival (Location ml, DATE d) {
-    IF NOT botArrivalReal(ml, d) AND NOT botArrivalMsgId(ml, d) AND arrivalDue(ml, d) THEN {
+    IF NOT botArrivalReal(ml, d) AND NOT botArrivalMsgId(ml, d) AND botGenDay(ml, d) AND arrivalDue(ml, d) THEN {
         sendToDrivers(ml, 'Приехал');
         botArrivalMsgId(ml, d) <- botSentMsgId();
     }
